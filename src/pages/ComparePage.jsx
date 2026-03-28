@@ -3,7 +3,7 @@ import Glass from "../components/Glass";
 import Spark from "../components/Spark";
 import { f2, fB, fV, SYMBOLS } from "../utils/formatters";
 
-const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.5)", accent = "#4facfe";
+const green = "#22c55e", red = "#ef4444", muted = "#52525b", accent = "#a1a1aa";
 
 function bar(pct, color) {
   return (
@@ -116,7 +116,7 @@ export default function ComparePage({ watch }) {
             <Glass key={d.symbol} style={{ padding: "14px 16px", borderRadius: 16, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#f8fafc", fontFamily: "'DM Serif Display',serif", fontStyle: "italic" }}>{d.symbol}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#f8fafc", fontWeight: 600, letterSpacing: "-.01em" }}>{d.symbol}</div>
                   <div style={{ fontSize: 9, color: muted, marginTop: 1 }}>{d.sector}</div>
                 </div>
                 {chgPct != null && (
@@ -183,7 +183,7 @@ export default function ComparePage({ watch }) {
                 const w52pos = d.w52h && d.w52l ? ((d.price - d.w52l) / (d.w52h - d.w52l) * 100) : null;
                 return (
                   <tr key={d.symbol} style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,.04)" : "none" }}>
-                    <td style={{ padding: "10px 12px 10px 0", fontWeight: 700, color: "#f1f5f9", fontFamily: "'DM Serif Display',serif", fontStyle: "italic" }}>{d.symbol}</td>
+                    <td style={{ padding: "10px 12px 10px 0", fontWeight: 700, color: "#f1f5f9", fontWeight: 600, letterSpacing: "-.01em" }}>{d.symbol}</td>
                     <td style={{ padding: "10px 12px 10px 0", color: "#e2e8f0", fontWeight: 500 }}>${f2(d.price)}</td>
                     <td style={{ padding: "10px 12px 10px 0", color: up ? green : red, fontWeight: 600 }}>{chgPct != null ? `${up ? "+" : ""}${chgPct.toFixed(2)}%` : "—"}</td>
                     <td style={{ padding: "10px 12px 10px 0", color: "#e2e8f0" }}>{fB(d.marketCap)}</td>

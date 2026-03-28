@@ -39,9 +39,9 @@ const Ticker = memo(function Ticker({ watch, loading, onSelect }) {
               style={{ padding: "0 22px", fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, flexShrink: 0, transition: "opacity .2s", background: "none", border: "none", color: "inherit" }}
               onMouseEnter={e => e.currentTarget.style.opacity = ".5"}
               onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-              <span style={{ color: "rgba(148,163,184,.4)", fontWeight: 500 }}>{s}</span>
-              <span style={{ color: "#e2e8f0", fontWeight: 500 }}>${f2(d.price)}</span>
-              <span style={{ fontSize: 10, color: chg >= 0 ? "#4ade80" : "#f87171", fontWeight: 500 }}>
+              <span style={{ color: "#3f3f46", fontWeight: 500 }}>{s}</span>
+              <span style={{ color: "#a1a1aa", fontWeight: 500 }}>${f2(d.price)}</span>
+              <span style={{ fontSize: 10, color: chg >= 0 ? "#22c55e" : "#ef4444", fontWeight: 500 }}>
                 {chg >= 0 ? "▲" : "▼"}{Math.abs(chg).toFixed(2)}%
               </span>
             </button>
@@ -55,8 +55,8 @@ const Ticker = memo(function Ticker({ watch, loading, onSelect }) {
 export default Ticker;
 
 const bar = {
-  position: "relative", zIndex: 10, height: 30,
-  borderBottom: "1px solid rgba(255,255,255,.05)",
+  position: "relative", zIndex: 10, height: 28,
+  borderBottom: "1px solid rgba(255,255,255,.06)",
   overflow: "hidden", display: "flex", alignItems: "center",
-  background: "rgba(8,14,30,.8)", backdropFilter: "blur(20px)", flexShrink: 0,
+  background: "#0a0a0a", flexShrink: 0,
 };

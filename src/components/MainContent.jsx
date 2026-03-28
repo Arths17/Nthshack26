@@ -5,7 +5,9 @@ import Spark from "./Spark";
 import Pill from "./Pill";
 import Stat from "./Stat";
 import Counter from "./Counter";
+import { Icons } from "./Icons";
 import { f2, fB, fV } from "../utils/formatters";
+import { COLORS, TYPOGRAPHY, SPACING } from "../utils/designSystem";
 // Lazy load pages for code splitting
 const ComparePage   = lazy(() => import("../pages/ComparePage"));
 const PortfolioPage = lazy(() => import("../pages/PortfolioPage"));
@@ -16,23 +18,23 @@ const AlertsPage    = lazy(() => import("../pages/AlertsPage"));
 const StrategyLibrary = lazy(() => import("../pages/StrategyLibrary"));
 
 const PAGES = [
-  { id: "market",    label: "Market",     icon: "◈" },
-  { id: "compare",   label: "Compare",    icon: "⊞" },
-  { id: "portfolio", label: "Portfolio",  icon: "◎" },
-  { id: "screener",  label: "Screener",   icon: "▤" },
-  { id: "strategies",label: "Strategies", icon: "◐" },
-  { id: "news",      label: "News",       icon: "✦" },
-  { id: "alerts",    label: "Alerts",     icon: "◉" },
-  { id: "learn",     label: "Learn",      icon: "▣" },
+  { id: "market",    label: "Market",     icon: "Market" },
+  { id: "compare",   label: "Compare",    icon: "Compare" },
+  { id: "portfolio", label: "Portfolio",  icon: "Portfolio" },
+  { id: "screener",  label: "Screener",   icon: "Screener" },
+  { id: "strategies",label: "Strategies", icon: "Strategies" },
+  { id: "news",      label: "News",       icon: "News" },
+  { id: "alerts",    label: "Alerts",     icon: "Alerts" },
+  { id: "learn",     label: "Learn",      icon: "Learn" },
 ];
 
 // Fallback loader for lazy pages
 function PageLoader() {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, minHeight: 200 }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, color: "rgba(148,163,184,.5)" }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid rgba(79,172,254,.15)", borderTop: "2px solid #4facfe", animation: "spin .8s linear infinite" }} />
-        <span style={{ fontSize: 12 }}>Loading page…</span>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, color: COLORS.text.muted }}>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: `2px solid ${COLORS.primary}20`, borderTop: `2px solid ${COLORS.primary}`, animation: "spin .8s linear infinite" }} />
+        <span style={{ fontSize: TYPOGRAPHY.sizes.xs }}>Loading page…</span>
       </div>
     </div>
   );
@@ -57,12 +59,17 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
 
       {/* ── TOP PAGE NAV ── */}
       <div style={{ display: "flex", gap: 4, flexShrink: 0, overflowX: "auto", paddingBottom: 2 }}>
-        {PAGES.map(p => (
-          <Pill key={p.id} active={page === p.id} onClick={() => setPage(p.id)}>
-            <span style={{ marginRight: 5, fontSize: 11, opacity: page === p.id ? 1 : 0.6 }}>{p.icon}</span>
-            {p.label}
-          </Pill>
-        ))}
+        {PAGES.map(p => {
+          const IconComp = Icons[p.icon];
+          return (
+            <Pill key={p.id} active={page === p.id} onClick={() => setPage(p.id)}>
+              <span style={{ marginRight: SPACING.sm, display: "flex", alignItems: "center", justifyContent: "center", opacity: page === p.id ? 1 : 0.6 }}>
+                <IconComp style={{ width: 16, height: 16 }} />
+              </span>
+              {p.label}
+            </Pill>
+          );
+        })}
       </div>
 
       {/* ── NON-MARKET PAGES ── */}
@@ -78,9 +85,9 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       {page === "market" && <>
 
       {/* Price hero */}
-      <Glass style={{ padding: "20px 24px", borderRadius: 20, flexShrink: 0 }}>
+      <Glass style={{ padding: "18px 22px", flexShrink: 0 }}>
         {error ? (
-          <div style={{ color: "#f87171", fontSize: 13, padding: "8px 0" }}>{error}</div>
+          <div style={{ color: COLORS.danger, fontSize: TYPOGRAPHY.sizes.base, padding: "8px 0" }}>{error}</div>
         ) : loading ? (
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <div className="skel" style={{ width: 120, height: 36 }} />
@@ -92,27 +99,27 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
         ) : data ? (
           <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap", animation: "fadeIn .4s ease" }}>
             <div>
-              <div style={{ fontFamily: "'DM Serif Display',serif", fontStyle: "italic", fontSize: 32, fontWeight: 400, color: "#f8fafc", lineHeight: 1 }}>{sym}</div>
-              <div style={{ fontSize: 11, color: "rgba(148,163,184,.5)", marginTop: 4, letterSpacing: ".04em" }}>{data.name}</div>
+              <div style={{ fontSize: TYPOGRAPHY.sizes["3xl"], fontWeight: TYPOGRAPHY.weights.bold, color: COLORS.text.primary, letterSpacing: "-.02em", lineHeight: 1, fontFamily: TYPOGRAPHY.families.heading }}>{sym}</div>
+              <div style={{ fontSize: TYPOGRAPHY.sizes.xs, color: COLORS.text.muted, marginTop: 3 }}>{data.name}</div>
             </div>
             <div>
-              <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 36, fontWeight: 400, color: "#f8fafc", lineHeight: 1 }}>
+              <div style={{ fontSize: TYPOGRAPHY.sizes["4xl"], fontWeight: TYPOGRAPHY.weights.semibold, color: COLORS.text.primary, letterSpacing: "-.02em", lineHeight: 1 }}>
                 <Counter to={price} prefix="$" />
               </div>
-              <div style={{ fontSize: 13, marginTop: 4, color: isUp ? "#4ade80" : "#f87171", display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ background: isUp ? "rgba(74,222,128,.12)" : "rgba(248,113,113,.12)", padding: "2px 8px", borderRadius: 6, fontWeight: 500 }}>
-                  {isUp ? "▲" : "▼"} ${f2(Math.abs(dayChg))} ({dayChgPct >= 0 ? "+" : ""}{dayChgPct?.toFixed(2)}%)
+              <div style={{ fontSize: TYPOGRAPHY.sizes.base, marginTop: 4, color: isUp ? COLORS.success : COLORS.danger, display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ background: isUp ? COLORS.accentMuted : "rgba(239,68,68,.1)", padding: "2px 7px", borderRadius: 4, fontWeight: TYPOGRAPHY.weights.medium }}>
+                  {isUp ? "+" : ""}{dayChgPct?.toFixed(2)}%
                 </span>
-                <span style={{ fontSize: 11, color: "rgba(148,163,184,.4)" }}>today</span>
+                <span style={{ fontSize: TYPOGRAPHY.sizes.xs, color: COLORS.text.muted }}>today</span>
               </div>
             </div>
-            <div style={{ marginLeft: "auto", display: "flex", gap: 28, flexWrap: "wrap" }}>
+            <div style={{ marginLeft: "auto", display: "flex", gap: 24, flexWrap: "wrap" }}>
               {[
                 { label: "Market Cap", value: fB(data.marketCap) },
                 { label: "P/E Ratio",  value: data.pe?.toFixed(1) ?? "—" },
                 { label: "Volume",     value: fV(data.volume) },
-                { label: "52W High",   value: `$${f2(data.w52h)}`, accent: "#4ade80" },
-                { label: "52W Low",    value: `$${f2(data.w52l)}`, accent: "#f87171" },
+                { label: "52W High",   value: `$${f2(data.w52h)}`, accent: COLORS.success },
+                { label: "52W Low",    value: `$${f2(data.w52l)}`, accent: COLORS.danger },
               ].map((s, i) => (
                 <div key={s.label} style={{ animation: `fadeUp .4s ${.06 + i * .04}s ease both` }}>
                   <Stat label={s.label} value={s.value} accent={s.accent} />
@@ -125,14 +132,14 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
 
       {/* Tabs */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 12, paddingBottom: SPACING.md, borderBottom: `1px solid ${COLORS.border.light}` }}>
           {[["chart", "Chart"], ["positions", "Positions"], ["log", "Trade Log"]].map(([id, label]) => (
             <Pill key={id} active={tab === id} onClick={() => setTab(id)}>{label}</Pill>
           ))}
-          <button onClick={onReload} style={{ marginLeft: "auto", padding: "5px 12px", borderRadius: 20, border: "1px solid rgba(255,255,255,.07)", background: "rgba(255,255,255,.02)", color: "rgba(148,163,184,.5)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all .2s" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.05)"; e.currentTarget.style.color = "#e2e8f0"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,.02)"; e.currentTarget.style.color = "rgba(148,163,184,.5)"; }}>
-            <span style={{ fontSize: 13 }}>↺</span> Refresh
+          <button onClick={onReload} style={{ marginLeft: "auto", padding: `${SPACING.sm}px ${SPACING.md}px`, borderRadius: 5, border: `1px solid ${COLORS.border.light}`, background: "transparent", color: COLORS.text.muted, fontSize: TYPOGRAPHY.sizes.xs, cursor: "pointer", display: "flex", alignItems: "center", gap: SPACING.sm, transition: "all .15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = COLORS.bg.cardHover; e.currentTarget.style.color = COLORS.text.secondary; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = COLORS.text.muted; }}>
+            ↺ Refresh
           </button>
         </div>
 
@@ -143,33 +150,31 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
               <Chart candles={data?.candles} />
             </Glass>
             <Glass style={{ padding: "16px 20px", flexShrink: 0, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ fontSize: 12, color: "rgba(148,163,184,.6)", display: "flex", gap: 20 }}>
-                <span>Position <strong style={{ color: "#e2e8f0", marginLeft: 6 }}>{curPos} shares</strong></span>
-                <span>Value <strong style={{ color: "#e2e8f0", marginLeft: 6 }}>${f2(curPos * (price || 0))}</strong></span>
+              <div style={{ fontSize: 12, color: "#52525b", display: "flex", gap: 20 }}>
+                <span>Position <strong style={{ color: "#a1a1aa", marginLeft: 6 }}>{curPos} shares</strong></span>
+                <span>Value <strong style={{ color: "#a1a1aa", marginLeft: 6 }}>${f2(curPos * (price || 0))}</strong></span>
               </div>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: "rgba(148,163,184,.4)" }}>Qty</span>
-                <div style={{ border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, background: "rgba(255,255,255,.04)", overflow: "hidden" }}>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "#3f3f46" }}>Qty</span>
+                <div style={{ border: "1px solid rgba(255,255,255,.08)", borderRadius: 5, background: "rgba(255,255,255,.04)", overflow: "hidden" }}>
                   <input type="number" value={qty} onChange={e => setQty(e.target.value)}
-                    style={{ width: 60, padding: "7px 12px", fontSize: 13, fontWeight: 500, textAlign: "center" }} />
+                    style={{ width: 56, padding: "6px 10px", fontSize: 13, fontWeight: 500, textAlign: "center" }} />
                 </div>
                 {[
-                  { label: "Buy",  color: "#4ade80", bg: "rgba(74,222,128,.12)",  border: "rgba(74,222,128,.3)",  action: () => buy(sym, parseInt(qty) || 0, price),  off: !price || (parseInt(qty) || 0) * price > cash },
-                  { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.12)", border: "rgba(248,113,113,.3)", action: () => sell(sym, parseInt(qty) || 0, price), off: (pos[sym] || 0) < (parseInt(qty) || 0) },
+                  { label: "Buy",  color: "#22c55e", bg: "rgba(34,197,94,.1)",   border: "rgba(34,197,94,.25)",  action: () => buy(sym, parseInt(qty) || 0, price),  off: !price || (parseInt(qty) || 0) * price > cash },
+                  { label: "Sell", color: "#ef4444", bg: "rgba(239,68,68,.1)",   border: "rgba(239,68,68,.25)",  action: () => sell(sym, parseInt(qty) || 0, price), off: (pos[sym] || 0) < (parseInt(qty) || 0) },
                 ].map(b => (
                   <button key={b.label} onClick={b.action} disabled={b.off} style={{
-                    padding: "7px 24px", borderRadius: 10,
-                    border: `1px solid ${b.off ? "rgba(255,255,255,.07)" : b.border}`,
-                    background: b.off ? "rgba(255,255,255,.02)" : b.bg,
-                    color: b.off ? "rgba(148,163,184,.25)" : b.color,
-                    fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all .2s", letterSpacing: ".02em",
-                  }}
-                    onMouseEnter={e => { if (!b.off) e.currentTarget.style.boxShadow = `0 0 16px ${b.bg}`; }}
-                    onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}>
+                    padding: "6px 20px", borderRadius: 5,
+                    border: `1px solid ${b.off ? "rgba(255,255,255,.06)" : b.border}`,
+                    background: b.off ? "transparent" : b.bg,
+                    color: b.off ? "#3f3f46" : b.color,
+                    fontSize: 12, fontWeight: 600, cursor: b.off ? "not-allowed" : "pointer", transition: "all .15s",
+                  }}>
                     {b.label}
                   </button>
                 ))}
-                <span style={{ fontSize: 11, color: "rgba(148,163,184,.3)" }}>≈ ${f2((parseInt(qty) || 0) * (price || 0))}</span>
+                <span style={{ fontSize: 11, color: "#3f3f46" }}>≈ ${f2((parseInt(qty) || 0) * (price || 0))}</span>
               </div>
             </Glass>
           </div>
@@ -194,8 +199,8 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
                     <Glass key={s} style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, animation: `fadeUp .3s ${i * .05}s ease both`, cursor: "pointer", transition: "border-color .2s" }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.14)"}
                       onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.07)"}>
-                      <div style={{ width: 40, height: 40, borderRadius: 12, background: up ? "rgba(74,222,128,.1)" : "rgba(248,113,113,.1)", border: `1px solid ${up ? "rgba(74,222,128,.2)" : "rgba(248,113,113,.2)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontFamily: "'DM Serif Display',serif", fontSize: 14, fontStyle: "italic", color: up ? "#4ade80" : "#f87171" }}>{s[0]}</span>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: up ? "rgba(34,197,94,.08)" : "rgba(239,68,68,.08)", border: `1px solid ${up ? "rgba(34,197,94,.18)" : "rgba(239,68,68,.18)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: up ? "#22c55e" : "#ef4444" }}>{s[0]}</span>
                       </div>
                       <div>
                         <div style={{ fontSize: 15, fontWeight: 600, color: "#f8fafc" }}>{s}</div>

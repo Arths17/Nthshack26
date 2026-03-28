@@ -65,12 +65,6 @@ Recent closes: ${recent}
 ═══ PORTFOLIO ═══
 Cash: $${f2(cash)} | ${sym} position: ${userShares} shares ($${f2(userShares * price)})
 
-═══ ALL WATCHLIST STOCKS (for comparisons) ═══
-${Object.entries(watch).map(([s, d]) => {
-  const chg = d.price && d.prevClose ? ((d.price - d.prevClose) / d.prevClose * 100).toFixed(2) : "N/A";
-  return `${s}: $${f2(d.price)} (${chg}% today) | 52w: $${f2(d.w52l)}–$${f2(d.w52h)} | MCap: ${fB(d.marketCap)} | P/E: ${d.pe?.toFixed(1) ?? "N/A"}`;
-}).join("\n")}
-
 ═══ RULES ═══
 - Your audience is BEGINNERS who do not know finance. Write like you're texting a smart friend, not writing a report.
 - NEVER use jargon without immediately explaining it in plain English in parentheses. Example: "The EMA (a line that smooths out price changes to show the trend)"
@@ -111,7 +105,7 @@ ${Object.entries(watch).map(([s, d]) => {
         }
 
         // 2. Get the AI commentary
-        const history = msgsRef.current.slice(-6).map(m => ({ role: m.role, content: m.content }));
+        const history = msgsRef.current.slice(-4).map(m => ({ role: m.role, content: m.content }));
         const backtestContext = backtestResult
           ? `\n\nA backtest was run on this strategy using ${backtestResult.bars} daily candles of ${sym}:
 Total Return: ${backtestResult.totalReturn}% | Sharpe: ${backtestResult.sharpe} | Win Rate: ${backtestResult.winRate}% | Max Drawdown: ${backtestResult.maxDrawdown}% | Trades: ${backtestResult.totalTrades}
@@ -133,7 +127,7 @@ Comment on these results and whether to use this strategy on ${sym} given curren
         }]);
       } else {
         // Normal analysis / Q&A
-        const history = msgsRef.current.slice(-8).map(m => ({ role: m.role, content: m.content }));
+        const history = msgsRef.current.slice(-4).map(m => ({ role: m.role, content: m.content }));
         const reply = await askClaude(
           [...history, { role: "user", content: txt }],
           buildSystemPrompt(),

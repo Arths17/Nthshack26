@@ -221,9 +221,9 @@ async def chat(req: ChatRequest):
     if req.current_ticker:
         mentioned_tickers.add(req.current_ticker)
     
-    # Fetch live data for all mentioned tickers
+    # Fetch live data for all mentioned tickers (async-friendly, but limited)
     stock_data_list = []
-    for ticker in sorted(mentioned_tickers)[:5]:  # Limit to 5 stocks to avoid API spam
+    for ticker in sorted(mentioned_tickers)[:3]:  # Reduced from 5 to 3 for speed
         stock_data = fetch_stock_data(ticker)
         if stock_data:
             stock_data_list.append(stock_data)
@@ -245,7 +245,7 @@ async def chat(req: ChatRequest):
 
     config = types.GenerateContentConfig(
         system_instruction=enhanced_system or None,
-        max_output_tokens=2048,
+        max_output_tokens=1024,  # Reduced from 2048 for faster responses
     )
 
     try:

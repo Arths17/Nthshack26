@@ -70,7 +70,7 @@ export default function AlertsPage({ watch }) {
   const currentPrice = watch[sym]?.price;
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
 
       {/* Toast notification */}
       {toast && (

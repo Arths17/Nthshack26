@@ -11,6 +11,11 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [msgs, busy]);
 
+  // Expose focus method for keyboard shortcuts
+  useEffect(() => {
+    window.quantaChatFocus = () => inputRef.current?.focus();
+  }, []);
+
   const suggestions = [
     `Should I buy ${sym} right now?`,
     `Why is ${sym} going up or down today?`,
@@ -87,19 +92,33 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
       <div style={{ padding: "12px", borderTop: "1px solid rgba(255,255,255,.05)", flexShrink: 0 }}>
         <Glass style={{ borderRadius: 14, padding: "10px 14px", border: "1px solid rgba(255,255,255,.08)", transition: "border-color .2s" }}>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
-            <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+            <textarea 
+              ref={inputRef} 
+              value={input} 
+              onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder={`Ask about ${sym}…`} rows={1}
-              style={{ flex: 1, fontSize: 12, lineHeight: "18px", color: "#e2e8f0", caretColor: "#4facfe" }} />
-            <button onClick={() => send()} disabled={busy || !input.trim()} style={{
-              width: 30, height: 30, borderRadius: 10, flexShrink: 0,
-              background: input.trim() && !busy ? "linear-gradient(135deg,#4facfe,#a78bfa)" : "rgba(255,255,255,.06)",
-              border: "none", color: input.trim() && !busy ? "#fff" : "rgba(148,163,184,.3)",
-              cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all .2s", boxShadow: input.trim() && !busy ? "0 0 16px rgba(79,172,254,.3)" : "none",
-            }}>↑</button>
+              placeholder={`Ask about ${sym}…`} 
+              rows={1}
+              aria-label={`Chat input for ${sym}`}
+              aria-describedby="chat-help"
+              title="Type your question (Shift+Enter to send)"
+              style={{ flex: 1, fontSize: 12, lineHeight: "18px", color: "#e2e8f0", caretColor: "#4facfe" }} 
+            />
+            <button 
+              onClick={() => send()} 
+              disabled={busy || !input.trim()} 
+              aria-label="Send message"
+              title="Send (Shift+Enter)"
+              style={{
+                width: 30, height: 30, borderRadius: 10, flexShrink: 0,
+                background: input.trim() && !busy ? "linear-gradient(135deg,#4facfe,#a78bfa)" : "rgba(255,255,255,.06)",
+                border: "none", color: input.trim() && !busy ? "#fff" : "rgba(148,163,184,.3)",
+                cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all .2s", boxShadow: input.trim() && !busy ? "0 0 16px rgba(79,172,254,.3)" : "none",
+              }}>
+              ↑
+            </button>
           </div>
-          <div style={{ fontSize: 10, color: "rgba(148,163,184,.25)", marginTop: 6, letterSpacing: ".04em" }}>⏎ to send · ⇧⏎ newline</div>
         </Glass>
       </div>
     </div>

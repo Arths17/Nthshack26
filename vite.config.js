@@ -13,4 +13,14 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor libraries into separate chunk
+          react: ["react", "react-dom"],
+        },
+      },
+    },
+  },
 });

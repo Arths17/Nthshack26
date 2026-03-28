@@ -7,8 +7,7 @@ import os
 import re
 import json
 from dotenv import load_dotenv
-import google.genai as genai
-from google.genai import types
+import google.generativeai as genai
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -21,7 +20,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 if not GEMINI_API_KEY:
     print("⚠️  GEMINI_API_KEY not set — run: export GEMINI_API_KEY='your-key'")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Configure Gemini API with key
+genai.configure(api_key=GEMINI_API_KEY)
 
 # Popular stocks database
 POPULAR_STOCKS = {
@@ -305,22 +305,28 @@ Examples:
 - "buy when RSI drops below 30, sell when RSI goes above 70" → entry type "rsi_below" threshold=30, exit type "rsi_above" threshold=70
 - "buy when price crosses above SMA50, sell with 5% stop loss" → entry type "price_above_sma" period=50, exit type "stop_loss", stopLoss=0.05"""
 
-    contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
-    config = types.GenerateContentConfig(max_output_tokens=512)
-
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=contents, config=config
-        )
-        import json, re
-        raw = response.text.strip()
-        # strip markdown fences if Gemini added them anyway
-        raw = re.sub(r"^```[a-z]*\n?", "", raw)
-        raw = re.sub(r"\n?```$", "", raw)
-        parsed = json.loads(raw)
-        return parsed
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Strategy parse failed: {e}")
+    MODELS = ["gemini-2.5-flash", "gemini-1.5-flash"]
+    last_err = None
+    for model_name in MODELS:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(max_output_tokens=512),
+            )
+            import json, re
+            raw = response.text.strip()
+            raw = re.sub(r"^```[a-z]*\n?", "", raw)
+            raw = re.sub(r"\n?```$", "", raw)
+            parsed = json.loads(raw)
+            return parsed
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Strategy parse failed: invalid JSON from model")
+        except Exception as e:
+            last_err = e
+            print(f"Strategy model {model_name} failed: {e}")
+            continue
+    raise HTTPException(status_code=500, detail=f"Strategy parse failed: all models unavailable. Last error: {str(last_err)[:100]}")
 
 
 @app.post("/api/chat")
@@ -328,29 +334,29 @@ async def chat(req: ChatRequest):
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured on server")
 
-    # System prompt already contains all live data from the frontend — no need to re-fetch
     enhanced_system = req.system or ""
 
-    # Convert to Gemini Content format (role "assistant" → "model")
-    contents = [
-        types.Content(
-            role="model" if m["role"] == "assistant" else "user",
-            parts=[types.Part(text=m["content"])]
-        )
-        for m in req.messages
-    ]
-
-    config = types.GenerateContentConfig(
-        system_instruction=enhanced_system or None,
-        max_output_tokens=1536,
+    MODELS = ["gemini-2.5-flash", "gemini-1.5-flash"]
+    last_err = None
+    for model_name in MODELS:
+        try:
+            model = genai.GenerativeModel(
+                model_name,
+                system_instruction=enhanced_system if enhanced_system else None,
+            )
+            
+            # Build message history
+            response = model.generate_content(
+                [{"role": m["role"] if m["role"] == "user" else "model", "parts": [m["content"]]} for m in req.messages],
+                generation_config=genai.types.GenerationConfig(max_output_tokens=1536),
+            )
+            return {"text": response.text}
+        except Exception as e:
+            last_err = e
+            print(f"Model {model_name} failed: {e}")
+            continue
+    
+    raise HTTPException(
+        status_code=500, 
+        detail=f"All models failed. Last error: {str(last_err)[:150]}"
     )
-
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=contents,
-            config=config,
-        )
-        return {"text": response.text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

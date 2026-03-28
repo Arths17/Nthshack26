@@ -167,9 +167,16 @@ Comment on these results and whether to use this strategy on ${sym} given curren
       }
     } catch (e) {
       console.error("Chat error:", e);
-      const errorMsg = e.message?.includes("fetch") 
-        ? "Connection error — make sure the backend server is running on port 8000."
-        : "Failed to get response from AI. Try again in a moment.";
+      let errorMsg;
+      if (e.message?.includes("fetch") || e.message?.includes("Failed to fetch") || e.message?.includes("NetworkError")) {
+        errorMsg = "Connection error — make sure the backend server is running on port 8000.";
+      } else if (e.message?.includes("GEMINI_API_KEY") || e.message?.includes("API_KEY")) {
+        errorMsg = "API key not configured. Set GEMINI_API_KEY in your .env file and restart the server.";
+      } else if (e.message) {
+        errorMsg = `AI error: ${e.message}`;
+      } else {
+        errorMsg = "Failed to get response from AI. Try again in a moment.";
+      }
       setMsgs(m => [...m, { role: "assistant", content: errorMsg }]);
     }
 

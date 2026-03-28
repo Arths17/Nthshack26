@@ -45,7 +45,7 @@ export default function PortfolioPage({ pos, log, cash, watch }) {
   const buys  = log.filter(t => t.type === "BUY");
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
 
       {/* Summary row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>

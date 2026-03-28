@@ -33,7 +33,7 @@ export default function ScreenerPage({ watch }) {
   );
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
 
       {/* Sort controls */}
       <Glass style={{ padding: "12px 16px", borderRadius: 14, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

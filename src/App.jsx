@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense, useRef } from "react";
 import { useWatchlist }  from "./hooks/useWatchlist";
 import { useStockData }  from "./hooks/useStockData";
 import { usePortfolio }  from "./hooks/usePortfolio";
 import { useChat }       from "./hooks/useChat";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { UI }            from "./utils/constants";
 import Ticker      from "./components/Ticker";
@@ -10,7 +11,14 @@ import NavBar      from "./components/NavBar";
 import ChatPanel   from "./components/ChatPanel";
 import MainContent from "./components/MainContent";
 import LandingPage from "./pages/LandingPage";
-import Onboarding  from "./components/Onboarding";
+// Lazy load less critical pages
+const LoginPage   = lazy(() => import("./pages/LoginPage"));
+const Onboarding  = lazy(() => import("./components/Onboarding"));
+
+const SESSION_KEY = "quanta:session";
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
+}
 
 const Orbs = () => (
   <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
@@ -21,8 +29,9 @@ const Orbs = () => (
 );
 
 export default function App() {
+  const [user, setUser]             = useState(() => getSession());
   const [sym, setSym]               = useState("NVDA");
-  const [showLanding, setShowLanding]       = useState(true);
+  const [showLanding, setShowLanding]       = useState(() => !getSession());
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobile, setIsMobile]     = useState(window.innerWidth < UI.BREAKPOINT_MOBILE);
   const [mobilTab, setMobilTab]     = useState("market");
@@ -38,14 +47,40 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Keyboard shortcuts: j/k for navigation, space for chat focus
+  useKeyboardShortcuts(
+    sym,
+    watch?.length > 0 ? Object.keys(watch).map(k => ({ symbol: k })) : [],
+    setSym,
+    () => { if (inputRef) { inputRef.current?.focus(); } },
+    () => window.quantaChatFocus?.()
+  );
+
+  const inputRef = useRef(null);
+
   const portVal = useMemo(
     () => cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0),
     [cash, pos, watch]
   );
   const pnl = useMemo(() => portVal - 100_000, [portVal]);
 
+  const [showLogin, setShowLogin] = useState(false);
+
   function handleEnter() {
+    if (user) {
+      // Already logged in — go straight to terminal
+      setShowLanding(false);
+      if (!localStorage.getItem("quanta:onboarded")) setShowOnboarding(true);
+    } else {
+      // Need to log in first
+      setShowLogin(true);
+    }
+  }
+
+  function handleLogin(u) {
+    setUser(u);
     setShowLanding(false);
+    setShowLogin(false);
     if (!localStorage.getItem("quanta:onboarded")) setShowOnboarding(true);
   }
 
@@ -55,7 +90,14 @@ export default function App() {
   }
 
   if (showLanding) {
-    return <LandingPage onEnter={handleEnter} watch={watch} loadingWatch={loadW} />;
+    if (showLogin) {
+      return (
+        <Suspense fallback={<div style={{ height: "100dvh", background: "#04070f" }} />}>
+          <LoginPage onLogin={handleLogin} onBack={() => setShowLogin(false)} />
+        </Suspense>
+      );
+    }
+    return <LandingPage onEnter={handleEnter} watch={watch} user={user} />;
   }
 
   if (!isHydrated) {
@@ -68,19 +110,32 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+      <div 
+        style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}
+        role="application"
+        aria-label="Quanta AI Trading Terminal">
         <Orbs />
 
-        {showOnboarding && <Onboarding onDone={handleOnboardingDone} />}
+        {showOnboarding && (
+          <Suspense fallback={null}>
+            <Onboarding onDone={handleOnboardingDone} />
+          </Suspense>
+        )}
 
         <Ticker watch={watch} loading={loadW} onSelect={setSym} />
         <NavBar sym={sym} watch={watch} pnl={pnl} cash={cash} onSelect={setSym} />
 
         {/* DESKTOP */}
         {!isMobile && (
-          <div style={{ position: "relative", zIndex: 5, flex: 1, display: "grid", gridTemplateColumns: `${UI.SIDEBAR_WIDTH}px 1fr`, minHeight: 0, overflow: "hidden" }}>
-            <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
-            <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} />
+          <div 
+            style={{ position: "relative", zIndex: 5, flex: 1, display: "grid", gridTemplateColumns: `${UI.SIDEBAR_WIDTH}px 1fr`, minHeight: 0, overflow: "hidden" }}
+            role="main">
+            <aside role="complementary" aria-label="AI Assistant">
+              <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
+            </aside>
+            <section role="region" aria-label="Market Data and Trading">
+              <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} />
+            </section>
           </div>
         )}
 

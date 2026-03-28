@@ -1,7 +1,8 @@
 import { useState } from "react";
 import Glass from "../components/Glass";
 import Spark from "../components/Spark";
-import { f2, fB, fV, SYMBOLS } from "../utils/formatters";
+import { f2, fB, fV } from "../utils/formatters";
+import { SCREENER_SYMBOLS } from "../utils/constants";
 
 const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.5)";
 
@@ -27,7 +28,7 @@ export default function ScreenerPage({ watch }) {
   const [asc, setAsc] = useState(false);
 
   const sort = SORTS.find(s => s.key === sortKey);
-  const stocks = SYMBOLS.map(s => watch[s]).filter(Boolean).sort((a, b) =>
+  const stocks = SCREENER_SYMBOLS.map(s => watch[s]).filter(Boolean).sort((a, b) =>
     asc ? sort.fn(a) - sort.fn(b) : sort.fn(b) - sort.fn(a)
   );
 

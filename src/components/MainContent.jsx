@@ -9,21 +9,23 @@ import { f2, fB, fV } from "../utils/formatters";
 import ComparePage   from "../pages/ComparePage";
 import PortfolioPage from "../pages/PortfolioPage";
 import ScreenerPage  from "../pages/ScreenerPage";
-import LearnPage     from "../pages/LearnPage";
-import NewsPage      from "../pages/NewsPage";
-import AlertsPage    from "../pages/AlertsPage";
+import LearnPage        from "../pages/LearnPage";
+import NewsPage         from "../pages/NewsPage";
+import AlertsPage       from "../pages/AlertsPage";
+import StrategyLibrary  from "../pages/StrategyLibrary";
 
 const PAGES = [
-  { id: "market",    label: "Market",    icon: "◈" },
-  { id: "compare",   label: "Compare",   icon: "⊞" },
-  { id: "portfolio", label: "Portfolio", icon: "◎" },
-  { id: "screener",  label: "Screener",  icon: "▤" },
-  { id: "news",      label: "News",      icon: "✦" },
-  { id: "alerts",    label: "Alerts",    icon: "◉" },
-  { id: "learn",     label: "Learn",     icon: "▣" },
+  { id: "market",    label: "Market",     icon: "◈" },
+  { id: "compare",   label: "Compare",    icon: "⊞" },
+  { id: "portfolio", label: "Portfolio",  icon: "◎" },
+  { id: "screener",  label: "Screener",   icon: "▤" },
+  { id: "strategies",label: "Strategies", icon: "◐" },
+  { id: "news",      label: "News",       icon: "✦" },
+  { id: "alerts",    label: "Alerts",     icon: "◉" },
+  { id: "learn",     label: "Learn",      icon: "▣" },
 ];
 
-export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload }) {
+export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload, send }) {
   const [page, setPage] = useState("market");
   const [tab,  setTab]  = useState("chart");
   const [qty,  setQty]  = useState("10");
@@ -54,6 +56,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       {page === "compare"   && <ComparePage   watch={watch} />}
       {page === "portfolio" && <PortfolioPage pos={pos} log={log} cash={cash} watch={watch} />}
       {page === "screener"  && <ScreenerPage  watch={watch} />}
+      {page === "strategies" && <StrategyLibrary onSendToChat={send} />}
       {page === "news"      && <NewsPage      sym={sym} />}
       {page === "alerts"    && <AlertsPage    watch={watch} />}
       {page === "learn"     && <LearnPage />}

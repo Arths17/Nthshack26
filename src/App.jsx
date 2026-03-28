@@ -80,7 +80,7 @@ export default function App() {
         {!isMobile && (
           <div style={{ position: "relative", zIndex: 5, flex: 1, display: "grid", gridTemplateColumns: `${UI.SIDEBAR_WIDTH}px 1fr`, minHeight: 0, overflow: "hidden" }}>
             <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
-            <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} />
+            <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} />
           </div>
         )}
 
@@ -89,7 +89,7 @@ export default function App() {
           <>
             <div style={{ position: "relative", zIndex: 5, flex: 1, minHeight: 0, overflow: "hidden" }}>
               {mobilTab === "market"
-                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} />
+                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} />
                 : <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
               }
             </div>

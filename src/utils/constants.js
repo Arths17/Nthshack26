@@ -30,7 +30,28 @@ export const UI = {
   BREAKPOINT_TABLET: 1024,
 };
 
+// Nav bar + ticker symbols (fast-load, always visible)
 export const WATCHLIST_SYMBOLS = ["NVDA", "AAPL", "TSLA", "MSFT", "META", "AMZN", "GOOGL", "SPY"];
+
+// Expanded screener symbols — 40 stocks across 8 sectors
+export const SCREENER_SYMBOLS = [
+  // Tech
+  "NVDA", "AAPL", "MSFT", "GOOGL", "META", "AMZN", "TSLA", "INTC", "AMD", "CRM",
+  // Finance
+  "JPM", "BAC", "GS", "V", "MA",
+  // Healthcare
+  "JNJ", "UNH", "PFE", "ABBV", "MRK",
+  // Energy
+  "XOM", "CVX", "OXY", "SLB",
+  // Consumer
+  "WMT", "COST", "HD", "MCD", "NKE",
+  // ETFs / Indices
+  "SPY", "QQQ", "DIA", "IWM",
+  // Industrials
+  "CAT", "BA", "GE", "LMT",
+  // Semis / Chips
+  "QCOM", "AVGO", "MU", "TXN",
+];
 
 export const STORAGE_KEYS = {
   PORTFOLIO_CASH: "quanta:cash",

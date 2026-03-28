@@ -1,4 +1,4 @@
-import { API, CACHE } from "../utils/constants";
+import { CACHE } from "../utils/constants";
 
 const cache = new Map(); // symbol → { data, expiresAt }
 
@@ -20,7 +20,7 @@ export const fetchYF = async (symbol) => {
   }
 
   try {
-    const response = await fetch(`${API.BACKEND_URL}/api/stock/${symbol.toUpperCase()}`, {
+    const response = await fetch(`/api/stock/${symbol.toUpperCase()}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });

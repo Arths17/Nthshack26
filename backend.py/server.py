@@ -216,30 +216,8 @@ async def chat(req: ChatRequest):
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured on server")
 
-    # Extract stock tickers from the latest user message
-    latest_user_message = None
-    for msg in reversed(req.messages):
-        if msg.get("role") == "user":
-            latest_user_message = msg.get("content", "")
-            break
-    
-    # Get tickers from the message and include current_ticker
-    mentioned_tickers = extract_tickers(latest_user_message or "")
-    if req.current_ticker:
-        mentioned_tickers.add(req.current_ticker)
-    
-    # Fetch live data for all mentioned tickers (async-friendly, but limited)
-    stock_data_list = []
-    for ticker in sorted(mentioned_tickers)[:3]:  # Reduced from 5 to 3 for speed
-        stock_data = fetch_stock_data(ticker)
-        if stock_data:
-            stock_data_list.append(stock_data)
-    
-    # Build enhanced system prompt with live data
-    live_data_context = format_stock_data(stock_data_list)
+    # System prompt already contains all live data from the frontend — no need to re-fetch
     enhanced_system = req.system or ""
-    if live_data_context:
-        enhanced_system += f"\n\n{live_data_context}"
 
     # Convert to Gemini Content format (role "assistant" → "model")
     contents = [
@@ -252,7 +230,7 @@ async def chat(req: ChatRequest):
 
     config = types.GenerateContentConfig(
         system_instruction=enhanced_system or None,
-        max_output_tokens=1024,  # Reduced from 2048 for faster responses
+        max_output_tokens=1536,
     )
 
     try:

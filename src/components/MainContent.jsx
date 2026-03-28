@@ -5,7 +5,6 @@ import Spark from "./Spark";
 import Pill from "./Pill";
 import Stat from "./Stat";
 import Counter from "./Counter";
-import Ticker from "./Ticker";
 import { f2, fB, fV } from "../utils/formatters";
 // Lazy load pages for code splitting
 const ComparePage   = lazy(() => import("../pages/ComparePage"));
@@ -126,9 +125,6 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
 
       {/* ── MARKET PAGE ── */}
       {page === "market" && <>
-
-      {/* Stock ticker list */}
-      <Ticker watch={watch} loading={loading} onSelect={onSelectSymbol} />
 
       {/* Price hero */}
       <Glass style={{ padding: "18px 22px", flexShrink: 0 }}>

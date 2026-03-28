@@ -112,6 +112,10 @@ logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI(title="Quanta Proxy")
 
+@app.get("/")
+async def health_check():
+    return {"status": "ok"}
+
 @app.middleware("http")
 async def catch_exceptions_middleware(request: Request, call_next):
     try:
@@ -122,6 +126,8 @@ async def catch_exceptions_middleware(request: Request, call_next):
             status_code=500,
             content={"detail": "Internal server error. Please try again later."}
         )
+
+_EXTRA_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
@@ -145,6 +151,7 @@ app.add_middleware(
         "http://localhost:5188",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        *_EXTRA_ORIGINS,
     ],
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],

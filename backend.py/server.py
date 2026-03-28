@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import yfinance as yf
 import pandas as pd
+from news_scraper import scraper
 
 load_dotenv()
 
@@ -378,3 +379,56 @@ async def chat(req: ChatRequest):
         status_code=500, 
         detail=f"All models failed. Last error: {str(last_err)[:150]}"
     )
+
+# News endpoints
+@app.get("/api/news/stock/{symbol}")
+async def get_stock_news(symbol: str):
+    """Fetch news for a specific stock"""
+    try:
+        symbol = symbol.upper()
+        articles = scraper.fetch_stock_news(symbol)
+        
+        # Add sentiment analysis
+        for article in articles:
+            article['sentiment'] = scraper.analyze_sentiment(
+                article['title'],
+                article['description']
+            )
+        
+        return {"articles": articles, "symbol": symbol}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/news/market")
+async def get_market_news():
+    """Fetch general market news"""
+    try:
+        articles = scraper.fetch_market_news()
+        
+        # Add sentiment analysis
+        for article in articles:
+            article['sentiment'] = scraper.analyze_sentiment(
+                article['title'],
+                article['description']
+            )
+        
+        return {"articles": articles}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/news/trending")
+async def get_trending_news():
+    """Fetch trending news (market + top stocks)"""
+    try:
+        market_news = scraper.fetch_market_news()[:10]
+        
+        # Add sentiment analysis
+        for article in market_news:
+            article['sentiment'] = scraper.analyze_sentiment(
+                article['title'],
+                article['description']
+            )
+        
+        return {"articles": market_news, "type": "trending"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -67,7 +67,7 @@ export default function NewsPage({ sym }) {
   const TABS = [sym, "AAPL", "MSFT", "TSLA", "SPY"].filter((v, i, a) => a.indexOf(v) === i);
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
 
       {/* Symbol tabs */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0 }}>

@@ -1,8 +1,9 @@
+import { useState, useRef } from "react";
 import Glass from "../components/Glass";
 import Spark from "../components/Spark";
 import { f2, fB, fV, SYMBOLS } from "../utils/formatters";
 
-const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.5)";
+const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.5)", accent = "#4facfe";
 
 function bar(pct, color) {
   return (
@@ -13,24 +14,102 @@ function bar(pct, color) {
 }
 
 export default function ComparePage({ watch }) {
-  const stocks = SYMBOLS.map(s => watch[s]).filter(Boolean);
+  const allSymbols = SYMBOLS.filter(s => watch[s]);
+  const [selected, setSelected] = useState(new Set(allSymbols));
+  const [inputVal, setInputVal] = useState("");
+  const [dropOpen, setDropOpen] = useState(false);
+  const inputRef = useRef(null);
+
+  const query = inputVal.trim().toUpperCase();
+  const suggestions = allSymbols.filter(s => !selected.has(s) && s.startsWith(query));
+
+  function toggle(sym) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(sym)) { if (next.size > 1) next.delete(sym); }
+      else next.add(sym);
+      return next;
+    });
+  }
+
+  function addSymbol(sym) {
+    setSelected(prev => new Set([...prev, sym]));
+    setInputVal("");
+    setDropOpen(false);
+    inputRef.current?.focus();
+  }
+
+  const stocks = SYMBOLS.map(s => watch[s]).filter(s => s && selected.has(s.symbol));
   if (!stocks.length) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, color: muted, fontSize: 13 }}>
       Loading market data…
     </div>
   );
 
-  const maxMcap = Math.max(...stocks.map(s => s.marketCap || 0));
   const minPct  = Math.min(...stocks.map(s => s.price && s.prevClose ? (s.price - s.prevClose) / s.prevClose * 100 : 0));
   const maxPct  = Math.max(...stocks.map(s => s.price && s.prevClose ? (s.price - s.prevClose) / s.prevClose * 100 : 0));
   const range   = maxPct - minPct || 1;
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Company selector */}
+      <Glass style={{ padding: "12px 16px", borderRadius: 16 }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: muted, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>Compare Companies</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          {allSymbols.map(sym => {
+            const on = selected.has(sym);
+            return (
+              <button key={sym} onClick={() => toggle(sym)} style={{
+                padding: "5px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                border: `1px solid ${on ? accent : "rgba(255,255,255,.1)"}`,
+                background: on ? "rgba(79,172,254,.12)" : "rgba(255,255,255,.03)",
+                color: on ? accent : muted,
+                transition: "all .15s",
+              }}>
+                {sym}
+              </button>
+            );
+          })}
+          <div style={{ position: "relative", marginLeft: "auto" }}>
+            <input
+              ref={inputRef}
+              value={inputVal}
+              onChange={e => { setInputVal(e.target.value.toUpperCase()); setDropOpen(true); }}
+              onFocus={() => setDropOpen(true)}
+              onBlur={() => setTimeout(() => setDropOpen(false), 150)}
+              placeholder="Add symbol…"
+              style={{
+                background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)",
+                borderRadius: 8, padding: "5px 12px", fontSize: 11, color: "#e2e8f0",
+                outline: "none", width: 110,
+              }}
+            />
+            {dropOpen && suggestions.length > 0 && (
+              <div style={{
+                position: "absolute", top: "calc(100% + 4px)", right: 0, background: "#0d1424",
+                border: "1px solid rgba(255,255,255,.1)", borderRadius: 8, overflow: "hidden", zIndex: 50, minWidth: 110,
+              }}>
+                {suggestions.map(sym => (
+                  <div key={sym} onMouseDown={() => addSymbol(sym)} style={{
+                    padding: "7px 12px", fontSize: 11, fontWeight: 600, color: "#e2e8f0",
+                    cursor: "pointer", transition: "background .1s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(79,172,254,.1)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    {sym}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </Glass>
 
       {/* Cards row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-        {stocks.map(d => {
+      <div style={{ overflowX: "auto", paddingBottom: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, minWidth: "min-content" }}>
+          {stocks.map(d => {
           const chgPct = d.price && d.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : null;
           const up = chgPct >= 0;
           return (
@@ -57,6 +136,7 @@ export default function ComparePage({ watch }) {
             </Glass>
           );
         })}
+        </div>
       </div>
 
       {/* Today's performance bar chart */}

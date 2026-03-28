@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import Glass from "./Glass";
 import Chart from "./Chart";
 import Spark from "./Spark";
@@ -6,13 +6,14 @@ import Pill from "./Pill";
 import Stat from "./Stat";
 import Counter from "./Counter";
 import { f2, fB, fV } from "../utils/formatters";
-import ComparePage   from "../pages/ComparePage";
-import PortfolioPage from "../pages/PortfolioPage";
-import ScreenerPage  from "../pages/ScreenerPage";
-import LearnPage        from "../pages/LearnPage";
-import NewsPage         from "../pages/NewsPage";
-import AlertsPage       from "../pages/AlertsPage";
-import StrategyLibrary  from "../pages/StrategyLibrary";
+// Lazy load pages for code splitting
+const ComparePage   = lazy(() => import("../pages/ComparePage"));
+const PortfolioPage = lazy(() => import("../pages/PortfolioPage"));
+const ScreenerPage  = lazy(() => import("../pages/ScreenerPage"));
+const LearnPage     = lazy(() => import("../pages/LearnPage"));
+const NewsPage      = lazy(() => import("../pages/NewsPage"));
+const AlertsPage    = lazy(() => import("../pages/AlertsPage"));
+const StrategyLibrary = lazy(() => import("../pages/StrategyLibrary"));
 
 const PAGES = [
   { id: "market",    label: "Market",     icon: "◈" },
@@ -24,6 +25,18 @@ const PAGES = [
   { id: "alerts",    label: "Alerts",     icon: "◉" },
   { id: "learn",     label: "Learn",      icon: "▣" },
 ];
+
+// Fallback loader for lazy pages
+function PageLoader() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, minHeight: 200 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, color: "rgba(148,163,184,.5)" }}>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid rgba(79,172,254,.15)", borderTop: "2px solid #4facfe", animation: "spin .8s linear infinite" }} />
+        <span style={{ fontSize: 12 }}>Loading page…</span>
+      </div>
+    </div>
+  );
+}
 
 export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload, send }) {
   const [page, setPage] = useState("market");
@@ -40,7 +53,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
   const pnl = cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0) - 100_000;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
 
       {/* ── TOP PAGE NAV ── */}
       <div style={{ display: "flex", gap: 4, flexShrink: 0, overflowX: "auto", paddingBottom: 2 }}>
@@ -53,13 +66,13 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       </div>
 
       {/* ── NON-MARKET PAGES ── */}
-      {page === "compare"   && <ComparePage   watch={watch} />}
-      {page === "portfolio" && <PortfolioPage pos={pos} log={log} cash={cash} watch={watch} />}
-      {page === "screener"  && <ScreenerPage  watch={watch} />}
-      {page === "strategies" && <StrategyLibrary onSendToChat={send} />}
-      {page === "news"      && <NewsPage      sym={sym} />}
-      {page === "alerts"    && <AlertsPage    watch={watch} />}
-      {page === "learn"     && <LearnPage />}
+      {page === "compare"   && <Suspense fallback={<PageLoader />}><ComparePage   watch={watch} /></Suspense>}
+      {page === "portfolio" && <Suspense fallback={<PageLoader />}><PortfolioPage pos={pos} log={log} cash={cash} watch={watch} /></Suspense>}
+      {page === "screener"  && <Suspense fallback={<PageLoader />}><ScreenerPage  watch={watch} /></Suspense>}
+      {page === "strategies" && <Suspense fallback={<PageLoader />}><StrategyLibrary onSendToChat={send} /></Suspense>}
+      {page === "news"      && <Suspense fallback={<PageLoader />}><NewsPage      sym={sym} /></Suspense>}
+      {page === "alerts"    && <Suspense fallback={<PageLoader />}><AlertsPage    watch={watch} /></Suspense>}
+      {page === "learn"     && <Suspense fallback={<PageLoader />}><LearnPage /></Suspense>}
 
       {/* ── MARKET PAGE ── */}
       {page === "market" && <>

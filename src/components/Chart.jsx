@@ -33,6 +33,8 @@ export default function Chart({ candles }) {
   const [hov, setHov]    = useState(null);
   const [drawn, setDrawn] = useState(false);
   const [showSR, setShowSR] = useState(true);
+  const [showVolume, setShowVolume] = useState(true);
+  const [showSMA, setShowSMA] = useState(true);
   const pathRef = useRef(null);
   const [pLen, setPLen]  = useState(0);
 
@@ -47,13 +49,20 @@ export default function Chart({ candles }) {
     </div>
   );
 
-  const W = 900, H = 240, PL = 48, PR = 12, PT = 12, PB = 32;
-  const cw = W - PL - PR, ch = H - PT - PB, n = candles.length;
+  const W = 900, H = 300, PL = 48, PR = 12, PT = 12, PB = 60;
+  const cw = W - PL - PR, ch = H - PT - PB - 40, n = candles.length;
   const allP = candles.flatMap(c => [c.high, c.low]).filter(Boolean);
   const mn = Math.min(...allP), mx = Math.max(...allP), rng = mx - mn || 1;
   const lo = mn - rng * .06, hi = mx + rng * .06;
   const xOf = i => PL + (i / (n - 1)) * cw;
   const yOf = v => PT + ch - ((v - lo) / (hi - lo)) * ch;
+  
+  // Volume calculations
+  const volumes = candles.map(c => c.volume || 0);
+  const maxVol = Math.max(...volumes, 1);
+  const volH = 30; // Height of volume bars
+  const volY = PT + ch + 10; // Y position of volume bars
+  const volOf = (v) => (v / maxVol) * volH;
   const isUp = candles.at(-1).close >= candles[0].close;
   const lineColor = isUp ? "#4ade80" : "#f87171";
   const s20 = sma(candles, 20), s50 = sma(candles, 50);
@@ -82,7 +91,7 @@ export default function Chart({ candles }) {
         setHov({ i, ...candles[i], pct: (xOf(i) / W * 100) });
       }} onMouseLeave={() => setHov(null)}>
 
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 260 }} preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 300 }} preserveAspectRatio="none">
         <defs>
           <linearGradient id="chartGradGreen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#4ade80" stopOpacity=".22" />
@@ -109,6 +118,20 @@ export default function Chart({ candles }) {
         <g clipPath="url(#chartClip)">
           <path d={areaPath} fill={`url(#${gradId})`} />
 
+          {/* Volume bars */}
+          {showVolume && candles.map((c, i) => {
+            const h = volOf(c.volume || 0);
+            const w = Math.max(0.8, cw / (n * 1.3));
+            const x = xOf(i) - w / 2;
+            const y = volY - h;
+            const isUpBar = c.close >= c.open;
+            return (
+              <rect key={`vol${i}`} x={x} y={y} width={w} height={h}
+                fill={isUpBar ? "rgba(74,222,128,.25)" : "rgba(248,113,113,.25)"}
+                opacity={hov?.i === i ? 0.5 : 0.25} />
+            );
+          })}
+
           {/* S/R lines */}
           {showSR && resistance.map((v, i) => (
             <g key={`r${i}`}>
@@ -125,8 +148,8 @@ export default function Chart({ candles }) {
             </g>
           ))}
 
-          <path d={toPath(s50)} fill="none" stroke="#a78bfa" strokeWidth="1.2" opacity=".5" strokeLinejoin="round" />
-          <path d={toPath(s20)} fill="none" stroke="#4facfe" strokeWidth="1.2" opacity=".5" strokeLinejoin="round" />
+          <path d={toPath(s50)} fill="none" stroke="#a78bfa" strokeWidth="1.2" opacity={showSMA ? ".7" : ".3"} strokeLinejoin="round" />
+          <path d={toPath(s20)} fill="none" stroke="#4facfe" strokeWidth="1.2" opacity={showSMA ? ".7" : ".3"} strokeLinejoin="round" />
           <path ref={pathRef} d={linePath} fill="none" stroke={lineColor} strokeWidth="2" filter="url(#lineGlow)" strokeLinejoin="round" strokeLinecap="round"
             style={{ strokeDasharray: pLen || 9999, strokeDashoffset: drawn ? 0 : (pLen || 9999), transition: drawn ? "stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)" : "none" }} />
           {hov && <>
@@ -147,10 +170,26 @@ export default function Chart({ candles }) {
       )}
 
       {/* Legend */}
-      <div style={{ position: "absolute", bottom: 36, right: 16, display: "flex", gap: 12, fontSize: 10, fontFamily: "'DM Sans',sans-serif", alignItems: "center" }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(148,163,184,.5)" }}><span style={{ width: 16, height: 2, background: "#4facfe", display: "inline-block", borderRadius: 1 }} /> SMA20</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(148,163,184,.5)" }}><span style={{ width: 16, height: 2, background: "#a78bfa", display: "inline-block", borderRadius: 1 }} /> SMA50</span>
-        <button onClick={() => setShowSR(v => !v)} style={{ background: showSR ? "rgba(255,255,255,.06)" : "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: showSR ? "#e2e8f0" : "rgba(148,163,184,.4)", fontSize: 10, transition: "all .2s" }}>
+      <div style={{ position: "absolute", bottom: 8, right: 16, display: "flex", gap: 8, fontSize: 10, fontFamily: "'DM Sans',sans-serif", alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(148,163,184,.5)" }}>
+          <span style={{ width: 16, height: 2, background: "#4facfe", display: "inline-block", borderRadius: 1 }} /> SMA20
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(148,163,184,.5)" }}>
+          <span style={{ width: 16, height: 2, background: "#a78bfa", display: "inline-block", borderRadius: 1 }} /> SMA50
+        </span>
+        <button onClick={() => setShowVolume(v => !v)} 
+          style={{ background: showVolume ? "rgba(255,255,255,.06)" : "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: showVolume ? "#e2e8f0" : "rgba(148,163,184,.4)", fontSize: 9, transition: "all .2s" }}
+          title="Toggle volume bars">
+          Vol {showVolume ? "on" : "off"}
+        </button>
+        <button onClick={() => setShowSMA(v => !v)} 
+          style={{ background: showSMA ? "rgba(255,255,255,.06)" : "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: showSMA ? "#e2e8f0" : "rgba(148,163,184,.4)", fontSize: 9, transition: "all .2s" }}
+          title="Toggle moving averages">
+          SMA {showSMA ? "on" : "off"}
+        </button>
+        <button onClick={() => setShowSR(v => !v)} 
+          style={{ background: showSR ? "rgba(255,255,255,.06)" : "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: showSR ? "#e2e8f0" : "rgba(148,163,184,.4)", fontSize: 9, transition: "all .2s" }}
+          title="Toggle support/resistance">
           S/R {showSR ? "on" : "off"}
         </button>
       </div>

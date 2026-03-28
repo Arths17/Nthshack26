@@ -20,13 +20,6 @@ function getSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
 }
 
-const Orbs = () => (
-  <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
-    <div style={{ position: "absolute", top: "-20%", left: "-10%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,172,254,.07) 0%,transparent 70%)", animation: "breathe 8s ease-in-out infinite" }} />
-    <div style={{ position: "absolute", bottom: "-15%", right: "-5%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(167,139,250,.06) 0%,transparent 70%)", animation: "breathe 10s ease-in-out infinite 2s" }} />
-    <div style={{ position: "absolute", top: "40%", right: "30%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(74,222,128,.04) 0%,transparent 70%)", animation: "breathe 12s ease-in-out infinite 4s" }} />
-  </div>
-);
 
 export default function App() {
   const [user, setUser]             = useState(() => getSession());
@@ -120,8 +113,6 @@ export default function App() {
         style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}
         role="application"
         aria-label="Quanta AI Trading Terminal">
-        <Orbs />
-
         {showOnboarding && (
           <Suspense fallback={null}>
             <Onboarding onDone={handleOnboardingDone} />

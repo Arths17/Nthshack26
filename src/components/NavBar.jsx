@@ -29,7 +29,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
   // Get first 17 stocks from popular stocks list for nav bar buttons
   const navSymbols = useMemo(() => {
     if (!stocks.length) return ["NVDA", "AAPL", "TSLA", "MSFT", "META", "AMZN", "GOOGL", "SPY", "NFLX", "AMD", "INTC", "AVGO", "MU", "QCOM", "NFLX", "ADBE"];
-    return stocks.slice(0, 16).map(s => s.symbol);
+    return stocks.slice(0, 14).map(s => s.symbol);
   }, [stocks]);
   
   // Filter and sort stocks by symbol for dropdown

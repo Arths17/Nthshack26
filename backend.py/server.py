@@ -13,6 +13,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import yfinance as yf
+import pandas as pd
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ app = FastAPI(title="Quanta Proxy")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
 
@@ -98,6 +99,12 @@ class ChatRequest(BaseModel):
     current_ticker: str = None  # Current stock being viewed
 
 
+@app.options("/api/stock/{symbol}")
+async def options_stock_data(symbol: str):
+    """Handle CORS preflight requests for stock data endpoint."""
+    return {}
+
+
 @app.get("/api/stock/{symbol}")
 async def get_stock_data(symbol: str):
     """Fetch live stock data for a single symbol from yfinance."""
@@ -117,11 +124,11 @@ async def get_stock_data(symbol: str):
         for date, row in hist.iterrows():
             candles.append({
                 "date": date.strftime("%b %d"),
-                "open": float(row["Open"]) if row["Open"] is not None else None,
-                "high": float(row["High"]) if row["High"] is not None else None,
-                "low": float(row["Low"]) if row["Low"] is not None else None,
+                "open": float(row["Open"]) if not pd.isna(row["Open"]) else None,
+                "high": float(row["High"]) if not pd.isna(row["High"]) else None,
+                "low": float(row["Low"]) if not pd.isna(row["Low"]) else None,
                 "close": float(row["Close"]),
-                "volume": int(row["Volume"]) if row["Volume"] else 0,
+                "volume": int(row["Volume"]) if not pd.isna(row["Volume"]) else 0,
             })
         
         current_price = float(info.get('currentPrice') or hist['Close'].iloc[-1])

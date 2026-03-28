@@ -9,12 +9,18 @@ import { f2, fB, fV } from "../utils/formatters";
 import ComparePage   from "../pages/ComparePage";
 import PortfolioPage from "../pages/PortfolioPage";
 import ScreenerPage  from "../pages/ScreenerPage";
+import LearnPage     from "../pages/LearnPage";
+import NewsPage      from "../pages/NewsPage";
+import AlertsPage    from "../pages/AlertsPage";
 
 const PAGES = [
-  { id: "market",    label: "📈 Market" },
-  { id: "compare",   label: "⚖️ Compare" },
-  { id: "portfolio", label: "💼 Portfolio" },
-  { id: "screener",  label: "🔍 Screener" },
+  { id: "market",    label: "Market" },
+  { id: "compare",   label: "Compare" },
+  { id: "portfolio", label: "Portfolio" },
+  { id: "screener",  label: "Screener" },
+  { id: "news",      label: "News" },
+  { id: "alerts",    label: "Alerts" },
+  { id: "learn",     label: "Learn" },
 ];
 
 export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload }) {
@@ -45,6 +51,9 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       {page === "compare"   && <ComparePage   watch={watch} />}
       {page === "portfolio" && <PortfolioPage pos={pos} log={log} cash={cash} watch={watch} />}
       {page === "screener"  && <ScreenerPage  watch={watch} />}
+      {page === "news"      && <NewsPage      sym={sym} />}
+      {page === "alerts"    && <AlertsPage    watch={watch} />}
+      {page === "learn"     && <LearnPage />}
 
       {/* ── MARKET PAGE ── */}
       {page === "market" && <>

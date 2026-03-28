@@ -4,7 +4,10 @@ Run: uvicorn server:app --reload --port 8000
 """
 
 import os
+from dotenv import load_dotenv
 import google.generativeai as genai
+
+load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel

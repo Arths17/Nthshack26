@@ -12,10 +12,10 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
   }, [msgs, busy]);
 
   const suggestions = [
-    `Analyze ${sym} with the live data`,
-    `Should I buy ${sym} today?`,
-    `Why is ${sym} moving?`,
-    `Build me a strategy for ${sym}`,
+    `Should I buy ${sym} right now?`,
+    `Why is ${sym} going up or down today?`,
+    `Is ${sym} a good stock to invest in?`,
+    `Build me a simple strategy for ${sym} — explain everything`,
   ];
 
   return (

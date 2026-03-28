@@ -22,7 +22,7 @@ export default function App() {
   const { watch, loading: loadW }             = useWatchlist();
   const { data, loading: loadS, error, reload } = useStockData(sym);
   const { cash, pos, log, buy, sell }           = usePortfolio();
-  const { msgs, input, setInput, busy, send }   = useChat(sym, data, cash, pos);
+  const { msgs, input, setInput, busy, send }   = useChat(sym, data, watch, cash, pos);
 
   const portVal = cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0);
   const pnl     = portVal - 100_000;

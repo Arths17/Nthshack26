@@ -6,10 +6,21 @@ import Pill from "./Pill";
 import Stat from "./Stat";
 import Counter from "./Counter";
 import { f2, fB, fV } from "../utils/formatters";
+import ComparePage   from "../pages/ComparePage";
+import PortfolioPage from "../pages/PortfolioPage";
+import ScreenerPage  from "../pages/ScreenerPage";
+
+const PAGES = [
+  { id: "market",    label: "📈 Market" },
+  { id: "compare",   label: "⚖️ Compare" },
+  { id: "portfolio", label: "💼 Portfolio" },
+  { id: "screener",  label: "🔍 Screener" },
+];
 
 export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload }) {
-  const [tab, setTab] = useState("chart");
-  const [qty, setQty] = useState("10");
+  const [page, setPage] = useState("market");
+  const [tab,  setTab]  = useState("chart");
+  const [qty,  setQty]  = useState("10");
 
   const price    = data?.price;
   const prev     = data?.prevClose;
@@ -21,7 +32,22 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
   const pnl = cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0) - 100_000;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", padding: "20px 24px 16px", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
+
+      {/* ── TOP PAGE NAV ── */}
+      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+        {PAGES.map(p => (
+          <Pill key={p.id} active={page === p.id} onClick={() => setPage(p.id)}>{p.label}</Pill>
+        ))}
+      </div>
+
+      {/* ── NON-MARKET PAGES ── */}
+      {page === "compare"   && <ComparePage   watch={watch} />}
+      {page === "portfolio" && <PortfolioPage pos={pos} log={log} cash={cash} watch={watch} />}
+      {page === "screener"  && <ScreenerPage  watch={watch} />}
+
+      {/* ── MARKET PAGE ── */}
+      {page === "market" && <>
 
       {/* Price hero */}
       <Glass style={{ padding: "20px 24px", borderRadius: 20, flexShrink: 0 }}>
@@ -200,6 +226,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
           </div>
         )}
       </div>
+      </>}
     </div>
   );
 }

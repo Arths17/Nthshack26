@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
+import { signUp, signIn } from "../api/supabase";
 
-const STORAGE_KEY = "quanta:users";
 const SESSION_KEY = "quanta:session";
-
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { return {}; }
-}
-function saveUsers(u) { localStorage.setItem(STORAGE_KEY, JSON.stringify(u)); }
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const BG     = "#04070f";
@@ -33,33 +28,40 @@ export default function LoginPage({ onLogin, onBack }) {
     setTimeout(() => { setMode(next); setAnimating(false); }, 180);
   }
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     setError("");
     if (loading) return;
     setLoading(true);
 
-    setTimeout(() => {
-      const users = getUsers();
-
+    try {
       if (mode === "signup") {
-        if (!name.trim())                        { setError("Please enter your name.");            setLoading(false); return; }
-        if (!email.includes("@"))                { setError("Enter a valid email address.");       setLoading(false); return; }
-        if (password.length < 6)                 { setError("Password must be at least 6 chars."); setLoading(false); return; }
-        if (users[email])                        { setError("Account exists — sign in instead.");  setLoading(false); return; }
-        users[email] = { name: name.trim(), password };
-        saveUsers(users);
+        if (!name.trim())                        { setError("Please enter your name."); return; }
+        if (!email.includes("@"))                { setError("Enter a valid email address."); return; }
+        if (password.length < 6)                 { setError("Password must be at least 6 chars."); return; }
+
+        const { data, error: signUpError } = await signUp(email, password, { display_name: name.trim() });
+        if (signUpError) { setError(signUpError.message); return; }
+
+        // Save session
         localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: name.trim() }));
-        onLogin({ email, name: name.trim() });
+        onLogin({ email, name: name.trim(), id: data.user.id });
       } else {
-        if (!email.trim())                       { setError("Enter your email.");           setLoading(false); return; }
-        if (!password)                           { setError("Enter your password.");        setLoading(false); return; }
-        const user = users[email];
-        if (!user || user.password !== password) { setError("Incorrect email or password."); setLoading(false); return; }
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: user.name }));
-        onLogin({ email, name: user.name });
+        if (!email.trim())                       { setError("Enter your email."); return; }
+        if (!password)                           { setError("Enter your password."); return; }
+
+        const { data, error: signInError } = await signIn(email, password);
+        if (signInError) { setError(signInError.message); return; }
+
+        const userName = data.user.user_metadata?.display_name || email.split("@")[0];
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: userName, id: data.user.id }));
+        onLogin({ email, name: userName, id: data.user.id });
       }
-    }, 380);
+    } catch (err) {
+      setError(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const inputBase = {

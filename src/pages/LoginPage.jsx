@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { signUp, signIn } from "../api/supabase";
+import { signUp, signIn } from "../api/firebase";
 
 const SESSION_KEY = "quanta:session";
 
@@ -40,22 +40,22 @@ export default function LoginPage({ onLogin, onBack }) {
         if (!email.includes("@"))                { setError("Enter a valid email address."); return; }
         if (password.length < 6)                 { setError("Password must be at least 6 chars."); return; }
 
-        const { data, error: signUpError } = await signUp(email, password, { display_name: name.trim() });
+        const { user, error: signUpError } = await signUp(email, password, name.trim());
         if (signUpError) { setError(signUpError.message); return; }
 
         // Save session
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: name.trim() }));
-        onLogin({ email, name: name.trim(), id: data.user.id });
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: name.trim(), id: user.uid }));
+        onLogin({ email, name: name.trim(), id: user.uid });
       } else {
         if (!email.trim())                       { setError("Enter your email."); return; }
         if (!password)                           { setError("Enter your password."); return; }
 
-        const { data, error: signInError } = await signIn(email, password);
+        const { user, error: signInError } = await signIn(email, password);
         if (signInError) { setError(signInError.message); return; }
 
-        const userName = data.user.user_metadata?.display_name || email.split("@")[0];
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: userName, id: data.user.id }));
-        onLogin({ email, name: userName, id: data.user.id });
+        const userName = user.displayName || email.split("@")[0];
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: userName, id: user.uid }));
+        onLogin({ email, name: userName, id: user.uid });
       }
     } catch (err) {
       setError(err.message || "An error occurred");

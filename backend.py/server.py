@@ -33,7 +33,7 @@ POPULAR_STOCKS = {
     'META': {'name': 'Meta', 'sector': 'Technology'},
     'TSLA': {'name': 'Tesla', 'sector': 'Automotive'},
     'AMD': {'name': 'Advanced Micro Devices', 'sector': 'Technology'},
-    'INTEL': {'name': 'Intel', 'sector': 'Technology'},
+    'INTC': {'name': 'Intel', 'sector': 'Technology'},
     'AVGO': {'name': 'Broadcom', 'sector': 'Technology'},
     'MU': {'name': 'Micron Technology', 'sector': 'Technology'},
     'QCOM': {'name': 'Qualcomm', 'sector': 'Technology'},

@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useState, useRef, useEffect } from "react";
 import Glass from "./Glass";
 import { useStocks } from "../hooks/useStocks";
 
@@ -9,12 +9,45 @@ import { useStocks } from "../hooks/useStocks";
 export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
   const { stocks } = useStocks();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef(null);
   
-  // Get first 8 stocks from popular stocks list for nav bar buttons
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+    
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDropdown]);
+  
+  // Get first 17 stocks from popular stocks list for nav bar buttons
   const navSymbols = useMemo(() => {
-    if (!stocks.length) return ["NVDA", "AAPL", "TSLA", "MSFT", "META", "AMZN", "GOOGL", "SPY"];
-    return stocks.slice(0, 8).map(s => s.symbol);
+    if (!stocks.length) return ["NVDA", "AAPL", "TSLA", "MSFT", "META", "AMZN", "GOOGL", "SPY", "NFLX", "AMD", "INTC", "AVGO", "MU", "QCOM", "NFLX", "ADBE"];
+    return stocks.slice(0, 16).map(s => s.symbol);
   }, [stocks]);
+  
+  // Filter and sort stocks by symbol for dropdown
+  const filteredStocks = useMemo(() => {
+    if (!searchQuery) {
+      // Show all stocks if no search query
+      return stocks.sort((a, b) => a.symbol.localeCompare(b.symbol));
+    }
+    
+    // Otherwise filter by search query
+    const query = searchQuery.toLowerCase();
+    const filtered = stocks.filter(stock => 
+      stock.symbol.toLowerCase().includes(query) ||
+      stock.name.toLowerCase().includes(query) ||
+      stock.sector.toLowerCase().includes(query)
+    );
+    return filtered.sort((a, b) => a.symbol.localeCompare(b.symbol));
+  }, [stocks, searchQuery]);
 
   return (
     <div style={nav}>
@@ -36,7 +69,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
           const chg = d?.price && d?.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : null;
           const active = s === sym;
           return (
-            <button key={s} onClick={() => onSelect(s)} style={{
+            <button key={s} type="button" onClick={() => onSelect(s)} style={{
               padding: "5px 14px", borderRadius: 20,
               border: `1px solid ${active ? "rgba(79,172,254,.4)" : "rgba(255,255,255,.07)"}`,
               background: active ? "rgba(79,172,254,.12)" : "rgba(255,255,255,.02)",
@@ -54,7 +87,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
         })}
 
         {/* Stock selector dropdown */}
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", marginLeft: "auto", flexShrink: 0 }} ref={dropdownRef}>
           <button 
             onClick={() => setShowDropdown(!showDropdown)}
             style={{
@@ -77,46 +110,90 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
               background: "rgba(8,14,30,.95)", backdropFilter: "blur(24px)",
               border: "1px solid rgba(255,255,255,.1)", borderRadius: 12,
               boxShadow: "0 20px 40px rgba(0,0,0,.5)",
-              maxHeight: 400, overflowY: "auto", width: 280,
-              padding: "8px"
+              maxHeight: 400, minWidth: 280,
+              display: "flex", flexDirection: "column"
             }}>
-              {stocks.map(stock => (
-                <button
-                  key={stock.symbol}
-                  onClick={() => {
-                    onSelect(stock.symbol);
-                    setShowDropdown(false);
+              {/* Search box */}
+              <div style={{ padding: "8px", borderBottom: "1px solid rgba(255,255,255,.06)", flexShrink: 0 }}>
+                <input
+                  type="text"
+                  placeholder="Search stocks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && filteredStocks.length > 0) {
+                      e.preventDefault();
+                      const query = searchQuery.toLowerCase().trim();
+                      // First try exact symbol match
+                      const exactMatch = filteredStocks.find(s => s.symbol.toLowerCase() === query);
+                      const stockToSelect = exactMatch || filteredStocks[0];
+                      onSelect(stockToSelect.symbol);
+                      setShowDropdown(false);
+                      setSearchQuery("");
+                    }
                   }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  autoFocus
                   style={{
-                    width: "100%", padding: "10px 12px", textAlign: "left",
-                    background: stock.symbol === sym ? "rgba(79,172,254,.15)" : "rgba(255,255,255,.02)",
-                    border: "1px solid " + (stock.symbol === sym ? "rgba(79,172,254,.3)" : "rgba(255,255,255,.06)"),
-                    borderRadius: 8, cursor: "pointer", marginBottom: 4, transition: "all .2s",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    color: stock.symbol === sym ? "#4facfe" : "rgba(148,163,184,.8)",
+                    width: "100%", padding: "8px 12px", fontSize: 12,
+                    background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)",
+                    borderRadius: 6, color: "rgba(148,163,184,.8)", outline: "none", boxSizing: "border-box",
                   }}
-                  onMouseEnter={e => {
-                    if (stock.symbol !== sym) {
-                      e.currentTarget.style.background = "rgba(255,255,255,.05)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,.14)";
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (stock.symbol !== sym) {
-                      e.currentTarget.style.background = "rgba(255,255,255,.02)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,.06)";
-                    }
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "inherit" }}>{stock.symbol}</div>
-                    <div style={{ fontSize: 10, color: "rgba(148,163,184,.5)", marginTop: 2 }}>{stock.name}</div>
+                  onFocus={(e) => e.target.style.borderColor = "rgba(79,172,254,.3)"}
+                  onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,.1)"}
+                />
+              </div>
+
+              {/* Stock list */}
+              <div style={{ overflowY: "auto", padding: "8px", flex: 1 }}>
+                {filteredStocks.length > 0 ? (
+                  filteredStocks.map(stock => (
+                    <button
+                      key={stock.symbol}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onSelect(stock.symbol);
+                        setShowDropdown(false);
+                        setSearchQuery("");
+                      }}
+                      style={{
+                        width: "100%", padding: "10px 12px", textAlign: "left",
+                        background: stock.symbol === sym ? "rgba(79,172,254,.15)" : "rgba(255,255,255,.02)",
+                        border: "1px solid " + (stock.symbol === sym ? "rgba(79,172,254,.3)" : "rgba(255,255,255,.06)"),
+                        borderRadius: 8, cursor: "pointer", marginBottom: 4, transition: "all .2s",
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                        color: stock.symbol === sym ? "#4facfe" : "rgba(148,163,184,.8)",
+                      }}
+                      onMouseEnter={e => {
+                        if (stock.symbol !== sym) {
+                          e.currentTarget.style.background = "rgba(255,255,255,.05)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,.14)";
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (stock.symbol !== sym) {
+                          e.currentTarget.style.background = "rgba(255,255,255,.02)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,.06)";
+                        }
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: "inherit" }}>{stock.symbol}</div>
+                        <div style={{ fontSize: 10, color: "rgba(148,163,184,.5)", marginTop: 2 }}>{stock.name}</div>
+                      </div>
+                      <div style={{ fontSize: 9, color: "rgba(148,163,184,.4)", textAlign: "right" }}>
+                        {stock.sector}
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div style={{ padding: "16px", textAlign: "center", color: "rgba(148,163,184,.5)", fontSize: 12 }}>
+                    {stocks.length === 0 ? "Loading stocks..." : "No stocks found"}
                   </div>
-                  <div style={{ fontSize: 9, color: "rgba(148,163,184,.4)", textAlign: "right" }}>
-                    {stock.sector}
-                  </div>
-                </button>
-              ))}
+                )}
+              </div>
             </div>
           )}
         </div>

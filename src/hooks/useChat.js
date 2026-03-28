@@ -100,7 +100,8 @@ Comment on these results and whether to use this strategy on ${sym} given curren
 
         const reply = await askClaude(
           [...history, { role: "user", content: txt + backtestContext }],
-          buildSystemPrompt()
+          buildSystemPrompt(),
+          sym
         );
 
         setMsgs(m => [...m, {
@@ -115,7 +116,8 @@ Comment on these results and whether to use this strategy on ${sym} given curren
         const history = msgsRef.current.slice(-8).map(m => ({ role: m.role, content: m.content }));
         const reply = await askClaude(
           [...history, { role: "user", content: txt }],
-          buildSystemPrompt()
+          buildSystemPrompt(),
+          sym
         );
         setMsgs(m => [...m, { role: "assistant", content: reply }]);
       }

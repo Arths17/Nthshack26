@@ -1,0 +1,211 @@
+"""
+FastAPI proxy server — keeps the Gemini API key server-side.
+Run: uvicorn server:app --reload --port 8000
+"""
+
+import os
+import re
+import json
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import yfinance as yf
+
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+if not GEMINI_API_KEY:
+    print("⚠️  GEMINI_API_KEY not set — run: export GEMINI_API_KEY='your-key'")
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+app = FastAPI(title="Quanta Proxy")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_methods=["POST"],
+    allow_headers=["Content-Type"],
+)
+
+
+def extract_tickers(text: str) -> set:
+    """Extract stock tickers (4-letter uppercase symbols) from text."""
+    # Match 1-4 letter uppercase symbols with word boundaries
+    pattern = r'\b([A-Z]{1,4})\b'
+    matches = re.findall(pattern, text)
+    # Filter out common words that aren't stock tickers
+    common_words = {'A', 'I', 'THE', 'AND', 'OR', 'IF', 'IS', 'ON', 'TO', 'UP', 'BY', 'AT', 'BE', 'IT', 'AS', 'THIS', 'THAT', 'WITH', 'FOR', 'YOU', 'NOT', 'BUT', 'FROM', 'CAN', 'DO', 'GET', 'GO', 'HAS', 'HE', 'IN', 'NO', 'SO', 'US', 'WE', 'MY', 'ME', 'VS', 'WHAT', 'WHO', 'WHY', 'HOW', 'WHEN', 'WHERE', 'WHICH', 'THAT'}
+    return {m.upper() for m in matches if m.upper() not in common_words}
+
+
+def fetch_stock_data(ticker: str) -> dict:
+    """Fetch live stock data from yfinance."""
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        hist = stock.history(period="1d")
+        
+        if hist.empty or not info:
+            return None
+        
+        current_price = float(info.get('currentPrice', hist['Close'].iloc[-1]))
+        prev_close = float(info.get('previousClose', hist['Open'].iloc[-1]))
+        change = current_price - prev_close
+        change_pct = (change / prev_close * 100) if prev_close != 0 else 0
+        
+        return {
+            'ticker': ticker,
+            'price': current_price,
+            'change': change,
+            'change_pct': change_pct,
+            'market_cap': info.get('marketCap'),
+            'pe_ratio': info.get('trailingPE'),
+            '52_week_high': info.get('fiftyTwoWeekHigh'),
+            '52_week_low': info.get('fiftyTwoWeekLow'),
+            'volume': info.get('volume'),
+        }
+    except Exception as e:
+        print(f"Failed to fetch data for {ticker}: {e}")
+        return None
+
+
+def format_stock_data(stocks_data: list) -> str:
+    """Format multiple stock data into a readable context string."""
+    if not stocks_data:
+        return ""
+    
+    context = "LIVE STOCK DATA:\n"
+    for stock in stocks_data:
+        if stock:
+            context += f"\n{stock['ticker']}:\n"
+            context += f"  Price: ${stock['price']:.2f}\n"
+            context += f"  Change: {stock['change']:+.2f} ({stock['change_pct']:+.2f}%)\n"
+            if stock.get('market_cap'):
+                context += f"  Market Cap: {stock['market_cap']}\n"
+            if stock.get('pe_ratio'):
+                context += f"  P/E Ratio: {stock['pe_ratio']:.2f}\n"
+    
+    return context
+
+
+class ChatRequest(BaseModel):
+    messages: list   # [{role: "user"|"assistant", content: "..."}]
+    system: str = ""
+    current_ticker: str = None  # Current stock being viewed
+
+
+class StrategyRequest(BaseModel):
+    text: str   # raw user strategy description
+
+
+@app.post("/api/strategy")
+async def parse_strategy(req: StrategyRequest):
+    """Parse a natural language strategy into structured JSON for the frontend backtester."""
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
+
+    prompt = f"""You are a trading strategy parser. Convert the user's strategy description into a JSON object.
+
+User strategy: "{req.text}"
+
+Return ONLY valid JSON, no explanation, no markdown fences. Use this exact schema:
+{{
+  "name": "short strategy name",
+  "entry": {{
+    "type": "ema_cross_above" | "sma_cross_above" | "rsi_below" | "price_above_ema" | "price_above_sma",
+    "fast": <integer or null>,
+    "slow": <integer or null>,
+    "period": <integer or null>,
+    "threshold": <number or null>
+  }},
+  "exit": {{
+    "type": "ema_cross_below" | "sma_cross_below" | "rsi_above" | "price_below_ema" | "price_below_sma" | "stop_loss" | "take_profit",
+    "fast": <integer or null>,
+    "slow": <integer or null>,
+    "period": <integer or null>,
+    "threshold": <number or null>
+  }},
+  "stopLoss": <decimal like 0.05 for 5%, or null>,
+  "takeProfit": <decimal like 0.10 for 10%, or null>
+}}
+
+Examples:
+- "buy when EMA12 crosses above EMA26, sell when it crosses below" → entry type "ema_cross_above" fast=12 slow=26, exit type "ema_cross_below" fast=12 slow=26
+- "buy when RSI drops below 30, sell when RSI goes above 70" → entry type "rsi_below" threshold=30, exit type "rsi_above" threshold=70
+- "buy when price crosses above SMA50, sell with 5% stop loss" → entry type "price_above_sma" period=50, exit type "stop_loss", stopLoss=0.05"""
+
+    contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
+    config = types.GenerateContentConfig(max_output_tokens=512)
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=contents, config=config
+        )
+        import json, re
+        raw = response.text.strip()
+        # strip markdown fences if Gemini added them anyway
+        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$", "", raw)
+        parsed = json.loads(raw)
+        return parsed
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Strategy parse failed: {e}")
+
+
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured on server")
+
+    # Extract stock tickers from the latest user message
+    latest_user_message = None
+    for msg in reversed(req.messages):
+        if msg.get("role") == "user":
+            latest_user_message = msg.get("content", "")
+            break
+    
+    # Get tickers from the message and include current_ticker
+    mentioned_tickers = extract_tickers(latest_user_message or "")
+    if req.current_ticker:
+        mentioned_tickers.add(req.current_ticker)
+    
+    # Fetch live data for all mentioned tickers
+    stock_data_list = []
+    for ticker in sorted(mentioned_tickers)[:5]:  # Limit to 5 stocks to avoid API spam
+        stock_data = fetch_stock_data(ticker)
+        if stock_data:
+            stock_data_list.append(stock_data)
+    
+    # Build enhanced system prompt with live data
+    live_data_context = format_stock_data(stock_data_list)
+    enhanced_system = req.system or ""
+    if live_data_context:
+        enhanced_system += f"\n\n{live_data_context}"
+
+    # Convert to Gemini Content format (role "assistant" → "model")
+    contents = [
+        types.Content(
+            role="model" if m["role"] == "assistant" else "user",
+            parts=[types.Part(text=m["content"])]
+        )
+        for m in req.messages
+    ]
+
+    config = types.GenerateContentConfig(
+        system_instruction=enhanced_system or None,
+        max_output_tokens=2048,
+    )
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=contents,
+            config=config,
+        )
+        return {"text": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

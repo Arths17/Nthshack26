@@ -24,13 +24,14 @@ function getSession() {
 export default function App() {
   const [user, setUser]             = useState(() => getSession());
   const [sym, setSym]               = useState("NVDA");
+  const [timeframe, setTimeframe]   = useState("3M");
   const [showLanding, setShowLanding]       = useState(() => !getSession());
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobile, setIsMobile]     = useState(window.innerWidth < UI.BREAKPOINT_MOBILE);
   const [mobilTab, setMobilTab]     = useState("market");
 
   const { watch, loading: loadW }               = useWatchlist();
-  const { data, loading: loadS, error, reload }   = useStockData(sym);
+  const { data, loading: loadS, error, reload }   = useStockData(sym, timeframe);
   const { cash, pos, log, buy, sell, isHydrated } = usePortfolio();
   const { msgs, input, setInput, busy, send }     = useChat(sym, data, watch, cash, pos);
 
@@ -125,7 +126,7 @@ export default function App() {
               <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
             </aside>
             <section role="region" aria-label="Market Data and Trading" style={{ height: "100%", overflow: "hidden" }}>
-              <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} />
+              <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} />
             </section>
           </div>
         )}
@@ -135,7 +136,7 @@ export default function App() {
           <>
             <div style={{ position: "relative", zIndex: 5, flex: 1, minHeight: 0, overflow: "hidden" }}>
               {mobilTab === "market"
-                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} />
+                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} />
                 : <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
               }
             </div>

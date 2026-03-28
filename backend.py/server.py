@@ -8,7 +8,7 @@ import re
 import json
 from dotenv import load_dotenv
 import google.generativeai as genai
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import yfinance as yf
@@ -236,15 +236,31 @@ async def get_popular_stocks():
 
 
 @app.get("/api/stock/{symbol}")
-async def get_stock_data(symbol: str):
+async def get_stock_data(symbol: str, timeframe: str = Query("3M")):
     """Fetch live stock data for a single symbol from yfinance."""
     if not symbol or len(symbol) > 5 or not symbol.isupper():
         raise HTTPException(status_code=400, detail="Invalid symbol format")
+
+    timeframe_config = {
+        "1D": {"period": "1d", "interval": "60m", "date_fmt": "%H:%M"},
+        "5D": {"period": "5d", "interval": "60m", "date_fmt": "%b %d %H:%M"},
+        "1M": {"period": "1mo", "interval": "1d", "date_fmt": "%b %d"},
+        "3M": {"period": "3mo", "interval": "1d", "date_fmt": "%b %d"},
+        "6M": {"period": "6mo", "interval": "1d", "date_fmt": "%b %d"},
+        "1Y": {"period": "1y", "interval": "1wk", "date_fmt": "%b %d"},
+        "5Y": {"period": "5y", "interval": "1mo", "date_fmt": "%b %Y"},
+        "MAX": {"period": "max", "interval": "1mo", "date_fmt": "%b %Y"},
+    }
+    tf = (timeframe or "3M").upper()
+    if tf not in timeframe_config:
+        allowed = ", ".join(timeframe_config.keys())
+        raise HTTPException(status_code=400, detail=f"Invalid timeframe. Allowed values: {allowed}")
+    selected = timeframe_config[tf]
     
     try:
         stock = yf.Ticker(symbol)
         info = stock.info
-        hist = stock.history(period="3mo")
+        hist = stock.history(period=selected["period"], interval=selected["interval"])
         
         if hist.empty:
             raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
@@ -253,7 +269,7 @@ async def get_stock_data(symbol: str):
         candles = []
         for date, row in hist.iterrows():
             candles.append({
-                "date": date.strftime("%b %d"),
+                "date": date.strftime(selected["date_fmt"]),
                 "open": float(row["Open"]) if not pd.isna(row["Open"]) else None,
                 "high": float(row["High"]) if not pd.isna(row["High"]) else None,
                 "low": float(row["Low"]) if not pd.isna(row["Low"]) else None,
@@ -266,6 +282,7 @@ async def get_stock_data(symbol: str):
         
         return {
             "symbol": symbol,
+            "timeframe": tf,
             "candles": candles,
             "price": current_price,
             "prevClose": prev_close,

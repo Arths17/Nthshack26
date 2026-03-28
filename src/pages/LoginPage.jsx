@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { signUp, signIn } from "../api/supabase";
+import { signUp, signIn } from "../api/firebaseAuth";
 
 const SESSION_KEY = "quanta:session";
 
@@ -44,8 +44,9 @@ export default function LoginPage({ onLogin, onBack }) {
         if (signUpError) { setError(signUpError.message); return; }
 
         // Save session
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: name.trim() }));
-        onLogin({ email, name: name.trim(), id: data.user.id });
+        const uid = data.user.uid;
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: name.trim(), id: uid }));
+        onLogin({ email, name: name.trim(), id: uid });
       } else {
         if (!email.trim())                       { setError("Enter your email."); return; }
         if (!password)                           { setError("Enter your password."); return; }
@@ -53,9 +54,10 @@ export default function LoginPage({ onLogin, onBack }) {
         const { data, error: signInError } = await signIn(email, password);
         if (signInError) { setError(signInError.message); return; }
 
-        const userName = data.user.user_metadata?.display_name || email.split("@")[0];
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: userName, id: data.user.id }));
-        onLogin({ email, name: userName, id: data.user.id });
+        const userName = data.user.displayName || email.split("@")[0];
+        const uid = data.user.uid;
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: userName, id: uid }));
+        onLogin({ email, name: userName, id: uid });
       }
     } catch (err) {
       setError(err.message || "An error occurred");

@@ -10,7 +10,7 @@ const STRATEGY_KEYWORDS = /\b(when|ema|sma|rsi|cross|crosses|above|below|buy whe
 const isStrategyRequest = (text) => STRATEGY_KEYWORDS.test(text) &&
   /\b(buy|sell|entry|exit|long|short)\b/i.test(text);
 
-export function useChat(sym, data, cash, pos) {
+export function useChat(sym, data, watch, cash, pos) {
   const [msgs,  setMsgs] = useState([{ role: "assistant", content: WELCOME }]);
   const [input, setInput] = useState("");
   const [busy,  setBusy]  = useState(false);
@@ -54,6 +54,12 @@ Recent closes: ${recent}
 
 ═══ PORTFOLIO ═══
 Cash: $${f2(cash)} | ${sym} position: ${userShares} shares ($${f2(userShares * price)})
+
+═══ ALL WATCHLIST STOCKS (for comparisons) ═══
+${Object.entries(watch).map(([s, d]) => {
+  const chg = d.price && d.prevClose ? ((d.price - d.prevClose) / d.prevClose * 100).toFixed(2) : "N/A";
+  return `${s}: $${f2(d.price)} (${chg}% today) | 52w: $${f2(d.w52l)}–$${f2(d.w52h)} | MCap: ${fB(d.marketCap)} | P/E: ${d.pe?.toFixed(1) ?? "N/A"}`;
+}).join("\n")}
 
 ═══ RULES ═══
 - Your audience is BEGINNERS who do not know finance. Write like you're texting a smart friend, not writing a report.

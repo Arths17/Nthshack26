@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect, lazy, Suspense, useRef } from "react";
 import { useWatchlist }  from "./hooks/useWatchlist";
 import { useStockData }  from "./hooks/useStockData";
-import { usePortfolio }  from "./hooks/usePortfolio";
+import { usePortfolioSupabase }  from "./hooks/usePortfolioSupabase";
 import { useChat }       from "./hooks/useChat";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useAuth } from "./contexts/AuthContext";
+import { signOut } from "./api/supabase";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { UI }            from "./utils/constants";
 import Ticker      from "./components/Ticker";
@@ -22,6 +24,7 @@ function getSession() {
 
 
 export default function App() {
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser]             = useState(() => getSession());
   const [sym, setSym]               = useState("NVDA");
   const [timeframe, setTimeframe]   = useState("3M");
@@ -32,8 +35,22 @@ export default function App() {
 
   const { watch, loading: loadW }               = useWatchlist();
   const { data, loading: loadS, error, reload }   = useStockData(sym, timeframe);
-  const { cash, pos, log, buy, sell, isHydrated } = usePortfolio();
+  const { user: portfolioUser, cash, pos, log, buy, sell, loading: portfolioLoading, isHydrated } = usePortfolioSupabase();
   const { msgs, input, setInput, busy, send }     = useChat(sym, data, watch, cash, pos);
+
+  // Sync Supabase auth to local state
+  useEffect(() => {
+    if (authUser && !user) {
+      const newUser = {
+        id: authUser.id,
+        email: authUser.email,
+        name: authUser.user_metadata?.display_name || authUser.email.split("@")[0],
+      };
+      setUser(newUser);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
+      setShowLanding(false);
+    }
+  }, [authUser, user]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < UI.BREAKPOINT_MOBILE);
@@ -83,7 +100,8 @@ export default function App() {
     setShowOnboarding(false);
   }
 
-  function handleSignOut() {
+  async function handleSignOut() {
+    await signOut();
     setUser(null);
     localStorage.removeItem(SESSION_KEY);
     setShowLanding(true);
@@ -100,7 +118,7 @@ export default function App() {
     return <LandingPage onEnter={handleEnter} watch={watch} user={user} />;
   }
 
-  if (!isHydrated) {
+  if (authLoading || portfolioLoading) {
     return (
       <div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#060b18", color: "rgba(148,163,184,.5)", fontSize: 13 }}>
         Loading…

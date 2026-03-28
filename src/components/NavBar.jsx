@@ -1,12 +1,20 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import Glass from "./Glass";
-import { WATCHLIST_SYMBOLS } from "../utils/constants";
+import { useStocks } from "../hooks/useStocks";
 
 /**
  * Navigation bar with symbol pills and portfolio summary
  * Memoized to prevent unnecessary re-renders
  */
 export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
+  const { stocks } = useStocks();
+  
+  // Get first 8 stocks from popular stocks list for nav bar buttons
+  const navSymbols = useMemo(() => {
+    if (!stocks.length) return ["NVDA", "AAPL", "TSLA", "MSFT", "META", "AMZN", "GOOGL", "SPY"];
+    return stocks.slice(0, 8).map(s => s.symbol);
+  }, [stocks]);
+
   return (
     <div style={nav}>
       {/* Logo */}
@@ -22,7 +30,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
 
       {/* Symbol pills */}
       <div style={{ display: "flex", gap: 6, overflowX: "auto", flex: 1, padding: "0 8px" }}>
-        {WATCHLIST_SYMBOLS.map(s => {
+        {navSymbols.map(s => {
           const d = watch[s];
           const chg = d?.price && d?.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : null;
           const active = s === sym;

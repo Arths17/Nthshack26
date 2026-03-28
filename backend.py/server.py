@@ -23,6 +23,85 @@ if not GEMINI_API_KEY:
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# Popular stocks database
+POPULAR_STOCKS = {
+    # Tech Giants
+    'AAPL': {'name': 'Apple', 'sector': 'Technology'},
+    'MSFT': {'name': 'Microsoft', 'sector': 'Technology'},
+    'GOOGL': {'name': 'Google', 'sector': 'Technology'},
+    'NVDA': {'name': 'NVIDIA', 'sector': 'Technology'},
+    'META': {'name': 'Meta', 'sector': 'Technology'},
+    'TSLA': {'name': 'Tesla', 'sector': 'Automotive'},
+    'AMD': {'name': 'Advanced Micro Devices', 'sector': 'Technology'},
+    'INTEL': {'name': 'Intel', 'sector': 'Technology'},
+    'AVGO': {'name': 'Broadcom', 'sector': 'Technology'},
+    'MU': {'name': 'Micron Technology', 'sector': 'Technology'},
+    'QCOM': {'name': 'Qualcomm', 'sector': 'Technology'},
+    'CRM': {'name': 'Salesforce', 'sector': 'Technology'},
+    'ADBE': {'name': 'Adobe', 'sector': 'Technology'},
+    'NFLX': {'name': 'Netflix', 'sector': 'Media'},
+    'AMZN': {'name': 'Amazon', 'sector': 'Technology'},
+    
+    # Financial Services
+    'JPM': {'name': 'JPMorgan Chase', 'sector': 'Finance'},
+    'BAC': {'name': 'Bank of America', 'sector': 'Finance'},
+    'WFC': {'name': 'Wells Fargo', 'sector': 'Finance'},
+    'GS': {'name': 'Goldman Sachs', 'sector': 'Finance'},
+    'MS': {'name': 'Morgan Stanley', 'sector': 'Finance'},
+    'BLK': {'name': 'BlackRock', 'sector': 'Finance'},
+    'SCHW': {'name': 'Charles Schwab', 'sector': 'Finance'},
+    'ICE': {'name': 'Intercontinental Exchange', 'sector': 'Finance'},
+    
+    # Healthcare & Pharma
+    'JNJ': {'name': 'Johnson & Johnson', 'sector': 'Healthcare'},
+    'UNH': {'name': 'UnitedHealth Group', 'sector': 'Healthcare'},
+    'PFE': {'name': 'Pfizer', 'sector': 'Pharma'},
+    'MRK': {'name': 'Merck', 'sector': 'Pharma'},
+    'AZN': {'name': 'AstraZeneca', 'sector': 'Pharma'},
+    'ABBV': {'name': 'AbbVie', 'sector': 'Pharma'},
+    'TMO': {'name': 'Thermo Fisher', 'sector': 'Healthcare'},
+    'AMGN': {'name': 'Amgen', 'sector': 'Pharma'},
+    
+    # Consumer & Retail
+    'WMT': {'name': 'Walmart', 'sector': 'Retail'},
+    'COST': {'name': 'Costco', 'sector': 'Retail'},
+    'HD': {'name': 'Home Depot', 'sector': 'Retail'},
+    'NKE': {'name': 'Nike', 'sector': 'Consumer'},
+    'KO': {'name': 'Coca-Cola', 'sector': 'Consumer'},
+    'PEP': {'name': 'PepsiCo', 'sector': 'Consumer'},
+    'MCD': {'name': 'McDonald\'s', 'sector': 'Food'},
+    'SBUX': {'name': 'Starbucks', 'sector': 'Food'},
+    
+    # Energy
+    'XOM': {'name': 'ExxonMobil', 'sector': 'Energy'},
+    'CVX': {'name': 'Chevron', 'sector': 'Energy'},
+    'COP': {'name': 'ConocoPhillips', 'sector': 'Energy'},
+    'EOG': {'name': 'EOG Resources', 'sector': 'Energy'},
+    'MPC': {'name': 'Marathon Petroleum', 'sector': 'Energy'},
+    
+    # Industrial
+    'BA': {'name': 'Boeing', 'sector': 'Industrial'},
+    'GE': {'name': 'General Electric', 'sector': 'Industrial'},
+    'CAT': {'name': 'Caterpillar', 'sector': 'Industrial'},
+    'LMT': {'name': 'Lockheed Martin', 'sector': 'Defense'},
+    'RTX': {'name': 'Raytheon Technologies', 'sector': 'Defense'},
+    
+    # Real Estate & Infrastructure
+    'SPG': {'name': 'Simon Property', 'sector': 'Real Estate'},
+    'AMT': {'name': 'American Tower', 'sector': 'Real Estate'},
+    'PLD': {'name': 'Prologis', 'sector': 'Real Estate'},
+    
+    # Utilities
+    'NEE': {'name': 'NextEra Energy', 'sector': 'Utilities'},
+    'DUK': {'name': 'Duke Energy', 'sector': 'Utilities'},
+    'SO': {'name': 'Southern Company', 'sector': 'Utilities'},
+    
+    # Communications
+    'VZ': {'name': 'Verizon', 'sector': 'Telecom'},
+    'T': {'name': 'AT&T', 'sector': 'Telecom'},
+    'CMCSA': {'name': 'Comcast', 'sector': 'Media'},
+}
+
 app = FastAPI(title="Quanta Proxy")
 
 app.add_middleware(
@@ -39,7 +118,25 @@ def extract_tickers(text: str) -> set:
     pattern = r'\b([A-Z]{1,4})\b'
     matches = re.findall(pattern, text)
     # Filter out common words that aren't stock tickers
-    common_words = {'A', 'I', 'THE', 'AND', 'OR', 'IF', 'IS', 'ON', 'TO', 'UP', 'BY', 'AT', 'BE', 'IT', 'AS', 'THIS', 'THAT', 'WITH', 'FOR', 'YOU', 'NOT', 'BUT', 'FROM', 'CAN', 'DO', 'GET', 'GO', 'HAS', 'HE', 'IN', 'NO', 'SO', 'US', 'WE', 'MY', 'ME', 'VS', 'WHAT', 'WHO', 'WHY', 'HOW', 'WHEN', 'WHERE', 'WHICH', 'THAT'}
+    common_words = {
+        # Single letters
+        'A', 'I',
+        # Common pronouns and articles
+        'THE', 'AND', 'OR', 'IF', 'IS', 'ON', 'TO', 'UP', 'BY', 'AT', 'BE', 'IT', 'AS',
+        'THIS', 'THAT', 'WITH', 'FOR', 'YOU', 'NOT', 'BUT', 'FROM', 'CAN', 'DO', 'GET', 'GO',
+        'HAS', 'HE', 'IN', 'NO', 'SO', 'US', 'WE', 'MY', 'ME', 'VS',
+        'WHAT', 'WHO', 'WHY', 'HOW', 'WHEN', 'WHERE', 'WHICH',
+        # Common prepositions and connectors
+        'AM', 'AN', 'ARE', 'OF', 'THAN', 'THEN', 'THEY', 'THEM', 'THEIR', 'THESE', 'THOSE',
+        'ABOUT', 'AFTER', 'BEFORE', 'BETWEEN', 'DURING', 'UNTIL', 'SINCE', 'THROUGH', 'INTO',
+        'OVER', 'UNDER', 'ABOVE', 'BELOW', 'OUT', 'SUCH', 'OUR', 'ALL', 'EACH', 'EVERY',
+        'FEW', 'MORE', 'MOST', 'OTHER', 'SOME', 'ANY', 'BEEN', 'HAVE', 'DOES', 'DID', 'WILL',
+        'WOULD', 'COULD', 'SHOULD', 'MUST', 'MAY', 'MIGHT', 'SHALL', 'THAN',
+        # Common words in trading/finance context
+        'BUY', 'SELL', 'LONG', 'SHORT', 'CALL', 'PUT', 'BULL', 'BEAR', 'RISK', 'GAIN', 'LOSS',
+        'STOP', 'TAKE', 'PROFIT', 'MARGIN', 'PRICE', 'RATE', 'TERM', 'YEAR', 'MONTH', 'WEEK',
+        'DAY', 'OPEN', 'CLOSE', 'HIGH', 'LOW', 'VOLUME', 'TRADE', 'ORDER', 'FILL', 'CHART',
+    }
     return {m.upper() for m in matches if m.upper() not in common_words}
 
 
@@ -103,6 +200,21 @@ class ChatRequest(BaseModel):
 async def options_stock_data(symbol: str):
     """Handle CORS preflight requests for stock data endpoint."""
     return {}
+
+
+@app.get("/api/stocks")
+async def get_popular_stocks():
+    """Get list of popular stocks for selection."""
+    return {
+        'stocks': [
+            {
+                'symbol': symbol,
+                'name': data['name'],
+                'sector': data['sector']
+            }
+            for symbol, data in POPULAR_STOCKS.items()
+        ]
+    }
 
 
 @app.get("/api/stock/{symbol}")

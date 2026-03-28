@@ -5,14 +5,15 @@ import { validateSymbol } from "../utils/validation";
 /**
  * Hook for fetching and caching stock data
  * @param {string} symbol - Stock symbol
+ * @param {string} timeframe - Chart timeframe key
  * @returns {object} { data, loading, error, reload }
  */
-export function useStockData(symbol) {
+export function useStockData(symbol, timeframe = "3M") {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const load = useCallback(async (sym) => {
+  const load = useCallback(async (sym, tf) => {
     // Validate symbol
     const validation = validateSymbol(sym);
     if (!validation.valid) {
@@ -24,7 +25,7 @@ export function useStockData(symbol) {
     setLoading(true);
     setError(null);
     try {
-      const stockData = await fetchYF(sym);
+      const stockData = await fetchYF(sym, tf);
       setData(stockData);
       setError(null);
     } catch (e) {
@@ -37,8 +38,8 @@ export function useStockData(symbol) {
   }, []);
 
   useEffect(() => {
-    load(symbol);
-  }, [symbol, load]);
+    load(symbol, timeframe);
+  }, [symbol, timeframe, load]);
 
-  return { data, loading, error, reload: () => load(symbol) };
+  return { data, loading, error, reload: () => load(symbol, timeframe) };
 }

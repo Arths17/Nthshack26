@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import Glass from "./Glass";
 import MarkdownText from "./MarkdownText";
+import BacktestCard from "./BacktestCard";
 
 export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
   const chatRef  = useRef(null);
@@ -46,7 +47,12 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
                 </div>
               </div>
             ) : (
-              <MarkdownText text={m.content} style={{ fontSize: 12, color: "rgba(148,163,184,.85)", lineHeight: 1.75 }} />
+              <>
+                <MarkdownText text={m.content} style={{ fontSize: 12, color: "rgba(148,163,184,.85)", lineHeight: 1.75 }} />
+                {m.backtestResult && m.strategySpec && (
+                  <BacktestCard spec={m.strategySpec} result={m.backtestResult} sym={m.sym} />
+                )}
+              </>
             )}
           </div>
         ))}

@@ -130,10 +130,10 @@ export default function App() {
           <div 
             style={{ position: "relative", zIndex: 5, flex: 1, display: "grid", gridTemplateColumns: `${UI.SIDEBAR_WIDTH}px 1fr`, minHeight: 0, overflow: "hidden" }}
             role="main">
-            <aside role="complementary" aria-label="AI Assistant">
+            <aside role="complementary" aria-label="AI Assistant" style={{ height: "100%", overflow: "hidden" }}>
               <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
             </aside>
-            <section role="region" aria-label="Market Data and Trading">
+            <section role="region" aria-label="Market Data and Trading" style={{ height: "100%", overflow: "hidden" }}>
               <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} />
             </section>
           </div>

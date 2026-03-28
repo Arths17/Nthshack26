@@ -53,7 +53,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
   const pnl = cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0) - 100_000;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
 
       {/* ── TOP PAGE NAV ── */}
       <div style={{ display: "flex", gap: 4, flexShrink: 0, overflowX: "auto", paddingBottom: 2 }}>

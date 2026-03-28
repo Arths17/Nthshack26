@@ -480,11 +480,30 @@ export default function LearnPage() {
 
   const isDone = (sec, item) => completed.has(lessonKey(sec, item));
 
+  // Calculate if a specific lesson is unlocked (only if it's next in the global sequence)
+  const isLessonUnlocked = (sec, item) => {
+    if (completed.has(lessonKey(sec, item))) return true; // Already done
+    // Check if this is the next lesson globally
+    let isNext = false;
+    outer: for (const s of SECTIONS) {
+      for (const i of s.items) {
+        if (!completed.has(lessonKey(s, i))) {
+          if (s.title === sec.title && i.term === item.term) {
+            isNext = true;
+          }
+          break outer;
+        }
+      }
+    }
+    return isNext;
+  };
+
   const isSectionUnlocked = idx => {
     if (idx === 0) return true;
+    // Section is unlocked only if ALL lessons in previous section are complete
     const prev = SECTIONS[idx - 1];
     const prevDone = prev.items.filter(i => completed.has(lessonKey(prev, i))).length;
-    return prevDone >= Math.ceil(prev.items.length * 0.5);
+    return prevDone === prev.items.length;
   };
 
   // First uncompleted item across ALL sections
@@ -538,8 +557,8 @@ export default function LearnPage() {
       </div>
 
       {/* ── PATH ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 0 60px" }}>
-        <div style={{ maxWidth: 400, margin: "0 auto", padding: "24px 20px 0" }}>
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0", minHeight: 0 }}>
+        <div style={{ maxWidth: 400, margin: "0 auto", padding: "24px 20px 120px" }}>
           {SECTIONS.map((sec, sIdx) => {
             const unlocked = isSectionUnlocked(sIdx);
             const secDone  = sec.items.filter(i => isDone(sec, i)).length;
@@ -560,6 +579,7 @@ export default function LearnPage() {
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 16 }}>
                   {sec.items.map((item, iIdx) => {
                     const done      = isDone(sec, item);
+                    const itemUnlocked = isLessonUnlocked(sec, item);
                     const current   = globalNext?.sec.title === sec.title && globalNext?.item.term === item.term;
                     const celebrate = celebKey === lessonKey(sec, item);
                     return (
@@ -568,8 +588,8 @@ export default function LearnPage() {
                         item={item} sec={sec}
                         iIdx={iIdx}
                         done={done}
-                        current={current && unlocked}
-                        unlocked={unlocked}
+                        current={current && itemUnlocked}
+                        unlocked={itemUnlocked}
                         celebrate={celebrate}
                         onClick={() => openLesson(sec, item)}
                       />

@@ -7,7 +7,7 @@ import os
 import re
 import json
 from dotenv import load_dotenv
-from google import genai
+import google.genai as genai
 from google.genai import types
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

@@ -102,7 +102,25 @@ POPULAR_STOCKS = {
     'CMCSA': {'name': 'Comcast', 'sector': 'Media'},
 }
 
+
+# --- Error Handling Middleware ---
+import logging
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger("uvicorn.error")
+
 app = FastAPI(title="Quanta Proxy")
+
+@app.middleware("http")
+async def catch_exceptions_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as exc:
+        logger.error(f"Unhandled error: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error. Please try again later."}
+        )
 
 app.add_middleware(
     CORSMiddleware,

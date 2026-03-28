@@ -11,13 +11,18 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("[AuthContext] Initializing auth listener");
     // Subscribe to Firebase auth changes
     const unsubscribe = onAuthStateChangeListener((authUser) => {
+      console.log("[AuthContext] Auth state changed:", authUser?.email || "NOT LOGGED IN");
       setUser(authUser || null);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log("[AuthContext] Cleaning up auth listener");
+      unsubscribe();
+    };
   }, []);
 
   return (

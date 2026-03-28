@@ -35,8 +35,11 @@ export default function App() {
 
   const { watch, loading: loadW }               = useWatchlist();
   const { data, loading: loadS, error, reload }   = useStockData(sym, timeframe);
-  const { user: portfolioUser, cash, pos, log, buy, sell, loading: portfolioLoading, isHydrated } = usePortfolioFirebase();
+  const { user: portfolioUser, cash, pos, log, buy, sell, loading: portfolioLoading, error: portfolioError, isHydrated } = usePortfolioFirebase();
   const { msgs, input, setInput, busy, send }     = useChat(sym, data, watch, cash, pos);
+
+  // Log portfolio errors for debugging
+  if (portfolioError) console.warn("[Portfolio Error]", portfolioError);
 
   // Sync Firebase auth to local state
   useEffect(() => {
@@ -78,17 +81,12 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false);
 
   function handleEnter() {
-    if (user) {
-      // Already logged in — go straight to terminal
-      setShowLanding(false);
-      if (!localStorage.getItem("quanta:onboarded")) setShowOnboarding(true);
-    } else {
-      // Need to log in first
-      setShowLogin(true);
-    }
+    // Always show login page - Firebase auth is required for trading
+    setShowLogin(true);
   }
 
   function handleLogin(u) {
+    console.log("[Auth] User logged in:", u.email);
     setUser(u);
     setShowLanding(false);
     setShowLogin(false);
@@ -126,6 +124,35 @@ export default function App() {
     );
   }
 
+  // Require Firebase auth for trading
+  if (!authUser) {
+    return (
+      <div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#060b18", overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, maxWidth: 400 }}>
+          <div style={{ fontSize: 32, color: "rgba(148,163,184,.3)" }}>🔐</div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#f8fafc", marginBottom: 8 }}>Authentication Required</div>
+            <div style={{ fontSize: 13, color: "rgba(148,163,184,.6)", marginBottom: 16 }}>
+              You need to log in to access the trading terminal.
+            </div>
+            <button onClick={() => setShowLanding(true)} style={{
+              padding: "10px 24px",
+              background: "#4facfe",
+              color: "#060b18",
+              border: "none",
+              borderRadius: 8,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontSize: 13,
+            }}>
+              Log In or Sign Up
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <div 
@@ -138,7 +165,6 @@ export default function App() {
           </Suspense>
         )}
 
-        <Ticker watch={watch} loading={loadW} onSelect={setSym} />
         <NavBar sym={sym} watch={watch} pnl={pnl} cash={cash} onSelect={setSym} onSignOut={handleSignOut} />
 
         {/* DESKTOP */}
@@ -150,7 +176,7 @@ export default function App() {
               <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
             </aside>
             <section role="region" aria-label="Market Data and Trading" style={{ height: "100%", overflow: "hidden" }}>
-              <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} />
+              <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} onSelectSymbol={setSym} />
             </section>
           </div>
         )}
@@ -160,7 +186,7 @@ export default function App() {
           <>
             <div style={{ position: "relative", zIndex: 5, flex: 1, minHeight: 0, overflow: "hidden" }}>
               {mobilTab === "market"
-                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} />
+                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} onSelectSymbol={setSym} />
                 : <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
               }
             </div>

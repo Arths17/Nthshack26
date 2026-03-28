@@ -1,10 +1,11 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import Glass from "./Glass";
 import Chart from "./Chart";
 import Spark from "./Spark";
 import Pill from "./Pill";
 import Stat from "./Stat";
 import Counter from "./Counter";
+import Ticker from "./Ticker";
 import { f2, fB, fV } from "../utils/formatters";
 // Lazy load pages for code splitting
 const ComparePage   = lazy(() => import("../pages/ComparePage"));
@@ -48,10 +49,12 @@ function PageLoader() {
   );
 }
 
-export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload, send, timeframe, onTimeframeChange }) {
+export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload, send, timeframe, onTimeframeChange, onSelectSymbol }) {
   const [page, setPage] = useState("market");
   const [tab,  setTab]  = useState("chart");
   const [qty,  setQty]  = useState("10");
+  const [trading, setTrading] = useState(false);
+  const [tradeMsg, setTradeMsg] = useState(null);
 
   const price    = data?.price;
   const prev     = data?.prevClose;
@@ -61,6 +64,44 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
   const curPos   = pos[sym] || 0;
 
   const pnl = cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0) - 100_000;
+
+  // Debug: Log cash changes
+  useEffect(() => {
+    console.log("[MainContent] Current cash:", cash, "Position in", sym, ":", curPos);
+  }, [cash, curPos, sym]);
+
+  // Handle buy/sell with async support
+  const handleBuy = async () => {
+    if (trading) return;
+    setTrading(true);
+    setTradeMsg(null);
+    const qtyNum = parseInt(qty) || 0;
+    const result = await buy(sym, qtyNum, price);
+    setTrading(false);
+    if (result?.success) {
+      setTradeMsg({ type: "success", text: `Bought ${qtyNum} shares of ${sym}` });
+      setQty("10");
+      setTimeout(() => setTradeMsg(null), 3000);
+    } else {
+      setTradeMsg({ type: "error", text: result?.error || "Failed to buy. Check your inputs." });
+    }
+  };
+
+  const handleSell = async () => {
+    if (trading) return;
+    setTrading(true);
+    setTradeMsg(null);
+    const qtyNum = parseInt(qty) || 0;
+    const result = await sell(sym, qtyNum, price);
+    setTrading(false);
+    if (result?.success) {
+      setTradeMsg({ type: "success", text: `Sold ${qtyNum} shares of ${sym}` });
+      setQty("10");
+      setTimeout(() => setTradeMsg(null), 3000);
+    } else {
+      setTradeMsg({ type: "error", text: result?.error || "Failed to sell. Check your inputs." });
+    }
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
@@ -85,6 +126,9 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
 
       {/* ── MARKET PAGE ── */}
       {page === "market" && <>
+
+      {/* Stock ticker list */}
+      <Ticker watch={watch} loading={loading} onSelect={onSelectSymbol} />
 
       {/* Price hero */}
       <Glass style={{ padding: "18px 22px", flexShrink: 0 }}>
@@ -166,12 +210,12 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
               <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
                 <span style={{ fontSize: 11, color: "#3f3f46" }}>Qty</span>
                 <div style={{ border: "1px solid rgba(255,255,255,.08)", borderRadius: 5, background: "rgba(255,255,255,.04)", overflow: "hidden" }}>
-                  <input type="number" value={qty} onChange={e => setQty(e.target.value)}
-                    style={{ width: 56, padding: "6px 10px", fontSize: 13, fontWeight: 500, textAlign: "center" }} />
+                  <input type="number" value={qty} onChange={e => setQty(e.target.value)} disabled={trading}
+                    style={{ width: 56, padding: "6px 10px", fontSize: 13, fontWeight: 500, textAlign: "center", opacity: trading ? 0.6 : 1 }} />
                 </div>
                 {[
-                  { label: "Buy",  color: "#4ade80", bg: "rgba(74,222,128,.1)",   border: "rgba(74,222,128,.25)",  action: () => buy(sym, parseInt(qty) || 0, price),  off: !price || (parseInt(qty) || 0) * price > cash },
-                  { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.1)",  border: "rgba(248,113,113,.25)", action: () => sell(sym, parseInt(qty) || 0, price), off: (pos[sym] || 0) < (parseInt(qty) || 0) },
+                  { label: "Buy",  color: "#4ade80", bg: "rgba(74,222,128,.1)",   border: "rgba(74,222,128,.25)",  action: handleBuy,  off: trading || !price || (parseInt(qty) || 0) * price > cash },
+                  { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.1)",  border: "rgba(248,113,113,.25)", action: handleSell, off: trading || (pos[sym] || 0) < (parseInt(qty) || 0) },
                 ].map(b => (
                   <button key={b.label} onClick={b.action} disabled={b.off} style={{
                     padding: "6px 20px", borderRadius: 5,
@@ -179,12 +223,18 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
                     background: b.off ? "transparent" : b.bg,
                     color: b.off ? "#3f3f46" : b.color,
                     fontSize: 12, fontWeight: 600, cursor: b.off ? "not-allowed" : "pointer", transition: "all .15s",
+                    opacity: trading && !b.off ? 0.7 : 1,
                   }}>
-                    {b.label}
+                    {trading && (b.label === "Buy" || b.label === "Sell") ? "..." : b.label}
                   </button>
                 ))}
                 <span style={{ fontSize: 11, color: "#3f3f46" }}>≈ ${f2((parseInt(qty) || 0) * (price || 0))}</span>
               </div>
+              {tradeMsg && (
+                <div style={{ marginTop: -8, width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: 11, background: tradeMsg.type === "success" ? "rgba(74,222,128,.1)" : "rgba(248,113,113,.1)", color: tradeMsg.type === "success" ? "#4ade80" : "#f87171", border: `1px solid ${tradeMsg.type === "success" ? "rgba(74,222,128,.3)" : "rgba(248,113,113,.3)"}` }}>
+                  {tradeMsg.text}
+                </div>
+              )}
             </Glass>
           </div>
         )}

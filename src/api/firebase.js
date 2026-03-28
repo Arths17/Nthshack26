@@ -110,9 +110,12 @@ export function onAuthStateChangeListener(callback) {
  */
 export async function getUserProfile(userId) {
   try {
+    console.log('[Firebase] Getting user profile for:', userId);
     const docSnap = await getDoc(doc(db, 'users', userId));
+    console.log('[Firebase] User profile retrieved');
     return { data: docSnap.data(), error: null };
   } catch (error) {
+    console.error('[Firebase] Error getting user profile:', error.message);
     return { data: null, error };
   }
 }
@@ -121,27 +124,42 @@ export async function getUserProfile(userId) {
  * Get user portfolio (holdings)
  */
 export function subscribeToPortfolio(userId, callback) {
+  console.log('[Firebase] Subscribing to portfolio for:', userId);
   const q = query(collection(db, 'portfolios'), where('userId', '==', userId));
-  return onSnapshot(q, (snapshot) => {
-    const holdings = {};
-    snapshot.docs.forEach((doc) => {
-      const data = doc.data();
-      holdings[data.symbol] = {
-        quantity: data.quantity,
-        avgCost: data.avgCost,
-      };
-    });
-    callback(holdings);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      console.log('[Firebase] Portfolio snapshot received, docs:', snapshot.docs.length);
+      const holdings = {};
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        holdings[data.symbol] = data.quantity;
+      });
+      callback(holdings);
+    },
+    (error) => {
+      console.error('[Firebase] Portfolio subscription error:', error.message);
+    }
+  );
 }
 
 /**
  * Buy stock (add to portfolio)
  */
-export async function buyStock(userId, symbol, quantity, price) {
+export async function buyStock(userId, symbol, quantity, price, newCash) {
   try {
+    console.log('[Firebase] Starting buy:', { userId, symbol, quantity, price });
+    
     const portfolioRef = doc(db, 'portfolios', `${userId}_${symbol}`);
-    const docSnap = await getDoc(portfolioRef);
+    let docSnap;
+    
+    try {
+      docSnap = await getDoc(portfolioRef);
+      console.log('[Firebase] Portfolio doc retrieved');
+    } catch (err) {
+      console.error('[Firebase] Error reading portfolio doc:', err.message);
+      throw new Error(`Failed to read portfolio: ${err.message}`);
+    }
     
     let newQuantity = quantity;
     let newAvgCost = price;
@@ -153,27 +171,53 @@ export async function buyStock(userId, symbol, quantity, price) {
       newAvgCost = totalCost / newQuantity;
     }
 
-    await setDoc(portfolioRef, {
-      userId,
-      symbol,
-      quantity: newQuantity,
-      avgCost: newAvgCost,
-      updatedAt: serverTimestamp(),
-    });
+    try {
+      await setDoc(portfolioRef, {
+        userId,
+        symbol,
+        quantity: newQuantity,
+        avgCost: newAvgCost,
+        updatedAt: serverTimestamp(),
+      });
+      console.log('[Firebase] Portfolio doc written');
+    } catch (err) {
+      console.error('[Firebase] Error writing portfolio doc:', err.message);
+      throw new Error(`Failed to update portfolio: ${err.message}`);
+    }
 
     // Log trade
-    await addDoc(collection(db, 'trades'), {
-      userId,
-      symbol,
-      type: 'BUY',
-      quantity,
-      price,
-      totalValue: quantity * price,
-      executedAt: serverTimestamp(),
-    });
+    try {
+      await addDoc(collection(db, 'trades'), {
+        userId,
+        symbol,
+        type: 'BUY',
+        quantity,
+        price,
+        totalValue: quantity * price,
+        executedAt: serverTimestamp(),
+      });
+      console.log('[Firebase] Trade logged');
+    } catch (err) {
+      console.error('[Firebase] Error logging trade:', err.message);
+      throw new Error(`Failed to log trade: ${err.message}`);
+    }
 
+    // Update user's cash
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        currentCash: newCash,
+        updatedAt: serverTimestamp(),
+      });
+      console.log('[Firebase] User cash updated');
+    } catch (err) {
+      console.error('[Firebase] Error updating user cash:', err.message);
+      throw new Error(`Failed to update cash: ${err.message}`);
+    }
+
+    console.log('[Firebase] Buy completed successfully');
     return { error: null };
   } catch (error) {
+    console.error('[Firebase] Buy failed:', error.message);
     return { error };
   }
 }
@@ -181,10 +225,20 @@ export async function buyStock(userId, symbol, quantity, price) {
 /**
  * Sell stock (reduce from portfolio)
  */
-export async function sellStock(userId, symbol, quantity, price) {
+export async function sellStock(userId, symbol, quantity, price, newCash) {
   try {
+    console.log('[Firebase] Starting sell:', { userId, symbol, quantity, price });
+    
     const portfolioRef = doc(db, 'portfolios', `${userId}_${symbol}`);
-    const docSnap = await getDoc(portfolioRef);
+    let docSnap;
+    
+    try {
+      docSnap = await getDoc(portfolioRef);
+      console.log('[Firebase] Portfolio doc retrieved');
+    } catch (err) {
+      console.error('[Firebase] Error reading portfolio doc:', err.message);
+      throw new Error(`Failed to read portfolio: ${err.message}`);
+    }
 
     if (!docSnap.exists()) {
       return { error: new Error('Position does not exist') };
@@ -193,28 +247,55 @@ export async function sellStock(userId, symbol, quantity, price) {
     const data = docSnap.data();
     const newQuantity = data.quantity - quantity;
 
-    if (newQuantity <= 0) {
-      await deleteDoc(portfolioRef);
-    } else {
-      await updateDoc(portfolioRef, {
-        quantity: newQuantity,
-        updatedAt: serverTimestamp(),
-      });
+    try {
+      if (newQuantity <= 0) {
+        await deleteDoc(portfolioRef);
+        console.log('[Firebase] Position deleted');
+      } else {
+        await updateDoc(portfolioRef, {
+          quantity: newQuantity,
+          updatedAt: serverTimestamp(),
+        });
+        console.log('[Firebase] Position updated');
+      }
+    } catch (err) {
+      console.error('[Firebase] Error updating portfolio doc:', err.message);
+      throw new Error(`Failed to update portfolio: ${err.message}`);
     }
 
     // Log trade
-    await addDoc(collection(db, 'trades'), {
-      userId,
-      symbol,
-      type: 'SELL',
-      quantity,
-      price,
-      totalValue: quantity * price,
-      executedAt: serverTimestamp(),
-    });
+    try {
+      await addDoc(collection(db, 'trades'), {
+        userId,
+        symbol,
+        type: 'SELL',
+        quantity,
+        price,
+        totalValue: quantity * price,
+        executedAt: serverTimestamp(),
+      });
+      console.log('[Firebase] Trade logged');
+    } catch (err) {
+      console.error('[Firebase] Error logging trade:', err.message);
+      throw new Error(`Failed to log trade: ${err.message}`);
+    }
 
+    // Update user's cash
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        currentCash: newCash,
+        updatedAt: serverTimestamp(),
+      });
+      console.log('[Firebase] User cash updated');
+    } catch (err) {
+      console.error('[Firebase] Error updating user cash:', err.message);
+      throw new Error(`Failed to update cash: ${err.message}`);
+    }
+
+    console.log('[Firebase] Sell completed successfully');
     return { error: null };
   } catch (error) {
+    console.error('[Firebase] Sell failed:', error.message);
     return { error };
   }
 }
@@ -284,6 +365,21 @@ export async function deleteAlert(alertId) {
 export async function toggleAlert(alertId, isActive) {
   try {
     await updateDoc(doc(db, 'alerts', alertId), { isActive });
+    return { error: null };
+  } catch (error) {
+    return { error };
+  }
+}
+
+/**
+ * Update user's cash balance
+ */
+export async function updateUserCash(userId, newCash) {
+  try {
+    await updateDoc(doc(db, 'users', userId), {
+      currentCash: newCash,
+      updatedAt: serverTimestamp(),
+    });
     return { error: null };
   } catch (error) {
     return { error };

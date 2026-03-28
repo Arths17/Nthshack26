@@ -1,7 +1,7 @@
 import { memo, useMemo, useState, useRef, useEffect } from "react";
 import { useStocks } from "../hooks/useStocks";
 
-export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
+export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut }) {
   const { stocks } = useStocks();
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -179,6 +179,38 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", animation: "pulse 2s infinite" }} />
           <span style={{ fontSize: 10, color: "#52525b", letterSpacing: ".06em" }}>LIVE</span>
         </div>
+        <div style={{ width: 1, height: 24, background: "rgba(255,255,255,.06)" }} />
+        <button
+          onClick={onSignOut}
+          title="Sign out"
+          style={{
+            padding: "5px 12px",
+            borderRadius: 5,
+            border: "1px solid rgba(255,255,255,.08)",
+            background: "transparent",
+            color: "#a1a1aa",
+            fontSize: 11,
+            fontWeight: 500,
+            cursor: "pointer",
+            transition: "all .15s",
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = "rgba(248,113,113,.1)";
+            e.currentTarget.style.borderColor = "rgba(248,113,113,.3)";
+            e.currentTarget.style.color = "#f87171";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,.08)";
+            e.currentTarget.style.color = "#a1a1aa";
+          }}
+        >
+          <span>🚪</span>
+          Sign Out
+        </button>
       </div>
     </div>
   );

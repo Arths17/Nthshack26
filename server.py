@@ -50,7 +50,7 @@ async def chat(req: ChatRequest):
 
     config = types.GenerateContentConfig(
         system_instruction=req.system or None,
-        max_output_tokens=1000,
+        max_output_tokens=2048,
     )
 
     try:

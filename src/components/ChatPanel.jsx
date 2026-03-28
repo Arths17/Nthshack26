@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import Glass from "./Glass";
+import MarkdownText from "./MarkdownText";
 
 export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
   const chatRef  = useRef(null);
@@ -45,9 +46,7 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: 12, color: "rgba(148,163,184,.85)", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
-                {m.content}
-              </div>
+              <MarkdownText text={m.content} style={{ fontSize: 12, color: "rgba(148,163,184,.85)", lineHeight: 1.75 }} />
             )}
           </div>
         ))}

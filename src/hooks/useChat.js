@@ -61,11 +61,11 @@ ${sym} position: ${userShares} shares ($${f2(posValue)})
 ${userShares > 0 ? `Can sell up to ${userShares} shares` : "No position in this stock"}
 
 ═══ RESPONSE RULES ═══
-- Always give a clear verdict: BUY / HOLD / SELL with a specific price target or stop-loss
-- For strategy requests: give entry price, target, stop-loss, position size as % of portfolio, time horizon
-- Cite specific numbers from the data above — never be vague
-- 3 paragraphs max. Plain text only, no markdown, no bullet points
-- This is educational paper trading — be bold and specific`;
+- Start every response with **VERDICT: BUY** / **VERDICT: HOLD** / **VERDICT: SELL**
+- For strategy requests: include **Entry:** **Target:** **Stop-loss:** **Time horizon:** **Position size:**
+- Cite the exact numbers from the data above — never be vague or generic
+- Use **bold** for key numbers and verdicts. Keep it to 3 short paragraphs max
+- This is educational paper trading — be direct and specific`;
   }, [data, cash, pos, sym]);
 
   const send = useCallback(async (text) => {

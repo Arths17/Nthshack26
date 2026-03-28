@@ -5,6 +5,18 @@ const PROXY = "https://corsproxy.io/?url=";
 const muted = "rgba(148,163,184,.5)";
 const dim   = "rgba(148,163,184,.25)";
 
+const POS_WORDS = /\b(surge|soar|jump|gain|rise|rally|beat|record|profit|growth|strong|boost|upgrade|bull|buy|outperform|high|up|positive|win|exceed|top)\b/i;
+const NEG_WORDS = /\b(fall|drop|crash|plunge|sink|loss|miss|warn|cut|downgrade|bear|sell|underperform|low|down|negative|risk|concern|fear|weak|decline|layoff|lawsuit|fine|penalty)\b/i;
+
+function getSentiment(title, desc) {
+  const text = `${title} ${desc}`;
+  const pos = (text.match(POS_WORDS) || []).length;
+  const neg = (text.match(NEG_WORDS) || []).length;
+  if (pos > neg + 1) return "positive";
+  if (neg > pos + 1) return "negative";
+  return "neutral";
+}
+
 function timeAgo(dateStr) {
   const diff = (Date.now() - new Date(dateStr)) / 1000;
   if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
@@ -99,29 +111,36 @@ export default function NewsPage({ sym }) {
         </Glass>
       )}
 
-      {!loading && articles.map((a, i) => (
-        <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-          <Glass style={{
-            padding: "16px 18px", borderRadius: 14, cursor: "pointer", transition: "border-color .2s, transform .15s",
-            display: "block",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.18)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.07)"; e.currentTarget.style.transform = "translateY(0)"; }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#f1f5f9", lineHeight: 1.5, marginBottom: 6 }}>{a.title}</div>
-            {a.desc && (
-              <div style={{ fontSize: 11, color: muted, lineHeight: 1.6, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                {a.desc}
+      {!loading && articles.map((a, i) => {
+        const sentiment = getSentiment(a.title, a.desc);
+        const sentColor = sentiment === "positive" ? "#4ade80" : sentiment === "negative" ? "#f87171" : muted;
+        const sentBg    = sentiment === "positive" ? "rgba(74,222,128,.06)" : sentiment === "negative" ? "rgba(248,113,113,.06)" : "transparent";
+        const sentLabel = sentiment === "positive" ? "▲ Positive" : sentiment === "negative" ? "▼ Negative" : "● Neutral";
+        return (
+          <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+            <Glass style={{
+              padding: "16px 18px", borderRadius: 14, cursor: "pointer", transition: "border-color .2s, transform .15s",
+              display: "block", background: sentBg,
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.18)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.07)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#f1f5f9", lineHeight: 1.5, marginBottom: 6 }}>{a.title}</div>
+              {a.desc && (
+                <div style={{ fontSize: 11, color: muted, lineHeight: 1.6, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {a.desc}
+                </div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 9, color: sentColor, fontWeight: 700, letterSpacing: ".04em", background: `${sentColor}18`, padding: "2px 7px", borderRadius: 6 }}>{sentLabel}</span>
+                <span style={{ fontSize: 10, color: "#4facfe", fontWeight: 500 }}>{a.source}</span>
+                <span style={{ width: 3, height: 3, borderRadius: "50%", background: dim, display: "inline-block" }} />
+                <span style={{ fontSize: 10, color: dim }}>{timeAgo(a.pubDate)}</span>
+                <span style={{ marginLeft: "auto", fontSize: 10, color: dim }}>Read →</span>
               </div>
-            )}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 10, color: "#4facfe", fontWeight: 500 }}>{a.source}</span>
-              <span style={{ width: 3, height: 3, borderRadius: "50%", background: dim, display: "inline-block" }} />
-              <span style={{ fontSize: 10, color: dim }}>{timeAgo(a.pubDate)}</span>
-              <span style={{ marginLeft: "auto", fontSize: 10, color: dim }}>Read →</span>
-            </div>
-          </Glass>
-        </a>
-      ))}
+            </Glass>
+          </a>
+        );
+      })}
     </div>
   );
 }

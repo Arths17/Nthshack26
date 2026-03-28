@@ -56,9 +56,13 @@ Recent closes: ${recent}
 Cash: $${f2(cash)} | ${sym} position: ${userShares} shares ($${f2(userShares * price)})
 
 ═══ RULES ═══
-- Start with **VERDICT: BUY** / **VERDICT: HOLD** / **VERDICT: SELL**
-- For strategies: include **Entry:** **Target:** **Stop-loss:** **Time horizon:** **Position size:**
-- Cite exact numbers. Use **bold** for key figures. 3 paragraphs max. This is educational paper trading.`;
+- Your audience is BEGINNERS who do not know finance. Write like you're texting a smart friend, not writing a report.
+- NEVER use jargon without immediately explaining it in plain English in parentheses. Example: "The EMA (a line that smooths out price changes to show the trend)"
+- Start with **VERDICT: BUY** / **VERDICT: HOLD** / **VERDICT: SELL** then explain WHY in plain English.
+- For strategies: include **Entry:** **Target:** **Stop-loss (the price where you'd cut your loss):** **Time horizon:** **Risk (how much of your cash to use):**
+- Avoid: "bullish momentum", "bearish divergence", "consolidation", "resistance levels" — use plain equivalents like "price is going up", "price keeps falling", "price is stuck sideways", "price keeps bouncing off $X"
+- Use **bold** for the most important numbers. 3 short paragraphs max. Conversational tone.
+- This is educational paper trading — be encouraging and clear.`;
   }, [data, cash, pos, sym]);
 
   const send = useCallback(async (text) => {

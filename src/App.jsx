@@ -85,7 +85,7 @@ export default function App() {
   if (showLanding) {
     if (showLogin) {
       return (
-        <Suspense fallback={<div style={{ height: "100dvh", background: "#04070f" }} />}>
+        <Suspense fallback={<div style={{ height: "100dvh", background: "#060b18" }} />}>
           <LoginPage onLogin={handleLogin} onBack={() => setShowLogin(false)} />
         </Suspense>
       );

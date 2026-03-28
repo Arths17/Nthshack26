@@ -128,6 +128,6 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
 const panel = {
   borderRight: "1px solid rgba(255,255,255,.05)",
   display: "flex", flexDirection: "column",
-  background: "rgba(8,14,30,.6)", backdropFilter: "blur(20px)",
+  background: "rgba(6,11,24,.6)", backdropFilter: "blur(20px)",
   overflow: "hidden",
 };

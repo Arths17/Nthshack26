@@ -36,12 +36,12 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
     <div style={nav}>
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
-        <div style={{ width: 28, height: 28, borderRadius: 7, background: "#1c1c1c", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#f4f4f5", letterSpacing: "-.02em" }}>Q</span>
+        <div style={{ width: 28, height: 28, borderRadius: 7, background: "linear-gradient(135deg,#4facfe,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'DM Serif Display', serif", fontStyle: "italic", color: "#fff", letterSpacing: "-.02em" }}>Q</span>
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".08em", color: "#f4f4f5" }}>QUANTA</div>
-          <div style={{ fontSize: 9, color: "#52525b", letterSpacing: ".08em" }}>TRADING TERMINAL</div>
+          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".08em", color: "#f8fafc" }}>QUANTA</div>
+          <div style={{ fontSize: 9, color: "rgba(148,163,184,.4)", letterSpacing: ".08em" }}>TRADING TERMINAL</div>
         </div>
       </div>
 
@@ -64,7 +64,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
             >
               <span style={{ fontSize: 11, fontWeight: active ? 600 : 400, color: active ? "#f4f4f5" : "#71717a", letterSpacing: ".02em" }}>{s}</span>
               {chg != null
-                ? <span style={{ fontSize: 9, color: chg >= 0 ? "#22c55e" : "#ef4444", fontWeight: 500 }}>{chg >= 0 ? "+" : ""}{chg.toFixed(1)}%</span>
+                ? <span style={{ fontSize: 9, color: chg >= 0 ? "#4ade80" : "#f87171", fontWeight: 500 }}>{chg >= 0 ? "+" : ""}{chg.toFixed(1)}%</span>
                 : <div className="skel" style={{ width: 24, height: 7 }} />}
             </button>
           );
@@ -90,7 +90,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
           {showDropdown && (
             <div style={{
               position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 1000,
-              background: "#141414", border: "1px solid rgba(255,255,255,.08)", borderRadius: 8,
+              background: "#080f20", border: "1px solid rgba(255,255,255,.08)", borderRadius: 8,
               boxShadow: "0 8px 24px rgba(0,0,0,.6)",
               maxHeight: 400, minWidth: 260,
               display: "flex", flexDirection: "column",
@@ -165,7 +165,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,.06)", paddingLeft: 16 }}>
         <div>
           <div style={{ fontSize: 9, color: "#52525b", letterSpacing: ".06em", marginBottom: 2 }}>P&L</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: pnl >= 0 ? "#22c55e" : "#ef4444" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: pnl >= 0 ? "#4ade80" : "#f87171" }}>
             {pnl >= 0 ? "+" : "−"}${Math.abs(pnl).toFixed(0)}
           </div>
         </div>
@@ -176,7 +176,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
         </div>
         <div style={{ width: 1, height: 24, background: "rgba(255,255,255,.06)" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "pulse 2s infinite" }} />
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", animation: "pulse 2s infinite" }} />
           <span style={{ fontSize: 10, color: "#52525b", letterSpacing: ".06em" }}>LIVE</span>
         </div>
       </div>
@@ -187,6 +187,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
 const nav = {
   position: "relative", zIndex: 10, height: 54,
   display: "flex", alignItems: "center", padding: "0 20px", gap: 16,
-  background: "#0a0a0a",
+  background: "rgba(6,11,24,.95)",
+  backdropFilter: "blur(20px)",
   borderBottom: "1px solid rgba(255,255,255,.06)", flexShrink: 0,
 };

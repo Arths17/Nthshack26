@@ -3,7 +3,7 @@ import Glass from "../components/Glass";
 import Spark from "../components/Spark";
 import { f2, fB, fV, SYMBOLS } from "../utils/formatters";
 
-const green = "#22c55e", red = "#ef4444", muted = "#52525b", accent = "#a1a1aa";
+const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.4)", accent = "#4facfe";
 
 function bar(pct, color) {
   return (

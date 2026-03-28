@@ -41,7 +41,7 @@ const Ticker = memo(function Ticker({ watch, loading, onSelect }) {
               onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
               <span style={{ color: "#3f3f46", fontWeight: 500 }}>{s}</span>
               <span style={{ color: "#a1a1aa", fontWeight: 500 }}>${f2(d.price)}</span>
-              <span style={{ fontSize: 10, color: chg >= 0 ? "#22c55e" : "#ef4444", fontWeight: 500 }}>
+              <span style={{ fontSize: 10, color: chg >= 0 ? "#4ade80" : "#f87171", fontWeight: 500 }}>
                 {chg >= 0 ? "▲" : "▼"}{Math.abs(chg).toFixed(2)}%
               </span>
             </button>
@@ -58,5 +58,5 @@ const bar = {
   position: "relative", zIndex: 10, height: 28,
   borderBottom: "1px solid rgba(255,255,255,.06)",
   overflow: "hidden", display: "flex", alignItems: "center",
-  background: "#0a0a0a", flexShrink: 0,
+  background: "rgba(6,11,24,.95)", flexShrink: 0,
 };

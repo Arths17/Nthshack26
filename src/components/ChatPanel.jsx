@@ -62,7 +62,7 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
         {msgs.length <= 1 && !busy && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
             {suggestions.map((p, i) => (
-              <button key={i} onClick={() => { setInput(p); inputRef.current?.focus(); }} style={{
+              <button key={i} onClick={() => send(p)} style={{
                 textAlign: "left", padding: "9px 12px", borderRadius: 10,
                 border: "1px solid rgba(255,255,255,.06)", background: "rgba(255,255,255,.02)",
                 color: "rgba(148,163,184,.6)", fontSize: 11, cursor: "pointer", lineHeight: 1.4,
@@ -86,7 +86,7 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
               placeholder={`Ask about ${sym}…`} rows={1}
               style={{ flex: 1, fontSize: 12, lineHeight: "18px", color: "#e2e8f0", caretColor: "#4facfe" }} />
-            <button onClick={send} disabled={busy || !input.trim()} style={{
+            <button onClick={() => send()} disabled={busy || !input.trim()} style={{
               width: 30, height: 30, borderRadius: 10, flexShrink: 0,
               background: input.trim() && !busy ? "linear-gradient(135deg,#4facfe,#a78bfa)" : "rgba(255,255,255,.06)",
               border: "none", color: input.trim() && !busy ? "#fff" : "rgba(148,163,184,.3)",

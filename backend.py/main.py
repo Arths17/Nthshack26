@@ -8,7 +8,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 if not GEMINI_API_KEY:
     print("⚠️  GEMINI_API_KEY not set!")
     print("   Get your key at: https://ai.google.dev/")
-    print("   Then run: export GEMINI_API_KEY='your-key-here'")
+    print("   Then run: export GEMINI_API_KEY='AIzaSyD9b7YDqNf1G2QBEr4dpJY_TWng3ym3TvU'")
     exit(1)
 
 genai.configure(api_key=GEMINI_API_KEY)

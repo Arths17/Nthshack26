@@ -131,3 +131,18 @@ App runs at `http://localhost:5173`. Make sure the backend is running first — 
 | AI | Gemini 2.5 Flash via Google GenAI SDK |
 | Backend | FastAPI + Uvicorn |
 | Market data | Yahoo Finance (via corsproxy.io) |
+
+---
+
+## Linting & Formatting
+
+- **JavaScript/React**: Run `npx eslint .` to lint, `npx prettier --check .` to check formatting, and `npx prettier --write .` to auto-format.
+- **Python**: Run `flake8 .` to lint Python files.
+- **EditorConfig**: Most editors will auto-detect `.editorconfig` for consistent indentation.
+
+---
+
+## Testing
+
+- **Frontend**: Example test in `src/utils/validation.test.js` (run with your preferred test runner, e.g., Jest).
+- **Backend**: Add tests using `pytest` or similar for API endpoints and logic.

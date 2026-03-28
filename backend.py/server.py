@@ -263,9 +263,45 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")):
         stock = yf.Ticker(symbol)
         info = stock.info
         hist = stock.history(period=selected["period"], interval=selected["interval"])
-        
+
+        # Fallback attempts when Yahoo returns empty history
         if hist.empty:
-            raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
+            logger.warning(f"Empty history for {symbol} with period={selected['period']} interval={selected['interval']}; trying fallbacks")
+            # Try a longer period at daily granularity
+            try:
+                hist = stock.history(period="1mo", interval="1d")
+            except Exception:
+                hist = None
+
+        # If still empty, try to synthesize minimal response from `info.currentPrice`
+        if (hist is None) or (hasattr(hist, 'empty') and hist.empty):
+            current_price = None
+            try:
+                current_price = float(info.get('currentPrice') or info.get('regularMarketPrice') or 0)
+            except Exception:
+                current_price = None
+
+            if current_price and current_price > 0:
+                logger.warning(f"Using info.currentPrice fallback for {symbol}: {current_price}")
+                # Build a minimal response consistent with the endpoint shape
+                return {
+                    "symbol": symbol,
+                    "timeframe": tf,
+                    "candles": [],
+                    "price": current_price,
+                    "prevClose": float(info.get('previousClose') or 0),
+                    "dayHigh": float(info.get('dayHigh') or 0),
+                    "dayLow": float(info.get('dayLow') or 0),
+                    "volume": int(info.get('volume') or 0),
+                    "marketCap": info.get('marketCap'),
+                    "pe": info.get('trailingPE'),
+                    "w52h": info.get('fiftyTwoWeekHigh'),
+                    "w52l": info.get('fiftyTwoWeekLow'),
+                    "name": info.get('longName') or info.get('shortName') or symbol,
+                    "sector": info.get('sector') or "—",
+                }
+            else:
+                raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
         
         # Extract OHLCV candles
         candles = []

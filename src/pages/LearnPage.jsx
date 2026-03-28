@@ -1,677 +1,1350 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-/* ─── Persistence ────────────────────────────────────────────── */
-const STORAGE_KEY = "quanta:learn";
+const STORAGE_KEY = "quanta:learn:v2";
+
+function lessonKey(sectionId, lessonId) {
+  return `${sectionId}::${lessonId}`;
+}
+
+function testKey(sectionId) {
+  return `${sectionId}::checkpoint`;
+}
 
 function loadProgress() {
   try {
-    const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    return { completed: new Set(d.completed || []), xp: d.xp || 0, streak: d.streak || 0, lastDate: d.lastDate || null };
-  } catch { return { completed: new Set(), xp: 0, streak: 0, lastDate: null }; }
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return {
+      completedLessons: new Set(raw.completedLessons || []),
+      completedTests: new Set(raw.completedTests || []),
+      xp: raw.xp || 0,
+      streak: raw.streak || 0,
+      lives: typeof raw.lives === "number" ? raw.lives : 5,
+      lastDate: raw.lastDate || null,
+    };
+  } catch {
+    return {
+      completedLessons: new Set(),
+      completedTests: new Set(),
+      xp: 0,
+      streak: 0,
+      lives: 5,
+      lastDate: null,
+    };
+  }
 }
 
-function persist({ completed, xp, streak, lastDate }) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ completed: [...completed], xp, streak, lastDate }));
+function persistProgress(prog) {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      completedLessons: [...prog.completedLessons],
+      completedTests: [...prog.completedTests],
+      xp: prog.xp,
+      streak: prog.streak,
+      lives: prog.lives,
+      lastDate: prog.lastDate,
+    })
+  );
 }
 
-function lessonKey(sec, item) { return `${sec.title}::${item.term}`; }
+function buildDailyStreak(previousDate, currentStreak) {
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (previousDate === today) return currentStreak;
+  if (previousDate === yesterday) return currentStreak + 1;
+  return 1;
+}
 
-/* ─── Curriculum data ────────────────────────────────────────── */
 const SECTIONS = [
   {
+    id: "stock-basics",
     title: "Stock Basics",
-    tagline: "The building blocks of investing",
+    tagline: "Foundations you must know before placing trades",
     color: "#4facfe",
-    glow: "rgba(79,172,254,.12)",
+    glow: "rgba(79,172,254,.14)",
     icon: "◈",
-    items: [
+    lessons: [
       {
+        id: "stock-share",
         term: "Stock / Share",
         icon: "◈",
-        short: "A tiny piece of ownership in a company",
-        explain: "When you buy one share of Apple, you literally own a small fraction of Apple Inc. If the company grows and becomes more valuable, your share is worth more. You're not lending them money — you own part of the business.",
-        example: "If Apple is worth $3 trillion and has 15 billion shares, each share = $200.",
+        summary: "A stock share is a slice of ownership in a company.",
+        learn: [
+          "Owning a share means you own part of the business, not a loan.",
+          "Your return comes from price appreciation and sometimes dividends.",
+          "Company performance and investor expectations both affect price.",
+        ],
+        example: "If a company is valued at $500B and has 10B shares, each share is worth about $50.",
+        quiz: {
+          question: "What does buying one share of a company mean?",
+          options: [
+            "You loan money with guaranteed interest",
+            "You own a small part of the company",
+            "You lock your money for one year",
+            "You buy the right to set company prices",
+          ],
+          answer: 1,
+          explain: "A share represents partial ownership in the business.",
+        },
       },
       {
+        id: "market-cap",
         term: "Market Cap",
         icon: "⊞",
-        short: "How much the whole company is worth",
-        explain: "Market Cap = share price × total number of shares. It tells you the total size of the company. 'Large-cap' companies (Apple, NVDA) are safer but slower growing. 'Small-cap' companies are riskier but can grow faster.",
-        example: "NVDA at $167 × 24.4B shares = ~$4T market cap.",
+        summary: "Market cap shows the total equity value of a company.",
+        learn: [
+          "Formula: market cap = share price x shares outstanding.",
+          "Large-cap stocks are usually more stable than small-cap stocks.",
+          "Market cap helps compare company size across industries.",
+        ],
+        example: "$120 stock price x 5 billion shares = $600 billion market cap.",
+        quiz: {
+          question: "Which formula calculates market cap?",
+          options: [
+            "Net income / shares outstanding",
+            "Share price x shares outstanding",
+            "Revenue - expenses",
+            "Share price x daily volume",
+          ],
+          answer: 1,
+          explain: "Market cap multiplies current share price by total shares.",
+        },
       },
       {
+        id: "volume",
         term: "Volume",
         icon: "≋",
-        short: "How many shares were traded today",
-        explain: "High volume means lots of people are buying and selling — the stock is active. Low volume means it's quiet. A big price move on high volume is more meaningful than the same move on low volume.",
-        example: "NVDA trading 194M shares on a down day = strong selling pressure, not just noise.",
+        summary: "Volume is how many shares traded in a period.",
+        learn: [
+          "High volume confirms conviction behind a move.",
+          "Low volume moves are often less reliable and can reverse.",
+          "Compare current volume to average volume for context.",
+        ],
+        example: "A 5% breakout on 3x average volume is stronger than the same move on thin volume.",
+        quiz: {
+          question: "Why does rising volume during a breakout matter?",
+          options: [
+            "It proves a guaranteed future gain",
+            "It signals stronger market participation",
+            "It means volatility is zero",
+            "It always lowers risk",
+          ],
+          answer: 1,
+          explain: "Higher participation usually makes the price move more credible.",
+        },
       },
       {
-        term: "52-Week Range",
-        icon: "◫",
-        short: "The highest and lowest price over the past year",
-        explain: "This gives you context. If a stock is trading near its 52-week low, it might be cheap. Near its high, it might be expensive — or it might be on a strong run. It's a quick sanity check.",
-        example: "NVDA 52W range: $86–$153. At $167, it's above the yearly range — that's a strong stock.",
-      },
-      {
+        id: "pe-ratio",
         term: "P/E Ratio",
         icon: "◉",
-        short: "How expensive the stock is vs. its profits",
-        explain: "P/E = stock price ÷ earnings per share. A high P/E (50+) means investors expect big future growth. A low P/E (12) means the stock might be cheap — or the company is struggling. There's no 'right' P/E — it depends on the industry.",
-        example: "Apple P/E of 28 = you're paying $28 for every $1 of annual profit.",
+        summary: "P/E compares stock price to earnings per share.",
+        learn: [
+          "Formula: P/E = price per share / earnings per share.",
+          "Higher P/E often means higher growth expectations.",
+          "P/E should be compared to peers in the same sector.",
+        ],
+        example: "A $90 stock with $3 EPS has a P/E of 30.",
+        quiz: {
+          question: "A stock is $80 and EPS is $4. What is the P/E?",
+          options: ["4", "16", "20", "32"],
+          answer: 2,
+          explain: "80 / 4 = 20.",
+        },
+      },
+    ],
+    test: [
+      {
+        question: "A stock rises on very low volume. Best interpretation?",
+        options: [
+          "Move may be less reliable",
+          "Move is definitely institutional",
+          "Trend is guaranteed to continue",
+          "Market cap has increased sharply",
+        ],
+        answer: 0,
+      },
+      {
+        question: "Company has 2B shares and trades at $35. Market cap is:",
+        options: ["$70M", "$70B", "$17.5B", "$35B"],
+        answer: 1,
+      },
+      {
+        question: "Owning shares gives you:",
+        options: ["Debt priority", "Partial ownership", "Guaranteed dividends", "Fixed coupon"],
+        answer: 1,
       },
     ],
   },
   {
+    id: "chart-reading",
     title: "Reading Charts",
-    tagline: "Decode what price movement means",
+    tagline: "Use structure and trend to avoid random entries",
     color: "#a78bfa",
-    glow: "rgba(167,139,250,.12)",
+    glow: "rgba(167,139,250,.14)",
     icon: "◎",
-    items: [
+    lessons: [
       {
+        id: "candlesticks",
         term: "Candlestick",
         icon: "▦",
-        short: "A bar showing open, close, high & low for one period",
-        explain: "Each candle shows 4 prices: where the stock opened, where it closed, and the highest/lowest it reached. A green candle = price went UP that period. A red candle = price went DOWN. They stack together to paint the full picture.",
-        example: "Open $100, High $108, Low $98, Close $105 → green candle.",
+        summary: "Candles show open, high, low, close for a period.",
+        learn: [
+          "Body shows open-to-close range.",
+          "Wicks show extreme prices reached during that period.",
+          "Consecutive candles reveal momentum and rejection.",
+        ],
+        example: "Open 100, high 106, low 98, close 104 = bullish candle with both wicks.",
+        quiz: {
+          question: "What does the wick on a candle represent?",
+          options: ["Only open and close", "Highest and lowest prices", "Average price", "Volume traded"],
+          answer: 1,
+          explain: "Wicks capture the intraperiod extremes.",
+        },
       },
       {
-        term: "SMA (Simple Moving Average)",
+        id: "sma",
+        term: "SMA",
         icon: "≈",
-        short: "The average price over the last N days",
-        explain: "SMA20 = the average of the last 20 closing prices. It smooths out daily noise so you can see the real trend. When price is above the SMA, the trend is up. Below it, the trend is down. Think of it as the baseline.",
-        example: "If NVDA closed at different prices each day for 20 days, the SMA20 is just the average of those 20 closes.",
+        summary: "SMA smooths price by averaging a fixed window.",
+        learn: [
+          "SMA(20) averages the last 20 closes.",
+          "Longer SMA reacts slower but filters more noise.",
+          "Price above rising SMA suggests bullish structure.",
+        ],
+        example: "A rising SMA50 often acts as dynamic support in uptrends.",
+        quiz: {
+          question: "Why do traders use moving averages?",
+          options: [
+            "To remove all risk",
+            "To smooth noise and identify trend",
+            "To predict exact highs",
+            "To replace stop losses",
+          ],
+          answer: 1,
+          explain: "Moving averages simplify trend reading by smoothing short-term noise.",
+        },
       },
       {
-        term: "EMA (Exponential Moving Average)",
+        id: "ema",
+        term: "EMA",
         icon: "≋",
-        short: "Like SMA but reacts faster to recent prices",
-        explain: "EMA weighs recent days more heavily than older ones. This means it reacts faster to price changes than SMA. Traders use it to spot trend changes earlier. EMA(12) and EMA(26) together form the popular MACD indicator.",
-        example: "If NVDA drops sharply today, the EMA moves down faster than the SMA would.",
+        summary: "EMA weights recent prices more heavily than SMA.",
+        learn: [
+          "EMA reacts faster to sudden price changes.",
+          "Useful for short-term momentum systems.",
+          "Crossovers between fast and slow EMAs can be signals.",
+        ],
+        example: "After a sharp drop, EMA20 turns down before SMA20.",
+        quiz: {
+          question: "Compared to SMA, EMA is generally:",
+          options: ["Slower", "Faster to react", "Always more accurate", "Unusable intraday"],
+          answer: 1,
+          explain: "EMA gives more weight to recent bars, so it responds quicker.",
+        },
       },
       {
+        id: "support-resistance",
         term: "Support & Resistance",
         icon: "⊡",
-        short: "Price levels where stocks tend to bounce or get stuck",
-        explain: "Support is a price floor — the stock keeps bouncing off it when it falls. Resistance is a ceiling — the stock keeps stalling when it rises there. When a stock breaks through resistance, it often keeps going up.",
-        example: "NVDA keeps bouncing around $160 → $160 is a support level to watch.",
+        summary: "Support is a floor, resistance is a ceiling.",
+        learn: [
+          "Support is where buyers repeatedly defend price.",
+          "Resistance is where sellers repeatedly appear.",
+          "A breakout through resistance can become new support.",
+        ],
+        example: "Price repeatedly rejects near 210, then breaks above on high volume: possible regime shift.",
+        quiz: {
+          question: "After a clean breakout above resistance, what often happens?",
+          options: [
+            "Resistance can become support",
+            "Volume disappears permanently",
+            "Trend always ends immediately",
+            "P/E ratio resets",
+          ],
+          answer: 0,
+          explain: "Old resistance often flips into support if the breakout holds.",
+        },
+      },
+    ],
+    test: [
+      {
+        question: "Which moving average reacts faster to new prices?",
+        options: ["SMA", "EMA", "VWAP", "RSI"],
+        answer: 1,
+      },
+      {
+        question: "A candle wick mainly indicates:",
+        options: ["Dividend yield", "Intraperiod extremes", "Earnings growth", "Order type"],
+        answer: 1,
+      },
+      {
+        question: "Support is best described as:",
+        options: ["A guaranteed bottom", "Repeated selling area", "Repeated buying area", "A valuation metric"],
+        answer: 2,
       },
     ],
   },
   {
+    id: "indicators",
     title: "Indicators",
-    tagline: "Tools that reveal hidden signals",
+    tagline: "Read momentum and quality of moves",
     color: "#4ade80",
-    glow: "rgba(74,222,128,.12)",
+    glow: "rgba(74,222,128,.14)",
     icon: "◆",
-    items: [
+    lessons: [
       {
+        id: "rsi",
         term: "RSI",
         icon: "◆",
-        short: "A score 0–100 showing if a stock is overbought or oversold",
-        explain: "RSI measures how fast and how much the price has moved recently. Above 70 = overbought (might be due for a pullback). Below 30 = oversold (might be due for a bounce). It's a guide, not a guarantee — use it with other signals.",
-        example: "RSI of 25 on NVDA after a big drop → stock might be oversold, possible bounce coming.",
+        summary: "RSI is a momentum oscillator from 0 to 100.",
+        learn: [
+          "RSI above 70 may indicate overbought conditions.",
+          "RSI below 30 may indicate oversold conditions.",
+          "Use RSI with trend context, not in isolation.",
+        ],
+        example: "In a strong uptrend, RSI can stay above 60 for long periods.",
+        quiz: {
+          question: "RSI below 30 often signals:",
+          options: ["Overbought", "Oversold", "No volume", "Guaranteed rally"],
+          answer: 1,
+          explain: "Below 30 is typically interpreted as oversold.",
+        },
       },
       {
+        id: "ema-crossover",
         term: "EMA Crossover",
         icon: "≈",
-        short: "When a fast trend line crosses a slow trend line",
-        explain: "When the fast EMA (e.g. 12-day) crosses above the slow EMA (e.g. 26-day), that's a buy signal — the short-term trend is turning bullish. When it crosses back below, it's a sell signal. One of the most widely used strategies.",
-        example: "EMA(12) crosses above EMA(26) on MSFT → strategy triggers a buy signal.",
+        summary: "Fast EMA crossing slow EMA can signal trend change.",
+        learn: [
+          "Fast above slow implies bullish momentum shift.",
+          "Fast below slow implies weakening momentum.",
+          "Crossovers work better when paired with volume and structure.",
+        ],
+        example: "EMA12 crossing above EMA26 after consolidation can mark a momentum breakout.",
+        quiz: {
+          question: "A bullish EMA crossover happens when:",
+          options: [
+            "Slow EMA crosses above fast EMA",
+            "Fast EMA crosses above slow EMA",
+            "Price closes below both EMAs",
+            "Volume drops to zero",
+          ],
+          answer: 1,
+          explain: "Bullish crossover = short-term trend overtakes long-term trend.",
+        },
       },
       {
+        id: "volume-spike",
         term: "Volume Spike",
         icon: "⊕",
-        short: "A sudden jump in how many shares are being traded",
-        explain: "When price moves a lot AND volume spikes, it's a more significant move. A big price drop on huge volume = strong selling. A big price jump on huge volume = strong buying. Low volume moves are less reliable.",
-        example: "NVDA drops 12% on 194M volume (vs normal ~50M) → very significant move, not just noise.",
+        summary: "Large volume changes reveal conviction in price action.",
+        learn: [
+          "A spike confirms importance of a breakout or breakdown.",
+          "Spikes near key levels are more informative.",
+          "Spikes against trend can indicate exhaustion.",
+        ],
+        example: "A failed breakout with a huge spike can become a reversal signal.",
+        quiz: {
+          question: "Why is a volume spike at resistance important?",
+          options: [
+            "It can confirm breakout strength or rejection",
+            "It cancels all indicators",
+            "It means market cap doubled",
+            "It guarantees next candle direction",
+          ],
+          answer: 0,
+          explain: "At key levels, unusual volume often confirms the real battle outcome.",
+        },
+      },
+    ],
+    test: [
+      {
+        question: "RSI is primarily a:",
+        options: ["Valuation metric", "Momentum oscillator", "Balance sheet line item", "Candlestick type"],
+        answer: 1,
+      },
+      {
+        question: "EMA crossover signals are strongest when combined with:",
+        options: ["No context", "Volume and structure", "Random entries", "Ignoring trend"],
+        answer: 1,
+      },
+      {
+        question: "A sudden volume spike during a breakdown usually means:",
+        options: ["Move may be meaningful", "Data error", "Guaranteed bounce", "Lower volatility"],
+        answer: 0,
       },
     ],
   },
   {
-    title: "Trading Concepts",
-    tagline: "Risk, strategy, and how to win",
+    id: "risk-strategy",
+    title: "Risk & Strategy",
+    tagline: "Protect downside and build repeatable process",
     color: "#f472b6",
-    glow: "rgba(244,114,182,.12)",
+    glow: "rgba(244,114,182,.14)",
     icon: "▣",
-    items: [
+    lessons: [
       {
+        id: "stop-loss",
         term: "Stop-Loss",
         icon: "⊗",
-        short: "An automatic exit to limit how much you can lose",
-        explain: "You set a price below your buy price. If the stock falls to that price, it automatically sells — limiting your loss. It protects you from holding a sinking stock and watching losses compound.",
-        example: "Buy NVDA at $167, set stop-loss at $158 (5% below). If it drops to $158, you're out automatically.",
+        summary: "Stop-loss defines max loss before the trade starts.",
+        learn: [
+          "Set the stop at a level that invalidates your trade idea.",
+          "Risk per trade should be a small fixed percent of account.",
+          "Never widen stops emotionally after entry.",
+        ],
+        example: "Entry at 100, invalidation at 95, risk = $5/share.",
+        quiz: {
+          question: "Best reason to use a stop-loss?",
+          options: [
+            "Guarantee profit",
+            "Control downside and preserve capital",
+            "Avoid paying fees",
+            "Increase leverage",
+          ],
+          answer: 1,
+          explain: "Stops keep one bad trade from becoming account damage.",
+        },
       },
       {
+        id: "take-profit",
         term: "Take-Profit",
         icon: "◎",
-        short: "An automatic exit to lock in your gains",
-        explain: "The opposite of a stop-loss. You set a target price above your buy price. When the stock hits it, you automatically sell and pocket the profit. Prevents greed from making you hold too long.",
-        example: "Buy at $167, take-profit at $185. Stock hits $185, you sell and lock in the ~10% gain.",
+        summary: "Take-profit locks gains at planned levels.",
+        learn: [
+          "Predefine exit targets based on structure or risk-reward.",
+          "Partial profit-taking can reduce psychological pressure.",
+          "Combining stop and target gives clear expectancy math.",
+        ],
+        example: "Risk $2 to target $6 gives a 1:3 risk-reward profile.",
+        quiz: {
+          question: "A 1:3 risk-reward trade means:",
+          options: [
+            "You risk 3 to make 1",
+            "You risk 1 to make 3",
+            "No stop-loss is needed",
+            "Win rate must be 100%",
+          ],
+          answer: 1,
+          explain: "Risk 1 unit to potentially earn 3 units.",
+        },
       },
       {
+        id: "paper-trading",
         term: "Paper Trading",
         icon: "▣",
-        short: "Practice trading with fake money — zero risk",
-        explain: "Paper trading lets you test strategies and build confidence without risking real money. Quanta gives you $100,000 of virtual cash to trade with. It behaves like real trading — you just can't lose actual money.",
-        example: "You practice buying NVDA, holding for a week, and selling. If it works, great. If not, you learned without losing a cent.",
+        summary: "Paper trading tests execution without financial risk.",
+        learn: [
+          "Use it to validate process and remove beginner mistakes.",
+          "Track mistakes and rules, not just PnL.",
+          "Graduate only after consistent rule-following.",
+        ],
+        example: "Run your setup for 20 trades in simulation before going live.",
+        quiz: {
+          question: "Best use of paper trading?",
+          options: [
+            "Max leverage experimentation",
+            "Build and test disciplined execution",
+            "Ignore risk management",
+            "Predict exact market tops",
+          ],
+          answer: 1,
+          explain: "It is a practice environment for process quality.",
+        },
       },
       {
-        term: "Backtest",
+        id: "backtesting",
+        term: "Backtesting",
         icon: "◉",
-        short: "Testing a strategy on historical data",
-        explain: "Before using a strategy with real money, check if it worked in the past. A backtest simulates all the trades the strategy would have made and shows total return, win rate, worst losing streak, and more.",
-        example: "Backtest EMA crossover on NVDA for 3 months → 37% win rate, -15% total return → risky strategy right now.",
+        summary: "Backtesting evaluates a strategy on historical data.",
+        learn: [
+          "Measure win rate, drawdown, and expectancy.",
+          "Avoid overfitting by testing on unseen periods.",
+          "A robust strategy survives different market regimes.",
+        ],
+        example: "A strategy that only works in one year may be curve-fit noise.",
+        quiz: {
+          question: "A major backtesting pitfall is:",
+          options: ["Overfitting", "Risk controls", "Data hygiene", "Sample diversity"],
+          answer: 0,
+          explain: "Overfitting creates fake confidence by memorizing history.",
+        },
+      },
+    ],
+    test: [
+      {
+        question: "Primary purpose of a stop-loss:",
+        options: ["Increase trade size", "Control downside", "Guarantee win rate", "Avoid taxes"],
+        answer: 1,
       },
       {
-        term: "Sharpe Ratio",
-        icon: "◈",
-        short: "How much return you got per unit of risk",
-        explain: "A Sharpe ratio above 1 is good — solid returns without crazy risk. Below 0 means you'd have been better off in a savings account. It accounts for how bumpy the ride was, not just the final return.",
-        example: "Two strategies both return +10%, but one was rocky. The smoother one has a higher Sharpe ratio.",
+        question: "Backtesting should include what metric?",
+        options: ["Only biggest winner", "Drawdown and expectancy", "Only total return", "Only number of trades"],
+        answer: 1,
+      },
+      {
+        question: "Paper trading is most useful for:",
+        options: ["Practicing process", "Making real income", "Avoiding journal", "Ignoring slippage"],
+        answer: 0,
       },
     ],
   },
 ];
 
-/* ─── Zig-zag offsets (px, from center) ─────────────────────── */
-const ZIGZAG = [0, 72, 0, -72, 0, 72, 0, -72, 0, 72];
-
-/* ─── Sub-components ─────────────────────────────────────────── */
+const ZIGZAG = [0, 72, 0, -72, 0, 72, 0, -72];
 
 function StatBadge({ icon, value, label, color }) {
   return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 8,
-      background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)",
-      borderRadius: 24, padding: "8px 16px",
-    }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        background: "rgba(255,255,255,.04)",
+        border: "1px solid rgba(255,255,255,.08)",
+        borderRadius: 24,
+        padding: "8px 16px",
+      }}
+    >
       <span style={{ fontSize: 16, color }}>{icon}</span>
       <div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#f0f4ff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{value}</div>
-        <div style={{ fontSize: 10, color: "rgba(148,163,184,.45)", fontWeight: 500, letterSpacing: ".06em", marginTop: 1 }}>{label}</div>
-      </div>
-    </div>
-  );
-}
-
-function SectionBanner({ sec, sIdx, doneCount, totalCount, unlocked, onContinue, nextItem }) {
-  const pct = totalCount > 0 ? Math.round(doneCount / totalCount * 100) : 0;
-  return (
-    <div style={{
-      margin: sIdx === 0 ? "0 0 32px" : "48px 0 32px",
-      borderRadius: 20, overflow: "hidden",
-      background: unlocked ? `linear-gradient(135deg,${sec.glow},rgba(255,255,255,.02))` : "rgba(255,255,255,.02)",
-      border: `1px solid ${unlocked ? sec.color + "28" : "rgba(255,255,255,.06)"}`,
-    }}>
-      {/* Top strip */}
-      <div style={{
-        height: 4, width: "100%",
-        background: unlocked
-          ? `linear-gradient(90deg,${sec.color} ${pct}%,rgba(255,255,255,.06) ${pct}%)`
-          : "rgba(255,255,255,.04)",
-      }} />
-      <div style={{ padding: "20px 22px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-          {/* Icon */}
-          <div style={{
-            width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-            background: unlocked ? sec.glow : "rgba(255,255,255,.04)",
-            border: `1px solid ${unlocked ? sec.color + "28" : "rgba(255,255,255,.06)"}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <span style={{ fontSize: 22, color: unlocked ? sec.color : "rgba(148,163,184,.25)" }}>{sec.icon}</span>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: unlocked ? "#f0f4ff" : "rgba(148,163,184,.35)", marginBottom: 3 }}>{sec.title}</div>
-            <div style={{ fontSize: 12, color: unlocked ? "rgba(148,163,184,.55)" : "rgba(148,163,184,.25)", marginBottom: 12 }}>
-              {unlocked ? sec.tagline : "Complete the previous section to unlock"}
-            </div>
-            {unlocked && (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                  <div style={{ flex: 1, height: 6, borderRadius: 10, background: "rgba(255,255,255,.06)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, borderRadius: 10, background: sec.color, transition: "width .4s ease" }} />
-                  </div>
-                  <span style={{ fontSize: 11, color: "rgba(148,163,184,.5)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{doneCount}/{totalCount}</span>
-                </div>
-                {doneCount < totalCount && nextItem && (
-                  <button onClick={onContinue} style={{
-                    padding: "10px 22px", borderRadius: 12, fontSize: 13, fontWeight: 700,
-                    background: sec.color, border: "none", color: "#fff", cursor: "pointer",
-                    boxShadow: `0 4px 16px ${sec.color}44`, letterSpacing: ".02em",
-                    transition: "all .18s",
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${sec.color}55`; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 4px 16px ${sec.color}44`; }}
-                    onMouseDown={e => { e.currentTarget.style.transform = "translateY(1px) scale(.97)"; }}
-                    onMouseUp={e => { e.currentTarget.style.transform = "translateY(-1px)"; }}>
-                    {doneCount === 0 ? `Start ${sec.title}` : "Continue"}
-                  </button>
-                )}
-                {doneCount === totalCount && (
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 10, background: `${sec.color}18`, border: `1px solid ${sec.color}28` }}>
-                    <span style={{ color: sec.color, fontSize: 14 }}>✓</span>
-                    <span style={{ fontSize: 12, color: sec.color, fontWeight: 600 }}>Section Complete!</span>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: "#f0f4ff",
+            lineHeight: 1,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {value}
+        </div>
+        <div style={{ fontSize: 10, color: "rgba(148,163,184,.45)", fontWeight: 600, letterSpacing: ".06em", marginTop: 1 }}>
+          {label}
         </div>
       </div>
     </div>
   );
 }
 
-function LessonNode({ item, sec, iIdx, done, current, unlocked, onClick, celebrate }) {
-  const offset = ZIGZAG[iIdx % ZIGZAG.length];
-  const color  = sec.color;
-
+function LessonNode({ section, lesson, idx, done, unlocked, current, celebrate, onOpen }) {
+  const offset = ZIGZAG[idx % ZIGZAG.length];
+  const color = section.color;
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-      {/* Connector line */}
-      {iIdx > 0 && (
-        <div style={{
-          width: 3, height: 36, borderRadius: 2,
-          background: done ? `${color}55` : "rgba(255,255,255,.07)",
-          marginBottom: 0,
-        }} />
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {idx > 0 && (
+        <div
+          style={{
+            width: 3,
+            height: 34,
+            borderRadius: 2,
+            background: done ? `${color}55` : "rgba(255,255,255,.07)",
+          }}
+        />
       )}
 
-      {/* "START" tooltip above current node */}
       {current && (
-        <div style={{
-          transform: `translateX(${offset}px)`,
-          background: color, borderRadius: 10, padding: "6px 16px",
-          marginBottom: 8, position: "relative",
-          animation: "tooltipBounce 1.2s ease-in-out infinite",
-        }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", letterSpacing: ".06em" }}>START</span>
-          {/* Triangle pointer */}
-          <div style={{
-            position: "absolute", bottom: -6, left: "50%", transform: "translateX(-50%)",
-            width: 0, height: 0,
-            borderLeft: "6px solid transparent",
-            borderRight: "6px solid transparent",
-            borderTop: `6px solid ${color}`,
-          }} />
+        <div
+          style={{
+            transform: `translateX(${offset}px)`,
+            marginBottom: 8,
+            background: color,
+            borderRadius: 10,
+            padding: "6px 14px",
+            animation: "tooltipBounce 1.2s ease-in-out infinite",
+          }}
+        >
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", color: "#fff" }}>NEXT</span>
         </div>
       )}
 
-      {/* Circle node */}
       <div
-        onClick={unlocked ? onClick : undefined}
+        onClick={unlocked ? onOpen : undefined}
         style={{
           transform: `translateX(${offset}px)`,
-          width: 72, height: 72, borderRadius: "50%",
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          width: 72,
+          height: 72,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           cursor: unlocked ? "pointer" : "not-allowed",
           userSelect: "none",
-          position: "relative",
-          transition: "transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s",
-          // Visual state
+          border: `3px solid ${done ? color : unlocked ? `${color}44` : "rgba(255,255,255,.1)"}`,
           background: done
-            ? `linear-gradient(145deg,${color},${color}cc)`
+            ? `linear-gradient(145deg, ${color}, ${color}cc)`
             : unlocked
-              ? `linear-gradient(145deg,${color}20,${color}10)`
+              ? `linear-gradient(145deg, ${color}22, ${color}12)`
               : "rgba(255,255,255,.04)",
-          border: `3px solid ${done ? color : unlocked ? color + "44" : "rgba(255,255,255,.1)"}`,
           boxShadow: done
             ? `0 0 0 4px ${color}22, 0 8px 24px ${color}44`
             : unlocked
-              ? `0 0 0 0px ${color}00, 0 4px 12px rgba(0,0,0,.3)`
+              ? "0 4px 12px rgba(0,0,0,.28)"
               : "0 4px 12px rgba(0,0,0,.2)",
-          animation: celebrate ? "completePop .5s cubic-bezier(.34,1.56,.64,1)" : current ? "nodePulse 2s ease-in-out infinite" : "none",
+          animation: celebrate ? "completePop .5s cubic-bezier(.34,1.56,.64,1)" : "none",
+          transition: "all .16s ease",
         }}
-        onMouseEnter={e => { if (unlocked) { e.currentTarget.style.transform = `translateX(${offset}px) scale(1.08)`; } }}
-        onMouseLeave={e => { e.currentTarget.style.transform = `translateX(${offset}px) scale(1)`; }}
-        onMouseDown={e => { if (unlocked) { e.currentTarget.style.transform = `translateX(${offset}px) scale(0.93)`; } }}
-        onMouseUp={e => { if (unlocked) { e.currentTarget.style.transform = `translateX(${offset}px) scale(1.08)`; } }}
       >
         {done ? (
           <span style={{ fontSize: 30, color: "#fff", fontWeight: 700 }}>✓</span>
         ) : unlocked ? (
-          <span style={{ fontSize: 24, color }}>{item.icon}</span>
+          <span style={{ fontSize: 24, color }}>{lesson.icon}</span>
         ) : (
-          <span style={{ fontSize: 22, color: "rgba(148,163,184,.2)" }}>⊠</span>
+          <span style={{ fontSize: 20, color: "rgba(148,163,184,.25)" }}>⊠</span>
         )}
       </div>
 
-      {/* Term label */}
-      <div style={{
-        transform: `translateX(${offset}px)`,
-        marginTop: 10, marginBottom: 4,
-        maxWidth: 100, textAlign: "center",
-      }}>
-        <div style={{
-          fontSize: 11, fontWeight: 600, lineHeight: 1.35,
-          color: done ? color : unlocked ? "rgba(148,163,184,.8)" : "rgba(148,163,184,.25)",
-        }}>
-          {item.term}
+      <div style={{ transform: `translateX(${offset}px)`, marginTop: 10, textAlign: "center", maxWidth: 120 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: done ? color : unlocked ? "rgba(148,163,184,.82)" : "rgba(148,163,184,.28)" }}>
+          {lesson.term}
         </div>
-        {done && <div style={{ fontSize: 9, color: color + "88", marginTop: 2, letterSpacing: ".06em" }}>DONE</div>}
+        <div style={{ marginTop: 3, fontSize: 10, color: "rgba(148,163,184,.45)" }}>
+          {done ? "Mini quiz passed" : "Mini quiz inside"}
+        </div>
       </div>
     </div>
   );
 }
 
-function LessonModal({ lesson, onComplete, onClose, alreadyDone }) {
-  const { section: sec, item } = lesson;
+function SectionHeader({ section, unlocked, lessonDone, lessonTotal, testDone, onStartLesson, onStartTest }) {
+  const pct = Math.round((lessonDone / lessonTotal) * 100);
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 1000,
-      background: "rgba(4,7,15,.88)", backdropFilter: "blur(12px)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "16px",
-      animation: "fadeIn .2s ease",
-    }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{
-        background: "rgba(10,16,32,.98)",
-        border: `1px solid ${sec.color}28`,
-        borderRadius: 24, width: "100%", maxWidth: 440, maxHeight: "85vh",
-        overflowY: "auto", position: "relative",
-        boxShadow: `0 48px 96px rgba(0,0,0,.8), 0 0 80px ${sec.color}10, inset 0 1px 0 rgba(255,255,255,.06)`,
-        animation: "slideUp .25s cubic-bezier(.34,1.4,.64,1)",
-      }}>
-        {/* Colored top strip */}
-        <div style={{ height: 4, background: sec.color, borderRadius: "24px 24px 0 0" }} />
-
-        {/* Header */}
-        <div style={{ padding: "20px 24px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 10,
-              background: sec.glow, border: `1px solid ${sec.color}28`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <span style={{ color: sec.color, fontSize: 16 }}>{sec.icon}</span>
+    <div
+      style={{
+        marginTop: 34,
+        borderRadius: 20,
+        overflow: "hidden",
+        border: `1px solid ${unlocked ? `${section.color}28` : "rgba(255,255,255,.06)"}`,
+        background: unlocked ? `linear-gradient(130deg, ${section.glow}, rgba(255,255,255,.02))` : "rgba(255,255,255,.02)",
+      }}
+    >
+      <div
+        style={{
+          height: 4,
+          width: "100%",
+          background: unlocked
+            ? `linear-gradient(90deg, ${section.color} ${pct}%, rgba(255,255,255,.07) ${pct}%)`
+            : "rgba(255,255,255,.05)",
+        }}
+      />
+      <div style={{ padding: "18px 20px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 14,
+              border: `1px solid ${unlocked ? `${section.color}30` : "rgba(255,255,255,.08)"}`,
+              background: unlocked ? section.glow : "rgba(255,255,255,.03)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 20, color: unlocked ? section.color : "rgba(148,163,184,.3)" }}>{section.icon}</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: unlocked ? "#f0f4ff" : "rgba(148,163,184,.45)" }}>{section.title}</div>
+            <div style={{ fontSize: 12, color: unlocked ? "rgba(148,163,184,.58)" : "rgba(148,163,184,.3)", marginTop: 2 }}>
+              {unlocked ? section.tagline : "Pass previous checkpoint to unlock"}
             </div>
-            <span style={{ fontSize: 12, color: sec.color, fontWeight: 600, letterSpacing: ".08em" }}>{sec.title.toUpperCase()}</span>
           </div>
-          <button onClick={onClose} style={{
-            background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.08)",
-            borderRadius: 8, width: 30, height: 30, cursor: "pointer", color: "rgba(148,163,184,.6)",
-            fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all .15s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.1)"; e.currentTarget.style.color = "#f0f4ff"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,.06)"; e.currentTarget.style.color = "rgba(148,163,184,.6)"; }}>
-            ✕
-          </button>
         </div>
 
-        {/* Big icon + term */}
-        <div style={{ padding: "24px 24px 0", textAlign: "center" }}>
-          <div style={{
-            width: 80, height: 80, borderRadius: "50%", margin: "0 auto 18px",
-            background: sec.glow, border: `2px solid ${sec.color}30`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: `0 0 32px ${sec.color}20`,
-          }}>
-            <span style={{ fontSize: 36, color: sec.color }}>{item.icon}</span>
+        {unlocked && (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+              <div style={{ flex: 1, height: 6, borderRadius: 8, overflow: "hidden", background: "rgba(255,255,255,.06)" }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: section.color, transition: "width .3s ease" }} />
+              </div>
+              <span style={{ fontSize: 11, color: "rgba(148,163,184,.5)", fontVariantNumeric: "tabular-nums" }}>
+                {lessonDone}/{lessonTotal}
+              </span>
+            </div>
+
+            {lessonDone < lessonTotal && (
+              <button
+                onClick={onStartLesson}
+                style={{
+                  padding: "9px 16px",
+                  borderRadius: 11,
+                  border: "none",
+                  background: section.color,
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: `0 8px 18px ${section.color}44`,
+                }}
+              >
+                {lessonDone === 0 ? "Start lessons" : "Continue lessons"}
+              </button>
+            )}
+
+            {lessonDone === lessonTotal && !testDone && (
+              <button
+                onClick={onStartTest}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: 11,
+                  border: "none",
+                  background: `linear-gradient(135deg, ${section.color}, #0ea5e9)`,
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: `0 8px 18px ${section.color}44`,
+                }}
+              >
+                Take checkpoint test
+              </button>
+            )}
+
+            {testDone && (
+              <div
+                style={{
+                  display: "inline-flex",
+                  gap: 7,
+                  alignItems: "center",
+                  padding: "8px 14px",
+                  borderRadius: 10,
+                  background: `${section.color}18`,
+                  border: `1px solid ${section.color}28`,
+                  fontSize: 12,
+                  color: section.color,
+                  fontWeight: 700,
+                }}
+              >
+                <span>✓</span>
+                <span>Checkpoint passed</span>
+              </div>
+            )}
           </div>
-          <h2 style={{
-            fontFamily: "'DM Serif Display',serif", fontStyle: "italic",
-            fontSize: 26, fontWeight: 400, color: "#f0f4ff",
-            margin: "0 0 6px", letterSpacing: "-.01em",
-          }}>{item.term}</h2>
-          <p style={{ fontSize: 14, color: "rgba(148,163,184,.6)", margin: 0, fontStyle: "italic" }}>{item.short}</p>
-        </div>
-
-        {/* Divider */}
-        <div style={{ margin: "22px 24px", height: 1, background: "rgba(255,255,255,.06)" }} />
-
-        {/* Explanation */}
-        <div style={{ padding: "0 24px" }}>
-          <div style={{ fontSize: 10, color: sec.color, fontWeight: 700, letterSpacing: ".12em", marginBottom: 10 }}>WHAT IT MEANS</div>
-          <p style={{ fontSize: 14, color: "rgba(148,163,184,.85)", lineHeight: 1.8, margin: 0 }}>
-            {item.explain}
-          </p>
-        </div>
-
-        {/* Example card */}
-        <div style={{
-          margin: "20px 24px",
-          background: sec.glow, border: `1px solid ${sec.color}20`,
-          borderRadius: 14, padding: "16px 18px",
-        }}>
-          <div style={{ fontSize: 10, color: sec.color, fontWeight: 700, letterSpacing: ".12em", marginBottom: 8 }}>EXAMPLE</div>
-          <p style={{ fontSize: 13, color: "rgba(148,163,184,.75)", lineHeight: 1.7, margin: 0, fontFamily: "monospace" }}>
-            {item.example}
-          </p>
-        </div>
-
-        {/* CTA */}
-        <div style={{ padding: "4px 24px 24px" }}>
-          <button onClick={onComplete} style={{
-            width: "100%", padding: "15px 0", borderRadius: 14,
-            fontSize: 15, fontWeight: 700, cursor: "pointer", letterSpacing: ".03em",
-            background: alreadyDone
-              ? "rgba(255,255,255,.06)"
-              : sec.color,
-            border: alreadyDone ? "1px solid rgba(255,255,255,.1)" : "none",
-            color: alreadyDone ? "rgba(148,163,184,.6)" : "#fff",
-            boxShadow: alreadyDone ? "none" : `0 8px 24px ${sec.color}44`,
-            transition: "all .18s cubic-bezier(.34,1.56,.64,1)",
-          }}
-            onMouseEnter={e => { if (!alreadyDone) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = `0 14px 32px ${sec.color}55`; } }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = alreadyDone ? "none" : `0 8px 24px ${sec.color}44`; }}
-            onMouseDown={e => { if (!alreadyDone) e.currentTarget.style.transform = "translateY(1px) scale(.98)"; }}
-            onMouseUp={e => { if (!alreadyDone) { e.currentTarget.style.transform = "translateY(-1px)"; } }}>
-            {alreadyDone ? "Already completed · Close" : "Got it!  +20 XP ✦"}
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ─── Main component ─────────────────────────────────────────── */
-export default function LearnPage() {
-  const [prog, setProg]   = useState(loadProgress);
-  const [lesson, setLesson] = useState(null);
-  const [popXp, setPopXp]   = useState(false);
-  const [celebKey, setCelebKey] = useState(null);
+function ModalShell({ color, title, subtitle, onClose, children }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(4,7,15,.88)",
+        backdropFilter: "blur(12px)",
+        padding: 16,
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 540,
+          maxHeight: "86vh",
+          overflowY: "auto",
+          borderRadius: 20,
+          border: `1px solid ${color}30`,
+          background: "rgba(10,16,32,.98)",
+          boxShadow: `0 40px 90px rgba(0,0,0,.8), 0 0 80px ${color}1a`,
+          animation: "slideUp .2s ease",
+        }}
+      >
+        <div style={{ height: 4, background: color }} />
+        <div style={{ padding: "18px 20px", borderBottom: "1px solid rgba(255,255,255,.06)", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#f8fafc" }}>{title}</div>
+            <div style={{ marginTop: 4, fontSize: 12, color: "rgba(148,163,184,.58)" }}>{subtitle}</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              border: "1px solid rgba(255,255,255,.1)",
+              background: "rgba(255,255,255,.04)",
+              color: "rgba(148,163,184,.7)",
+              cursor: "pointer",
+            }}
+          >
+            x
+          </button>
+        </div>
+        <div style={{ padding: 20 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
 
-  const { completed, xp, streak } = prog;
-  const total = SECTIONS.reduce((a, s) => a + s.items.length, 0);
+function QuizOptions({ options, selected, onSelect, disabled }) {
+  return (
+    <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+      {options.map((opt, idx) => (
+        <button
+          key={`${opt}-${idx}`}
+          disabled={disabled}
+          onClick={() => onSelect(idx)}
+          style={{
+            textAlign: "left",
+            borderRadius: 12,
+            padding: "10px 12px",
+            border: `1px solid ${selected === idx ? "rgba(79,172,254,.7)" : "rgba(255,255,255,.1)"}`,
+            background: selected === idx ? "rgba(79,172,254,.16)" : "rgba(255,255,255,.03)",
+            color: selected === idx ? "#e0f2ff" : "rgba(226,232,240,.92)",
+            cursor: disabled ? "default" : "pointer",
+            fontSize: 13,
+          }}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-  const isDone = (sec, item) => completed.has(lessonKey(sec, item));
+function LessonModal({ section, lesson, alreadyDone, onPass, onClose }) {
+  const [stage, setStage] = useState("learn");
+  const [selected, setSelected] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const [correct, setCorrect] = useState(false);
+  const [mistakes, setMistakes] = useState(0);
 
-  // Calculate if a specific lesson is unlocked (only if it's next in the global sequence)
-  const isLessonUnlocked = (sec, item) => {
-    if (completed.has(lessonKey(sec, item))) return true; // Already done
-    // Check if this is the next lesson globally
-    let isNext = false;
-    outer: for (const s of SECTIONS) {
-      for (const i of s.items) {
-        if (!completed.has(lessonKey(s, i))) {
-          if (s.title === sec.title && i.term === item.term) {
-            isNext = true;
-          }
-          break outer;
-        }
-      }
-    }
-    return isNext;
-  };
-
-  const isSectionUnlocked = idx => {
-    if (idx === 0) return true;
-    // Section is unlocked only if ALL lessons in previous section are complete
-    const prev = SECTIONS[idx - 1];
-    const prevDone = prev.items.filter(i => completed.has(lessonKey(prev, i))).length;
-    return prevDone === prev.items.length;
-  };
-
-  // First uncompleted item across ALL sections
-  let globalNext = null;
-  outer: for (const sec of SECTIONS) {
-    for (const item of sec.items) {
-      if (!completed.has(lessonKey(sec, item))) { globalNext = { sec, item }; break outer; }
-    }
+  function checkAnswer() {
+    if (selected === null) return;
+    const ok = selected === lesson.quiz.answer;
+    setCorrect(ok);
+    setChecked(true);
+    if (!ok) setMistakes((m) => m + 1);
   }
 
-  function openLesson(sec, item) { setLesson({ section: sec, item }); }
-
-  function completeLesson() {
-    if (!lesson) return;
-    const k = lessonKey(lesson.section, lesson.item);
-    const alreadyDone = completed.has(k);
-    if (alreadyDone) { setLesson(null); return; }
-
-    const newC = new Set([...completed, k]);
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    const newStreak = prog.lastDate === today ? streak : prog.lastDate === yesterday ? streak + 1 : 1;
-    const newProg = { completed: newC, xp: xp + 20, streak: newStreak, lastDate: today };
-    setProg(newProg);
-    persist(newProg);
-    setCelebKey(k);
-    setPopXp(true);
-    setLesson(null);
-    setTimeout(() => { setCelebKey(null); setPopXp(false); }, 1600);
+  function nextStep() {
+    if (correct) {
+      onPass(mistakes);
+      return;
+    }
+    setChecked(false);
+    setSelected(null);
   }
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", minHeight: 0 }}>
-
-      {/* ── STATS HEADER ─────────────────────────────────────── */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 20,
-        background: "rgba(4,7,15,.95)", backdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(255,255,255,.06)",
-        padding: "12px 0 10px", flexShrink: 0,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-          <StatBadge icon="◆" value={streak > 0 ? `${streak}` : "0"} label="Day Streak" color="#f472b6" />
-          <StatBadge icon="✦" value={xp.toLocaleString()} label="Total XP" color="#a78bfa" />
-          <StatBadge icon="◈" value={`${completed.size}/${total}`} label="Completed" color="#4facfe" />
-        </div>
-        {/* Overall progress bar */}
-        <div style={{ margin: "10px 24px 0", height: 4, borderRadius: 4, background: "rgba(255,255,255,.06)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${(completed.size / total) * 100}%`, background: "linear-gradient(90deg,#4facfe,#a78bfa)", borderRadius: 4, transition: "width .4s ease" }} />
-        </div>
-      </div>
-
-      {/* ── PATH ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0", minHeight: 0 }}>
-        <div style={{ maxWidth: 400, margin: "0 auto", padding: "24px 20px 120px" }}>
-          {SECTIONS.map((sec, sIdx) => {
-            const unlocked = isSectionUnlocked(sIdx);
-            const secDone  = sec.items.filter(i => isDone(sec, i)).length;
-            // First uncompleted item in this section
-            const nextInSec = unlocked ? sec.items.find(i => !isDone(sec, i)) : null;
-
-            return (
-              <div key={sec.title}>
-                {/* Section banner */}
-                <SectionBanner
-                  sec={sec} sIdx={sIdx} unlocked={unlocked}
-                  doneCount={secDone} totalCount={sec.items.length}
-                  nextItem={nextInSec}
-                  onContinue={() => nextInSec && openLesson(sec, nextInSec)}
-                />
-
-                {/* Lesson nodes */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 16 }}>
-                  {sec.items.map((item, iIdx) => {
-                    const done      = isDone(sec, item);
-                    const itemUnlocked = isLessonUnlocked(sec, item);
-                    const current   = globalNext?.sec.title === sec.title && globalNext?.item.term === item.term;
-                    const celebrate = celebKey === lessonKey(sec, item);
-                    return (
-                      <LessonNode
-                        key={item.term}
-                        item={item} sec={sec}
-                        iIdx={iIdx}
-                        done={done}
-                        current={current && itemUnlocked}
-                        unlocked={itemUnlocked}
-                        celebrate={celebrate}
-                        onClick={() => openLesson(sec, item)}
-                      />
-                    );
-                  })}
-                </div>
+    <ModalShell
+      color={section.color}
+      title={lesson.term}
+      subtitle={stage === "learn" ? "Read, then take a mini quiz" : "Mini quiz"}
+      onClose={onClose}
+    >
+      {stage === "learn" && (
+        <>
+          <div style={{ fontSize: 14, color: "#f0f4ff", fontWeight: 700, marginBottom: 10 }}>{lesson.summary}</div>
+          <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>
+            {lesson.learn.map((point) => (
+              <div key={point} style={{ fontSize: 13, color: "rgba(148,163,184,.9)", lineHeight: 1.7 }}>
+                - {point}
               </div>
-            );
-          })}
+            ))}
+          </div>
+          <div
+            style={{
+              borderRadius: 12,
+              border: `1px solid ${section.color}26`,
+              background: section.glow,
+              padding: "10px 12px",
+              fontSize: 12,
+              color: "rgba(226,232,240,.9)",
+              lineHeight: 1.6,
+            }}
+          >
+            <strong style={{ color: section.color }}>Example:</strong> {lesson.example}
+          </div>
+          <button
+            onClick={() => setStage("quiz")}
+            style={{
+              marginTop: 16,
+              width: "100%",
+              border: "none",
+              borderRadius: 12,
+              background: section.color,
+              color: "#fff",
+              fontWeight: 700,
+              padding: "12px 0",
+              cursor: "pointer",
+            }}
+          >
+            Start mini quiz
+          </button>
+        </>
+      )}
 
-          {/* All done state */}
-          {completed.size === total && (
-            <div style={{
-              textAlign: "center", padding: "40px 24px",
-              background: "rgba(79,172,254,.05)", border: "1px solid rgba(79,172,254,.14)",
-              borderRadius: 20,
-            }}>
-              <div style={{ fontSize: 40, marginBottom: 14 }}>✦</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f4ff", marginBottom: 8 }}>Trading 101 Complete!</div>
-              <div style={{ fontSize: 13, color: "rgba(148,163,184,.55)", lineHeight: 1.7 }}>
-                You've mastered all {total} concepts. Head to the terminal and put your knowledge to work.
+      {stage === "quiz" && (
+        <>
+          <div style={{ fontSize: 13, color: "rgba(148,163,184,.7)" }}>
+            {alreadyDone ? "Already completed. You can still practice." : "Get it right to complete this lesson."}
+          </div>
+          <div style={{ marginTop: 10, fontSize: 16, fontWeight: 700, color: "#f8fafc", lineHeight: 1.5 }}>{lesson.quiz.question}</div>
+
+          <QuizOptions options={lesson.quiz.options} selected={selected} onSelect={setSelected} disabled={checked} />
+
+          {!checked ? (
+            <button
+              onClick={checkAnswer}
+              disabled={selected === null}
+              style={{
+                marginTop: 14,
+                width: "100%",
+                border: "none",
+                borderRadius: 12,
+                padding: "12px 0",
+                fontWeight: 700,
+                cursor: selected === null ? "not-allowed" : "pointer",
+                background: selected === null ? "rgba(255,255,255,.08)" : section.color,
+                color: selected === null ? "rgba(148,163,184,.5)" : "#fff",
+              }}
+            >
+              Check answer
+            </button>
+          ) : (
+            <div
+              style={{
+                marginTop: 14,
+                borderRadius: 12,
+                padding: "12px 14px",
+                background: correct ? "rgba(74,222,128,.14)" : "rgba(248,113,113,.14)",
+                border: `1px solid ${correct ? "rgba(74,222,128,.35)" : "rgba(248,113,113,.35)"}`,
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, color: correct ? "#4ade80" : "#f87171" }}>
+                {correct ? "Correct!" : "Not yet"}
               </div>
-              <div style={{ marginTop: 16, fontSize: 13, color: "#4facfe", fontWeight: 600 }}>{xp} XP earned ✦</div>
+              <div style={{ marginTop: 6, fontSize: 12, color: "rgba(226,232,240,.88)", lineHeight: 1.6 }}>{lesson.quiz.explain}</div>
+              <button
+                onClick={nextStep}
+                style={{
+                  marginTop: 10,
+                  width: "100%",
+                  borderRadius: 10,
+                  padding: "10px 0",
+                  border: "none",
+                  background: correct ? section.color : "rgba(255,255,255,.12)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                {correct ? (alreadyDone ? "Close" : "Complete lesson +25 XP") : "Try again"}
+              </button>
             </div>
           )}
+        </>
+      )}
+    </ModalShell>
+  );
+}
+
+function SectionTestModal({ section, onPass, onClose }) {
+  const [idx, setIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const [score, setScore] = useState(0);
+  const [mistakes, setMistakes] = useState(0);
+  const [finished, setFinished] = useState(false);
+
+  const q = section.test[idx];
+  const passScore = Math.ceil(section.test.length * 0.67);
+
+  function checkCurrent() {
+    if (selected === null) return;
+    const ok = selected === q.answer;
+    if (ok) setScore((s) => s + 1);
+    if (!ok) setMistakes((m) => m + 1);
+    setChecked(true);
+  }
+
+  function nextQuestion() {
+    if (idx + 1 >= section.test.length) {
+      setFinished(true);
+      return;
+    }
+    setIdx((i) => i + 1);
+    setSelected(null);
+    setChecked(false);
+  }
+
+  function restart() {
+    setIdx(0);
+    setSelected(null);
+    setChecked(false);
+    setScore(0);
+    setMistakes(0);
+    setFinished(false);
+  }
+
+  return (
+    <ModalShell
+      color={section.color}
+      title={`${section.title} Checkpoint`}
+      subtitle={`Pass ${passScore}/${section.test.length} to unlock the next section`}
+      onClose={onClose}
+    >
+      {!finished ? (
+        <>
+          <div style={{ fontSize: 12, color: "rgba(148,163,184,.65)", marginBottom: 8 }}>
+            Question {idx + 1} of {section.test.length}
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#f8fafc", lineHeight: 1.5 }}>{q.question}</div>
+          <QuizOptions options={q.options} selected={selected} onSelect={setSelected} disabled={checked} />
+
+          {!checked ? (
+            <button
+              onClick={checkCurrent}
+              disabled={selected === null}
+              style={{
+                marginTop: 14,
+                width: "100%",
+                border: "none",
+                borderRadius: 12,
+                padding: "12px 0",
+                fontWeight: 700,
+                cursor: selected === null ? "not-allowed" : "pointer",
+                background: selected === null ? "rgba(255,255,255,.08)" : section.color,
+                color: selected === null ? "rgba(148,163,184,.5)" : "#fff",
+              }}
+            >
+              Check answer
+            </button>
+          ) : (
+            <button
+              onClick={nextQuestion}
+              style={{
+                marginTop: 14,
+                width: "100%",
+                border: "none",
+                borderRadius: 12,
+                padding: "12px 0",
+                fontWeight: 700,
+                cursor: "pointer",
+                background: section.color,
+                color: "#fff",
+              }}
+            >
+              {idx + 1 === section.test.length ? "See results" : "Next question"}
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          <div
+            style={{
+              borderRadius: 14,
+              padding: "16px 14px",
+              background: score >= passScore ? "rgba(74,222,128,.12)" : "rgba(248,113,113,.12)",
+              border: `1px solid ${score >= passScore ? "rgba(74,222,128,.35)" : "rgba(248,113,113,.35)"}`,
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 800, color: score >= passScore ? "#4ade80" : "#f87171" }}>
+              {score >= passScore ? "Checkpoint passed" : "Checkpoint not passed"}
+            </div>
+            <div style={{ marginTop: 6, fontSize: 13, color: "rgba(226,232,240,.88)" }}>
+              Score: {score}/{section.test.length}
+            </div>
+          </div>
+
+          {score >= passScore ? (
+            <button
+              onClick={() => onPass(mistakes)}
+              style={{
+                marginTop: 14,
+                width: "100%",
+                border: "none",
+                borderRadius: 12,
+                padding: "12px 0",
+                fontWeight: 700,
+                cursor: "pointer",
+                background: section.color,
+                color: "#fff",
+              }}
+            >
+              Claim +60 XP and continue
+            </button>
+          ) : (
+            <button
+              onClick={restart}
+              style={{
+                marginTop: 14,
+                width: "100%",
+                border: "none",
+                borderRadius: 12,
+                padding: "12px 0",
+                fontWeight: 700,
+                cursor: "pointer",
+                background: "rgba(255,255,255,.1)",
+                color: "#fff",
+              }}
+            >
+              Retry checkpoint
+            </button>
+          )}
+        </>
+      )}
+    </ModalShell>
+  );
+}
+
+export default function LearnPage() {
+  const [prog, setProg] = useState(loadProgress);
+  const [openLesson, setOpenLesson] = useState(null);
+  const [openTest, setOpenTest] = useState(null);
+  const [celebrateKey, setCelebrateKey] = useState(null);
+  const [xpPop, setXpPop] = useState(null);
+
+  const totalLessons = useMemo(() => SECTIONS.reduce((sum, sec) => sum + sec.lessons.length, 0), []);
+  const totalTests = SECTIONS.length;
+
+  const completedCount = prog.completedLessons.size;
+
+  function isSectionUnlocked(sectionIdx) {
+    if (sectionIdx === 0) return true;
+    const prev = SECTIONS[sectionIdx - 1];
+    const prevLessonsDone = prev.lessons.every((l) => prog.completedLessons.has(lessonKey(prev.id, l.id)));
+    const prevTestDone = prog.completedTests.has(testKey(prev.id));
+    return prevLessonsDone && prevTestDone;
+  }
+
+  function isLessonDone(section, lesson) {
+    return prog.completedLessons.has(lessonKey(section.id, lesson.id));
+  }
+
+  function findNextLesson() {
+    for (let sIdx = 0; sIdx < SECTIONS.length; sIdx += 1) {
+      if (!isSectionUnlocked(sIdx)) break;
+      const sec = SECTIONS[sIdx];
+      const firstUnfinished = sec.lessons.find((lesson) => !isLessonDone(sec, lesson));
+      if (firstUnfinished) return { sec, lesson: firstUnfinished };
+    }
+    return null;
+  }
+
+  function isLessonUnlocked(section, lesson) {
+    if (isLessonDone(section, lesson)) return true;
+    const next = findNextLesson();
+    return next?.sec.id === section.id && next?.lesson.id === lesson.id;
+  }
+
+  function awardProgress({ xpGain, mistakePenalty }) {
+    const today = new Date().toDateString();
+    const streak = buildDailyStreak(prog.lastDate, prog.streak);
+    const lives = Math.max(0, Math.min(5, prog.lives - mistakePenalty));
+    return {
+      ...prog,
+      xp: prog.xp + xpGain,
+      streak,
+      lives,
+      lastDate: today,
+    };
+  }
+
+  function completeLesson(section, lesson, mistakes) {
+    const key = lessonKey(section.id, lesson.id);
+    const alreadyDone = prog.completedLessons.has(key);
+    const base = alreadyDone ? 5 : 25;
+
+    const nextProg = awardProgress({ xpGain: base, mistakePenalty: Math.min(mistakes, 1) });
+    nextProg.completedLessons = new Set([...prog.completedLessons, key]);
+    nextProg.completedTests = new Set([...prog.completedTests]);
+
+    setProg(nextProg);
+    persistProgress(nextProg);
+
+    setCelebrateKey(key);
+    setXpPop(`+${base} XP`);
+    setOpenLesson(null);
+    setTimeout(() => {
+      setCelebrateKey(null);
+      setXpPop(null);
+    }, 1400);
+  }
+
+  function completeCheckpoint(section, mistakes) {
+    const key = testKey(section.id);
+    const nextProg = awardProgress({ xpGain: 60, mistakePenalty: Math.min(mistakes, 2) });
+    nextProg.completedLessons = new Set([...prog.completedLessons]);
+    nextProg.completedTests = new Set([...prog.completedTests, key]);
+
+    setProg(nextProg);
+    persistProgress(nextProg);
+
+    setXpPop("+60 XP");
+    setOpenTest(null);
+    setTimeout(() => setXpPop(null), 1400);
+  }
+
+  const nextLesson = findNextLesson();
+  const finishedAllLessons = completedCount === totalLessons;
+  const finishedAllTests = prog.completedTests.size === totalTests;
+
+  return (
+    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif" }}>
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
+          padding: "12px 0 10px",
+          background: "rgba(4,7,15,.95)",
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(255,255,255,.06)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+          <StatBadge icon="✦" value={prog.xp.toLocaleString()} label="XP" color="#a78bfa" />
+          <StatBadge icon="◆" value={`${prog.streak}`} label="Day Streak" color="#4ade80" />
+          <StatBadge icon="♥" value={`${prog.lives}/5`} label="Lives" color="#f87171" />
+          <StatBadge icon="◈" value={`${completedCount}/${totalLessons}`} label="Lessons" color="#4facfe" />
+        </div>
+
+        <div style={{ margin: "10px 24px 0", height: 4, borderRadius: 4, overflow: "hidden", background: "rgba(255,255,255,.06)" }}>
+          <div
+            style={{
+              width: `${((completedCount + prog.completedTests.size) / (totalLessons + totalTests)) * 100}%`,
+              height: "100%",
+              background: "linear-gradient(90deg,#4facfe,#a78bfa,#4ade80)",
+              transition: "width .4s ease",
+            }}
+          />
         </div>
       </div>
 
-      {/* ── LESSON MODAL ─────────────────────────────────────── */}
-      {lesson && (
+      <div style={{ maxWidth: 430, margin: "0 auto", width: "100%", padding: "16px 20px 120px" }}>
+        {SECTIONS.map((section, sIdx) => {
+          const unlocked = isSectionUnlocked(sIdx);
+          const lessonDone = section.lessons.filter((lesson) => isLessonDone(section, lesson)).length;
+          const checkpointDone = prog.completedTests.has(testKey(section.id));
+          const nextInSection = section.lessons.find((lesson) => !isLessonDone(section, lesson));
+
+          return (
+            <div key={section.id}>
+              <SectionHeader
+                section={section}
+                unlocked={unlocked}
+                lessonDone={lessonDone}
+                lessonTotal={section.lessons.length}
+                testDone={checkpointDone}
+                onStartLesson={() => {
+                  if (nextInSection) setOpenLesson({ section, lesson: nextInSection });
+                }}
+                onStartTest={() => setOpenTest({ section })}
+              />
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 18 }}>
+                {section.lessons.map((lesson, idx) => {
+                  const done = isLessonDone(section, lesson);
+                  const lessonUnlocked = unlocked && isLessonUnlocked(section, lesson);
+                  const current = nextLesson?.sec.id === section.id && nextLesson?.lesson.id === lesson.id;
+                  return (
+                    <LessonNode
+                      key={lesson.id}
+                      section={section}
+                      lesson={lesson}
+                      idx={idx}
+                      done={done}
+                      unlocked={lessonUnlocked}
+                      current={current && lessonUnlocked}
+                      celebrate={celebrateKey === lessonKey(section.id, lesson.id)}
+                      onOpen={() => setOpenLesson({ section, lesson })}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        {finishedAllLessons && finishedAllTests && (
+          <div
+            style={{
+              marginTop: 26,
+              textAlign: "center",
+              borderRadius: 18,
+              border: "1px solid rgba(74,222,128,.22)",
+              background: "rgba(74,222,128,.08)",
+              padding: "24px 16px",
+            }}
+          >
+            <div style={{ fontSize: 34, marginBottom: 8 }}>🏁</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#dcfce7" }}>Course complete</div>
+            <div style={{ marginTop: 6, fontSize: 13, color: "rgba(226,232,240,.8)", lineHeight: 1.7 }}>
+              You finished all lessons and checkpoints. Use the terminal pages to apply your strategy skills in practice.
+            </div>
+          </div>
+        )}
+      </div>
+
+      {openLesson && (
         <LessonModal
-          lesson={lesson}
-          alreadyDone={isDone(lesson.section, lesson.item)}
-          onComplete={completeLesson}
-          onClose={() => setLesson(null)}
+          section={openLesson.section}
+          lesson={openLesson.lesson}
+          alreadyDone={isLessonDone(openLesson.section, openLesson.lesson)}
+          onPass={(mistakes) => completeLesson(openLesson.section, openLesson.lesson, mistakes)}
+          onClose={() => setOpenLesson(null)}
         />
       )}
 
-      {/* ── XP POP ───────────────────────────────────────────── */}
-      {popXp && (
-        <div style={{
-          position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-          zIndex: 2000, background: "#a78bfa",
-          borderRadius: 40, padding: "12px 28px",
-          fontSize: 15, fontWeight: 700, color: "#fff",
-          boxShadow: "0 8px 32px rgba(167,139,250,.5)",
-          animation: "floatUp 1.5s ease forwards",
-          pointerEvents: "none",
-          whiteSpace: "nowrap",
-        }}>
-          ✦ +20 XP
+      {openTest && (
+        <SectionTestModal
+          section={openTest.section}
+          onPass={(mistakes) => completeCheckpoint(openTest.section, mistakes)}
+          onClose={() => setOpenTest(null)}
+        />
+      )}
+
+      {xpPop && (
+        <div
+          style={{
+            position: "fixed",
+            left: "50%",
+            bottom: 80,
+            transform: "translateX(-50%)",
+            zIndex: 1001,
+            borderRadius: 999,
+            background: "#a78bfa",
+            color: "#fff",
+            padding: "10px 18px",
+            fontWeight: 800,
+            boxShadow: "0 10px 34px rgba(167,139,250,.45)",
+            animation: "floatUp 1.2s ease forwards",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {xpPop}
         </div>
       )}
 
-      {/* ── CSS KEYFRAMES ─────────────────────────────────────── */}
       <style>{`
-        @keyframes nodePulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(79,172,254,.4), 0 4px 12px rgba(0,0,0,.3); }
-          50%      { box-shadow: 0 0 0 10px rgba(79,172,254,.0), 0 4px 12px rgba(0,0,0,.3); }
-        }
         @keyframes tooltipBounce {
           0%,100% { transform: translateY(0); }
-          50%      { transform: translateY(-5px); }
+          50% { transform: translateY(-5px); }
         }
         @keyframes completePop {
-          0%   { transform: scale(1); }
-          40%  { transform: scale(1.22); }
-          70%  { transform: scale(0.93); }
+          0% { transform: scale(1); }
+          45% { transform: scale(1.18); }
+          75% { transform: scale(.92); }
           100% { transform: scale(1); }
         }
         @keyframes floatUp {
-          0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
-          60%  { opacity: 1; transform: translateX(-50%) translateY(-20px); }
-          100% { opacity: 0; transform: translateX(-50%) translateY(-44px); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
+          0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-42px); }
         }
         @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px) scale(.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
+          from { opacity: 0; transform: translateY(20px) scale(.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>

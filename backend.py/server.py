@@ -244,6 +244,7 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")):
 
     timeframe_config = {
         "1D": {"period": "1d", "interval": "60m", "date_fmt": "%H:%M"},
+        "1W": {"period": "7d", "interval": "1h", "date_fmt": "%a %H:%M"},
         "5D": {"period": "5d", "interval": "60m", "date_fmt": "%b %d %H:%M"},
         "1M": {"period": "1mo", "interval": "1d", "date_fmt": "%b %d"},
         "3M": {"period": "3mo", "interval": "1d", "date_fmt": "%b %d"},

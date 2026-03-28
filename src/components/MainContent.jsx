@@ -26,7 +26,15 @@ const PAGES = [
   { id: "learn",      label: "Learn" },
 ];
 
-const TIMEFRAMES = ["1D", "5D", "1M", "3M", "6M", "1Y", "5Y"];
+const TIMEFRAMES = [
+  { id: "1D", label: "Hourly" },
+  { id: "1W", label: "Weekly" },
+  { id: "1M", label: "Monthly" },
+  { id: "3M", label: "3M" },
+  { id: "6M", label: "6M" },
+  { id: "1Y", label: "1Y" },
+  { id: "5Y", label: "5Y" },
+];
 
 // Fallback loader for lazy pages
 function PageLoader() {
@@ -142,8 +150,8 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minHeight: 0, animation: "fadeIn .3s ease" }}>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {TIMEFRAMES.map(tf => (
-                <Pill key={tf} active={timeframe === tf} onClick={() => onTimeframeChange(tf)} style={{ padding: "4px 10px", fontSize: 11 }}>
-                  {tf}
+                <Pill key={tf.id} active={timeframe === tf.id} onClick={() => onTimeframeChange(tf.id)} style={{ padding: "4px 10px", fontSize: 11 }}>
+                  {tf.label}
                 </Pill>
               ))}
             </div>

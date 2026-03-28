@@ -35,10 +35,22 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
     });
 
     if (!response.ok) {
+      let detail = response.statusText;
+      try {
+        // Try to read JSON error body (FastAPI returns {detail: ...})
+        const err = await response.json();
+        if (err && err.detail) detail = err.detail;
+      } catch (e) {
+        try {
+          const txt = await response.text();
+          if (txt) detail = txt;
+        } catch (e) {}
+      }
+
       if (response.status === 404) {
         throw new Error(`Stock not found: ${symbol}`);
       }
-      throw new Error(`API error: ${response.statusText}`);
+      throw new Error(`API error: ${detail}`);
     }
 
     const data = await response.json();

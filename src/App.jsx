@@ -83,6 +83,12 @@ export default function App() {
     setShowOnboarding(false);
   }
 
+  function handleSignOut() {
+    setUser(null);
+    localStorage.removeItem(SESSION_KEY);
+    setShowLanding(true);
+  }
+
   if (showLanding) {
     if (showLogin) {
       return (
@@ -115,7 +121,7 @@ export default function App() {
         )}
 
         <Ticker watch={watch} loading={loadW} onSelect={setSym} />
-        <NavBar sym={sym} watch={watch} pnl={pnl} cash={cash} onSelect={setSym} />
+        <NavBar sym={sym} watch={watch} pnl={pnl} cash={cash} onSelect={setSym} onSignOut={handleSignOut} />
 
         {/* DESKTOP */}
         {!isMobile && (

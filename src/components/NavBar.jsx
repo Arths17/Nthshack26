@@ -6,7 +6,7 @@ import { useStocks } from "../hooks/useStocks";
  * Navigation bar with symbol pills and portfolio summary
  * Memoized to prevent unnecessary re-renders
  */
-export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
+export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut }) {
   const { stocks } = useStocks();
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,7 +29,7 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
   // Get first 17 stocks from popular stocks list for nav bar buttons
   const navSymbols = useMemo(() => {
     if (!stocks.length) return ["NVDA", "AAPL", "TSLA", "MSFT", "META", "AMZN", "GOOGL", "SPY", "NFLX", "AMD", "INTC", "AVGO", "MU", "QCOM", "NFLX", "ADBE"];
-    return stocks.slice(0, 16).map(s => s.symbol);
+    return stocks.slice(0, 14).map(s => s.symbol);
   }, [stocks]);
   
   // Filter and sort stocks by symbol for dropdown
@@ -217,6 +217,29 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", animation: "pulse 2s infinite", boxShadow: "0 0 8px #4ade80" }} />
           <span style={{ fontSize: 10, color: "rgba(148,163,184,.6)", letterSpacing: ".07em" }}>LIVE</span>
         </div>
+        <div style={{ width: 1, height: 28, background: "rgba(255,255,255,.08)" }} />
+        <button
+          onClick={onSignOut}
+          style={{
+            padding: "5px 12px", borderRadius: 6,
+            border: "1px solid rgba(255,255,255,.1)",
+            background: "rgba(255,255,255,.04)", cursor: "pointer",
+            fontSize: 10, fontWeight: 500, color: "rgba(148,163,184,.7)",
+            letterSpacing: ".05em", transition: "all .2s",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = "rgba(248,95,95,.15)";
+            e.currentTarget.style.borderColor = "rgba(248,95,95,.3)";
+            e.currentTarget.style.color = "#f87171";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "rgba(255,255,255,.04)";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,.1)";
+            e.currentTarget.style.color = "rgba(148,163,184,.7)";
+          }}
+        >
+          SIGN OUT
+        </button>
       </Glass>
     </div>
   );

@@ -123,11 +123,17 @@ async def catch_exceptions_middleware(request: Request, call_next):
             content={"detail": "Internal server error. Please try again later."}
         )
 
+# Configure CORS origins via environment variable for deployments.
+# Set `ALLOWED_ORIGINS` to a comma-separated list of allowed origins (e.g. https://your-frontend.com)
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
+allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"],
+    allow_credentials=True,
 )
 
 

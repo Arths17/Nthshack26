@@ -1,4 +1,3 @@
-import "./index.css";
 import { useState } from "react";
 import { useWatchlist }  from "./hooks/useWatchlist";
 import { useStockData }  from "./hooks/useStockData";

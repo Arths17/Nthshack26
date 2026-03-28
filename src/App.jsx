@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, lazy, Suspense, useRef } from "react";
 import { useWatchlist }  from "./hooks/useWatchlist";
 import { useStockData }  from "./hooks/useStockData";
-import { usePortfolioFirebase }  from "./hooks/usePortfolioFirebase";
+import { usePortfolio }  from "./hooks/usePortfolio";
 import { useChat }       from "./hooks/useChat";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useAuth } from "./contexts/AuthContext";
-import { signOut } from "./api/firebase";
+import { signOut } from "./api/firebaseAuth";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { UI }            from "./utils/constants";
 import Ticker      from "./components/Ticker";
@@ -35,13 +35,10 @@ export default function App() {
 
   const { watch, loading: loadW }               = useWatchlist();
   const { data, loading: loadS, error, reload }   = useStockData(sym, timeframe);
-  const { user: portfolioUser, cash, pos, log, buy, sell, loading: portfolioLoading, error: portfolioError, isHydrated } = usePortfolioFirebase();
+  const { cash, pos, log, buy, sell, isHydrated } = usePortfolio();
   const { msgs, input, setInput, busy, send }     = useChat(sym, data, watch, cash, pos);
 
-  // Log portfolio errors for debugging
-  if (portfolioError) console.warn("[Portfolio Error]", portfolioError);
-
-  // Sync Firebase auth to local state
+  // Sync auth to local state
   useEffect(() => {
     if (authUser && !user) {
       const newUser = {
@@ -81,12 +78,17 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false);
 
   function handleEnter() {
-    // Always show login page - Firebase auth is required for trading
-    setShowLogin(true);
+    if (user) {
+      // Already logged in — go straight to terminal
+      setShowLanding(false);
+      if (!localStorage.getItem("quanta:onboarded")) setShowOnboarding(true);
+    } else {
+      // Need to log in first
+      setShowLogin(true);
+    }
   }
 
   function handleLogin(u) {
-    console.log("[Auth] User logged in:", u.email);
     setUser(u);
     setShowLanding(false);
     setShowLogin(false);
@@ -116,39 +118,10 @@ export default function App() {
     return <LandingPage onEnter={handleEnter} watch={watch} user={user} />;
   }
 
-  if (authLoading || portfolioLoading) {
+  if (authLoading || !isHydrated) {
     return (
       <div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#060b18", color: "rgba(148,163,184,.5)", fontSize: 13 }}>
         Loading…
-      </div>
-    );
-  }
-
-  // Require Firebase auth for trading
-  if (!authUser) {
-    return (
-      <div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#060b18", overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, maxWidth: 400 }}>
-          <div style={{ fontSize: 32, color: "rgba(148,163,184,.3)" }}>🔐</div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#f8fafc", marginBottom: 8 }}>Authentication Required</div>
-            <div style={{ fontSize: 13, color: "rgba(148,163,184,.6)", marginBottom: 16 }}>
-              You need to log in to access the trading terminal.
-            </div>
-            <button onClick={() => setShowLanding(true)} style={{
-              padding: "10px 24px",
-              background: "#4facfe",
-              color: "#060b18",
-              border: "none",
-              borderRadius: 8,
-              fontWeight: 600,
-              cursor: "pointer",
-              fontSize: 13,
-            }}>
-              Log In or Sign Up
-            </button>
-          </div>
-        </div>
       </div>
     );
   }
@@ -165,6 +138,7 @@ export default function App() {
           </Suspense>
         )}
 
+        <Ticker watch={watch} loading={loadW} onSelect={setSym} />
         <NavBar sym={sym} watch={watch} pnl={pnl} cash={cash} onSelect={setSym} onSignOut={handleSignOut} />
 
         {/* DESKTOP */}
@@ -176,7 +150,7 @@ export default function App() {
               <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
             </aside>
             <section role="region" aria-label="Market Data and Trading" style={{ height: "100%", overflow: "hidden" }}>
-              <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} onSelectSymbol={setSym} />
+              <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} />
             </section>
           </div>
         )}
@@ -186,7 +160,7 @@ export default function App() {
           <>
             <div style={{ position: "relative", zIndex: 5, flex: 1, minHeight: 0, overflow: "hidden" }}>
               {mobilTab === "market"
-                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} onSelectSymbol={setSym} />
+                ? <MainContent sym={sym} data={data} loading={loadS} error={error} watch={watch} pos={pos} log={log} cash={cash} buy={buy} sell={sell} onReload={reload} send={send} timeframe={timeframe} onTimeframeChange={setTimeframe} />
                 : <ChatPanel   sym={sym} msgs={msgs} input={input} setInput={setInput} busy={busy} send={send} />
               }
             </div>

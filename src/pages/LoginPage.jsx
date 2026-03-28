@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { signUp, signIn } from "../api/firebase";
+import { signUp, signIn } from "../api/firebaseAuth";
 
 const SESSION_KEY = "quanta:session";
 
@@ -40,22 +40,24 @@ export default function LoginPage({ onLogin, onBack }) {
         if (!email.includes("@"))                { setError("Enter a valid email address."); return; }
         if (password.length < 6)                 { setError("Password must be at least 6 chars."); return; }
 
-        const { user, error: signUpError } = await signUp(email, password, name.trim());
+        const { data, error: signUpError } = await signUp(email, password, { display_name: name.trim() });
         if (signUpError) { setError(signUpError.message); return; }
 
         // Save session
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: name.trim(), id: user.uid }));
-        onLogin({ email, name: name.trim(), id: user.uid });
+        const uid = data.user.uid;
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: name.trim(), id: uid }));
+        onLogin({ email, name: name.trim(), id: uid });
       } else {
         if (!email.trim())                       { setError("Enter your email."); return; }
         if (!password)                           { setError("Enter your password."); return; }
 
-        const { user, error: signInError } = await signIn(email, password);
+        const { data, error: signInError } = await signIn(email, password);
         if (signInError) { setError(signInError.message); return; }
 
-        const userName = user.displayName || email.split("@")[0];
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: userName, id: user.uid }));
-        onLogin({ email, name: userName, id: user.uid });
+        const userName = data.user.displayName || email.split("@")[0];
+        const uid = data.user.uid;
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: userName, id: uid }));
+        onLogin({ email, name: userName, id: uid });
       }
     } catch (err) {
       setError(err.message || "An error occurred");

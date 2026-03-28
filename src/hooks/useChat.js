@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { askClaude } from "../api/gemini";
 import { f2, fB, fV, sma } from "../utils/formatters";
 import { runBacktest } from "../utils/backtest";
+import { API } from "../utils/constants";
 
 const WELCOME = "Hi, I'm Quanta — your AI trading assistant powered by live Yahoo Finance data.\n\nAsk me to analyze any stock, explain a price move, give a buy/sell verdict, or build a strategy.";
 
@@ -10,10 +11,19 @@ const STRATEGY_KEYWORDS = /\b(when|ema|sma|rsi|cross|crosses|above|below|buy whe
 const isStrategyRequest = (text) => STRATEGY_KEYWORDS.test(text) &&
   /\b(buy|sell|entry|exit|long|short)\b/i.test(text);
 
+/**
+ * Chat hook for AI trading assistant
+ * @param {string} sym - Current stock symbol
+ * @param {object} data - Stock data from useStockData
+ * @param {object} watch - Watchlist data from useWatchlist
+ * @param {number} cash - Available cash from usePortfolio
+ * @param {object} pos - Positions from usePortfolio
+ * @returns {object} { msgs, input, setInput, busy, send }
+ */
 export function useChat(sym, data, watch, cash, pos) {
-  const [msgs,  setMsgs] = useState([{ role: "assistant", content: WELCOME }]);
+  const [msgs, setMsgs] = useState([{ role: "assistant", content: WELCOME }]);
   const [input, setInput] = useState("");
-  const [busy,  setBusy]  = useState(false);
+  const [busy, setBusy] = useState(false);
   const msgsRef = useRef(msgs);
   msgsRef.current = msgs;
 
@@ -87,7 +97,7 @@ ${Object.entries(watch).map(([s, d]) => {
         let backtestResult = null;
 
         try {
-          const parseRes = await fetch("/api/strategy", {
+          const parseRes = await fetch(`${API.BACKEND_URL}/api/strategy`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: txt }),
@@ -132,8 +142,11 @@ Comment on these results and whether to use this strategy on ${sym} given curren
         setMsgs(m => [...m, { role: "assistant", content: reply }]);
       }
     } catch (e) {
-      console.error(e);
-      setMsgs(m => [...m, { role: "assistant", content: "Connection error — check that the backend server is running on port 8000." }]);
+      console.error("Chat error:", e);
+      const errorMsg = e.message?.includes("fetch") 
+        ? "Connection error — make sure the backend server is running on port 8000."
+        : "Failed to get response from AI. Try again in a moment.";
+      setMsgs(m => [...m, { role: "assistant", content: errorMsg }]);
     }
 
     setBusy(false);

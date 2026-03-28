@@ -27,7 +27,7 @@ app = FastAPI(title="Quanta Proxy")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_methods=["POST"],
+    allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
 
@@ -96,6 +96,54 @@ class ChatRequest(BaseModel):
     messages: list   # [{role: "user"|"assistant", content: "..."}]
     system: str = ""
     current_ticker: str = None  # Current stock being viewed
+
+
+@app.get("/api/stock/{symbol}")
+async def get_stock_data(symbol: str):
+    """Fetch live stock data for a single symbol from yfinance."""
+    if not symbol or len(symbol) > 5 or not symbol.isupper():
+        raise HTTPException(status_code=400, detail="Invalid symbol format")
+    
+    try:
+        stock = yf.Ticker(symbol)
+        info = stock.info
+        hist = stock.history(period="3mo")
+        
+        if hist.empty:
+            raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
+        
+        # Extract OHLCV candles
+        candles = []
+        for date, row in hist.iterrows():
+            candles.append({
+                "date": date.strftime("%b %d"),
+                "open": float(row["Open"]) if row["Open"] is not None else None,
+                "high": float(row["High"]) if row["High"] is not None else None,
+                "low": float(row["Low"]) if row["Low"] is not None else None,
+                "close": float(row["Close"]),
+                "volume": int(row["Volume"]) if row["Volume"] else 0,
+            })
+        
+        current_price = float(info.get('currentPrice') or hist['Close'].iloc[-1])
+        prev_close = float(info.get('previousClose') or hist['Open'].iloc[0])
+        
+        return {
+            "symbol": symbol,
+            "candles": candles,
+            "price": current_price,
+            "prevClose": prev_close,
+            "dayHigh": float(info.get('dayHigh') or 0),
+            "dayLow": float(info.get('dayLow') or 0),
+            "volume": int(info.get('volume') or 0),
+            "marketCap": info.get('marketCap'),
+            "pe": info.get('trailingPE'),
+            "w52h": info.get('fiftyTwoWeekHigh'),
+            "w52l": info.get('fiftyTwoWeekLow'),
+            "name": info.get('longName') or info.get('shortName') or symbol,
+            "sector": info.get('sector') or "—",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch data: {str(e)}")
 
 
 class StrategyRequest(BaseModel):

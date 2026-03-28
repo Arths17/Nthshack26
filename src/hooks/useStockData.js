@@ -1,24 +1,44 @@
 import { useState, useCallback, useEffect } from "react";
 import { fetchYF } from "../api/yahoo";
+import { validateSymbol } from "../utils/validation";
 
+/**
+ * Hook for fetching and caching stock data
+ * @param {string} symbol - Stock symbol
+ * @returns {object} { data, loading, error, reload }
+ */
 export function useStockData(symbol) {
-  const [data, setData]     = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState(null);
+  const [error, setError] = useState(null);
 
   const load = useCallback(async (sym) => {
+    // Validate symbol
+    const validation = validateSymbol(sym);
+    if (!validation.valid) {
+      setError(validation.error);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      setData(await fetchYF(sym));
+      const stockData = await fetchYF(sym);
+      setData(stockData);
+      setError(null);
     } catch (e) {
-      setError("Failed to load data for " + sym + ". Check your connection and try again.");
-      console.error(e);
+      console.error(`Failed to load data for ${sym}:`, e);
+      setError(e.message || `Failed to load data for ${sym}`);
+      setData(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  useEffect(() => { load(symbol); }, [symbol, load]);
+  useEffect(() => {
+    load(symbol);
+  }, [symbol, load]);
 
   return { data, loading, error, reload: () => load(symbol) };
 }

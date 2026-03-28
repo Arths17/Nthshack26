@@ -1,7 +1,12 @@
+import { memo } from "react";
 import { f2 } from "../utils/formatters";
-import { SYMBOLS } from "../utils/formatters";
+import { WATCHLIST_SYMBOLS } from "../utils/constants";
 
-export default function Ticker({ watch, loading, onSelect }) {
+/**
+ * Scrolling ticker bar showing live prices for all watchlist symbols
+ * Memoized to prevent unnecessary animations/reflows
+ */
+const Ticker = memo(function Ticker({ watch, loading, onSelect }) {
   if (loading) {
     return (
       <div style={bar}>
@@ -13,7 +18,7 @@ export default function Ticker({ watch, loading, onSelect }) {
   return (
     <div style={bar}>
       <div style={{ display: "flex", animation: "ticker 55s linear infinite", whiteSpace: "nowrap" }}>
-        {[...SYMBOLS, ...SYMBOLS].map((s, i) => {
+        {[...WATCHLIST_SYMBOLS, ...WATCHLIST_SYMBOLS].map((s, i) => {
           const d = watch[s];
           if (!d) return null;
           const chg = d.price && d.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : 0;
@@ -33,7 +38,9 @@ export default function Ticker({ watch, loading, onSelect }) {
       </div>
     </div>
   );
-}
+});
+
+export default Ticker;
 
 const bar = {
   position: "relative", zIndex: 10, height: 30,

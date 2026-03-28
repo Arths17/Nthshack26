@@ -1,7 +1,12 @@
+import { memo } from "react";
 import Glass from "./Glass";
-import { SYMBOLS } from "../utils/formatters";
+import { WATCHLIST_SYMBOLS } from "../utils/constants";
 
-export default function NavBar({ sym, watch, pnl, cash, onSelect }) {
+/**
+ * Navigation bar with symbol pills and portfolio summary
+ * Memoized to prevent unnecessary re-renders
+ */
+export default memo(function NavBar({ sym, watch, pnl, cash, onSelect }) {
   return (
     <div style={nav}>
       {/* Logo */}
@@ -17,7 +22,7 @@ export default function NavBar({ sym, watch, pnl, cash, onSelect }) {
 
       {/* Symbol pills */}
       <div style={{ display: "flex", gap: 6, overflowX: "auto", flex: 1, padding: "0 8px" }}>
-        {SYMBOLS.map(s => {
+        {WATCHLIST_SYMBOLS.map(s => {
           const d = watch[s];
           const chg = d?.price && d?.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : null;
           const active = s === sym;
@@ -61,7 +66,7 @@ export default function NavBar({ sym, watch, pnl, cash, onSelect }) {
       </Glass>
     </div>
   );
-}
+});
 
 const nav = {
   position: "relative", zIndex: 10, height: 58,

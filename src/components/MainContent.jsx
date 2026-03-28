@@ -26,6 +26,8 @@ const PAGES = [
   { id: "learn",      label: "Learn" },
 ];
 
+const TIMEFRAMES = ["1D", "5D", "1M", "3M", "6M", "1Y", "5Y"];
+
 // Fallback loader for lazy pages
 function PageLoader() {
   return (
@@ -38,7 +40,7 @@ function PageLoader() {
   );
 }
 
-export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload, send }) {
+export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload, send, timeframe, onTimeframeChange }) {
   const [page, setPage] = useState("market");
   const [tab,  setTab]  = useState("chart");
   const [qty,  setQty]  = useState("10");
@@ -138,6 +140,13 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
         {/* ── CHART TAB ── */}
         {tab === "chart" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minHeight: 0, animation: "fadeIn .3s ease" }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {TIMEFRAMES.map(tf => (
+                <Pill key={tf} active={timeframe === tf} onClick={() => onTimeframeChange(tf)} style={{ padding: "4px 10px", fontSize: 11 }}>
+                  {tf}
+                </Pill>
+              ))}
+            </div>
             <Glass style={{ flex: 1, padding: "4px 8px 0", minHeight: 0, overflow: "hidden" }}>
               <Chart candles={data?.candles} />
             </Glass>

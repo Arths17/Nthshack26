@@ -2,4 +2,8 @@
 python-dotenv
 yfinance
 google-generativeai
-
+fastapi
+uvicorn
+requests
+beautifulsoup4
+lxml

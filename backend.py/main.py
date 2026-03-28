@@ -1,16 +1,53 @@
 import yfinance as yf
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    _GENAI_IMPORT = "google.generativeai"
+except Exception:
+    try:
+        import generativeai as genai
+        _GENAI_IMPORT = "generativeai"
+    except Exception:
+        genai = None
+        _GENAI_IMPORT = None
 import os
 from datetime import datetime
+
+# Load .env into environment if available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 # Configure Gemini API
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 if not GEMINI_API_KEY:
-    print("⚠️  GEMINI_API_KEY not set!")
-    print("   Get your key at: https://ai.google.dev/")
-    print("   Then run: export GEMINI_API_KEY='AIzaSyD9b7YDqNf1G2QBEr4dpJY_TWng3ym3TvU'")
+    # Try to read .env manually as a fallback (avoids dependency issues)
+    env_path = os.path.join(os.getcwd(), ".env")
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+            GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+        except Exception:
+            pass
+
+    if not GEMINI_API_KEY:
+        print("⚠️  GEMINI_API_KEY not set!")
+        print("   Get your key at: https://ai.google.dev/")
+        print("   Then run: export GEMINI_API_KEY='your-key-here'")
+        exit(1)
+
+if genai is None:
+    print("⚠️  Generative AI SDK not installed. Install 'google-generative-ai' or 'generativeai'.")
     exit(1)
 
+print(f"Using generative AI SDK: {_GENAI_IMPORT}")
 genai.configure(api_key=GEMINI_API_KEY)
 
 def fetch_stock_data(ticker: str, start_date: str, end_date: str):

@@ -48,8 +48,27 @@ export function useChat(sym, data, watch, cash, pos) {
     const last14   = candles.slice(-14);
     const avgRange = last14.length ? (last14.reduce((s, c) => s + (c.high - c.low), 0) / last14.length).toFixed(2) : "N/A";
     const userShares = pos[sym] || 0;
+    const userValue  = userShares * price;
+    const allPositions = Object.entries(pos).filter(([, q]) => q > 0);
+    const totalInvested = allPositions.reduce((s, [k, q]) => s + q * (watch[k]?.price || 0), 0);
+    const portfolioTotal = cash + totalInvested;
+    const portfolioPnl = portfolioTotal - 100_000;
 
-    return `You are Quanta AI, a sharp professional trading analyst. You have LIVE market data. Be concise, specific, cite exact numbers. No fluff.
+    // Build a plain-English description of what the user owns
+    const positionContext = allPositions.length === 0
+      ? "No open positions yet — still holding all $100,000 in cash."
+      : allPositions.map(([k, q]) => {
+          const p = watch[k]?.price || 0;
+          const val = q * p;
+          const pct = (val / portfolioTotal * 100).toFixed(0);
+          return `${k}: ${q} shares @ $${f2(p)} = $${f2(val)} (${pct}% of portfolio)`;
+        }).join("\n");
+
+    const symPositionAdvice = userShares > 0
+      ? `⚠️ USER ALREADY OWNS ${userShares} shares of ${sym} worth $${f2(userValue)}. When giving advice, acknowledge this position. If suggesting to buy more, say "you already own X shares — adding more increases your risk." If suggesting to sell, be specific: "you could sell all ${userShares} shares" or "consider selling half (${Math.floor(userShares/2)} shares)."`
+      : `User has NO position in ${sym} yet. They can afford ${Math.floor(cash / price)} shares at current price.`;
+
+    return `You are Quanta AI, a sharp professional trading analyst. You have LIVE market data AND the user's full portfolio. Be concise, specific, cite exact numbers. No fluff.
 
 ═══ LIVE DATA: ${sym} (${name}) ═══
 Sector: ${sector}
@@ -62,15 +81,26 @@ SMA20: $${sma20} (price ${aboveSma20 === null ? "unknown" : aboveSma20 ? "ABOVE 
 SMA50: $${sma50} (price ${aboveSma50 === null ? "unknown" : aboveSma50 ? "ABOVE ▲" : "BELOW ▼"})
 Recent closes: ${recent}
 
-═══ PORTFOLIO ═══
-Cash: $${f2(cash)} | ${sym} position: ${userShares} shares ($${f2(userShares * price)})
+═══ USER'S PORTFOLIO (CRITICAL — use this to personalize advice) ═══
+Cash available: $${f2(cash)} | Total portfolio: $${f2(portfolioTotal)} | P&L: ${portfolioPnl >= 0 ? "+" : ""}$${f2(Math.abs(portfolioPnl))}
+${symPositionAdvice}
+
+All open positions:
+${positionContext}
+
+═══ ALL WATCHLIST STOCKS ═══
+${Object.entries(watch).map(([s, d]) => {
+  const chg = d.price && d.prevClose ? ((d.price - d.prevClose) / d.prevClose * 100).toFixed(2) : "N/A";
+  return `${s}: $${f2(d.price)} (${chg}% today) | MCap: ${fB(d.marketCap)} | P/E: ${d.pe?.toFixed(1) ?? "N/A"}`;
+}).join("\n")}
 
 ═══ RULES ═══
-- Your audience is BEGINNERS who do not know finance. Write like you're texting a smart friend, not writing a report.
-- NEVER use jargon without immediately explaining it in plain English in parentheses. Example: "The EMA (a line that smooths out price changes to show the trend)"
+- Your audience is BEGINNERS. Write like you're texting a smart friend, not writing a report.
+- ALWAYS personalize to their portfolio. If they own the stock, say so and what it means for them. If they don't, tell them how many shares they could afford.
+- NEVER use jargon without explaining it. Example: "The SMA (the average price over 20 days — it shows the trend)"
 - Start with **VERDICT: BUY** / **VERDICT: HOLD** / **VERDICT: SELL** then explain WHY in plain English.
-- For strategies: include **Entry:** **Target:** **Stop-loss (the price where you'd cut your loss):** **Time horizon:** **Risk (how much of your cash to use):**
-- Avoid: "bullish momentum", "bearish divergence", "consolidation", "resistance levels" — use plain equivalents like "price is going up", "price keeps falling", "price is stuck sideways", "price keeps bouncing off $X"
+- For buy/sell advice: always give a specific share count based on their cash, e.g. "you could buy 10 shares for $1,670"
+- For strategies: include **Entry:** **Target:** **Stop-loss:** **Time horizon:** **Risk:**
 - Use **bold** for the most important numbers. 3 short paragraphs max. Conversational tone.
 - This is educational paper trading — be encouraging and clear.`;
   }, [data, cash, pos, sym]);

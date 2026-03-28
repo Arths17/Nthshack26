@@ -14,13 +14,13 @@ import NewsPage      from "../pages/NewsPage";
 import AlertsPage    from "../pages/AlertsPage";
 
 const PAGES = [
-  { id: "market",    label: "Market" },
-  { id: "compare",   label: "Compare" },
-  { id: "portfolio", label: "Portfolio" },
-  { id: "screener",  label: "Screener" },
-  { id: "news",      label: "News" },
-  { id: "alerts",    label: "Alerts" },
-  { id: "learn",     label: "Learn" },
+  { id: "market",    label: "Market",    icon: "◈" },
+  { id: "compare",   label: "Compare",   icon: "⊞" },
+  { id: "portfolio", label: "Portfolio", icon: "◎" },
+  { id: "screener",  label: "Screener",  icon: "▤" },
+  { id: "news",      label: "News",      icon: "✦" },
+  { id: "alerts",    label: "Alerts",    icon: "◉" },
+  { id: "learn",     label: "Learn",     icon: "▣" },
 ];
 
 export default function MainContent({ sym, data, loading, error, watch, pos, log, cash, buy, sell, onReload }) {
@@ -41,9 +41,12 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
     <div style={{ display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
 
       {/* ── TOP PAGE NAV ── */}
-      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: 4, flexShrink: 0, overflowX: "auto", paddingBottom: 2 }}>
         {PAGES.map(p => (
-          <Pill key={p.id} active={page === p.id} onClick={() => setPage(p.id)}>{p.label}</Pill>
+          <Pill key={p.id} active={page === p.id} onClick={() => setPage(p.id)}>
+            <span style={{ marginRight: 5, fontSize: 11, opacity: page === p.id ? 1 : 0.6 }}>{p.icon}</span>
+            {p.label}
+          </Pill>
         ))}
       </div>
 

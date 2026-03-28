@@ -4,15 +4,23 @@ import { f2, SYMBOLS } from "../utils/formatters";
 
 const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.5)", dim = "rgba(148,163,184,.25)";
 
+function loadStored(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+}
+
 export default function AlertsPage({ watch }) {
-  const [alerts,    setAlerts]    = useState([]);
-  const [triggered, setTriggered] = useState([]);
+  const [alerts,    setAlerts]    = useState(() => loadStored("quanta:alerts", []));
+  const [triggered, setTriggered] = useState(() => loadStored("quanta:triggered", []));
   const [sym,       setSym]       = useState("NVDA");
   const [condition, setCondition] = useState("above");
   const [price,     setPrice]     = useState("");
   const [note,      setNote]      = useState("");
   const [toast,     setToast]     = useState(null);
   const toastTimer = useRef(null);
+
+  // Persist alerts to localStorage
+  useEffect(() => { localStorage.setItem("quanta:alerts",    JSON.stringify(alerts));    }, [alerts]);
+  useEffect(() => { localStorage.setItem("quanta:triggered", JSON.stringify(triggered)); }, [triggered]);
 
   // Check alerts against live prices every time watch updates
   useEffect(() => {

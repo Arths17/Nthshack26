@@ -37,7 +37,10 @@ function PnLChart({ log }) {
 
 export default function PortfolioPage({ pos, log, cash, watch }) {
   const posEntries = Object.entries(pos);
-  const portVal = cash + posEntries.reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0);
+  const portVal = cash + posEntries.reduce((s, [k, v]) => {
+    const qty = typeof v === 'object' ? v.quantity : v;
+    return s + qty * (watch[k]?.price || 0);
+  }, 0);
   const pnl = portVal - 100_000;
   const isUp = pnl >= 0;
 
@@ -85,7 +88,8 @@ export default function PortfolioPage({ pos, log, cash, watch }) {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {posEntries.map(([s, qty]) => {
+            {posEntries.map(([s, v]) => {
+              const qty = typeof v === 'object' ? v.quantity : v;
               const d = watch[s];
               const price = d?.price || 0;
               const dayChgPct = d?.price && d?.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : 0;

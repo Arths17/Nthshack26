@@ -105,16 +105,6 @@ export default function Chart({ candles }) {
           <clipPath id="chartClip"><rect x={PL} y={PT} width={cw + 1} height={ch + 1} /></clipPath>
         </defs>
 
-        {yticks.map((v, i) => (
-          <g key={i}>
-            <line x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="rgba(148,163,184,.06)" strokeWidth="1" />
-            <text x={PL - 8} y={yOf(v) + 4} textAnchor="end" fontSize="9" fill="rgba(148,163,184,.4)" fontFamily="'DM Sans',sans-serif">${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(0)}</text>
-          </g>
-        ))}
-        {xticks.map((idx, i) => (
-          <text key={i} x={xOf(idx)} y={H - 8} textAnchor="middle" fontSize="9" fill="rgba(148,163,184,.4)" fontFamily="'DM Sans',sans-serif">{candles[idx]?.date}</text>
-        ))}
-
         <g clipPath="url(#chartClip)">
           <path d={areaPath} fill={`url(#${gradId})`} />
 
@@ -134,18 +124,10 @@ export default function Chart({ candles }) {
 
           {/* S/R lines */}
           {showSR && resistance.map((v, i) => (
-            <g key={`r${i}`}>
-              <line x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="#f87171" strokeWidth="1" strokeDasharray="5 4" opacity=".5" />
-              <rect x={W - PR - 36} y={yOf(v) - 9} width={36} height={11} rx="3" fill="rgba(248,113,113,.15)" />
-              <text x={W - PR - 18} y={yOf(v)} textAnchor="middle" fontSize="7.5" fill="#f87171" fontFamily="'DM Sans',sans-serif" fontWeight="600">R {f2(v)}</text>
-            </g>
+            <line key={`r${i}`} x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="#f87171" strokeWidth="1" strokeDasharray="5 4" opacity=".5" />
           ))}
           {showSR && support.map((v, i) => (
-            <g key={`s${i}`}>
-              <line x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="#4ade80" strokeWidth="1" strokeDasharray="5 4" opacity=".5" />
-              <rect x={W - PR - 36} y={yOf(v) - 1} width={36} height={11} rx="3" fill="rgba(74,222,128,.15)" />
-              <text x={W - PR - 18} y={yOf(v) + 8} textAnchor="middle" fontSize="7.5" fill="#4ade80" fontFamily="'DM Sans',sans-serif" fontWeight="600">S {f2(v)}</text>
-            </g>
+            <line key={`s${i}`} x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="#4ade80" strokeWidth="1" strokeDasharray="5 4" opacity=".5" />
           ))}
 
           <path d={toPath(s50)} fill="none" stroke="#a78bfa" strokeWidth="1.2" opacity={showSMA ? ".7" : ".3"} strokeLinejoin="round" />
@@ -158,6 +140,20 @@ export default function Chart({ candles }) {
             <circle cx={xOf(hov.i)} cy={yOf(hov.close)} r="10" fill="none" stroke={lineColor} strokeWidth="1" opacity=".3" />
           </>}
         </g>
+
+        {/* Y-axis labels (outside clip) */}
+        {yticks.map((v, i) => (
+          <g key={i}>
+            <line x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="rgba(148,163,184,.06)" strokeWidth="1" />
+            <text x={PL - 8} y={yOf(v) + 4} textAnchor="end" fontSize="9" fill="rgba(148,163,184,.4)" fontFamily="'DM Sans',sans-serif">${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(0)}</text>
+          </g>
+        ))}
+        {/* X-axis labels (outside clip) */}
+        {xticks.map((idx, i) => (
+          <text key={i} x={xOf(idx)} y={H - 8} textAnchor="middle" fontSize="9" fill="rgba(148,163,184,.4)" fontFamily="'DM Sans',sans-serif">{candles[idx]?.date}</text>
+        ))}
+
+        {/* S/R labels (outside clip, on the right) - rendered as HTML overlays for z-index control */}
       </svg>
 
       {hov && (
@@ -168,6 +164,24 @@ export default function Chart({ candles }) {
           <div style={{ color: "rgba(148,163,184,.5)", fontSize: 10 }}>Vol {fV(hov.volume)}</div>
         </div>
       )}
+
+      {/* S/R labels as HTML overlays for proper z-index */}
+      {showSR && resistance.map((v, i) => {
+        const y = yOf(v);
+        return (
+          <div key={`rlabel${i}`} style={{ position: "absolute", left: `${((W - PR - 18) / W) * 100}%`, top: `${(y / H) * 100}%`, transform: "translate(-50%, -50%)", background: "rgba(248,113,113,.25)", border: "1px solid #f87171", borderRadius: 3, padding: "1px 4px", fontSize: 7.5, fontWeight: 600, color: "#f87171", fontFamily: "'DM Sans',sans-serif", pointerEvents: "none", zIndex: 30, whiteSpace: "nowrap" }}>
+            R {f2(v)}
+          </div>
+        );
+      })}
+      {showSR && support.map((v, i) => {
+        const y = yOf(v);
+        return (
+          <div key={`slabel${i}`} style={{ position: "absolute", left: `${((W - PR - 18) / W) * 100}%`, top: `${(y / H) * 100}%`, transform: "translate(-50%, -50%)", background: "rgba(74,222,128,.25)", border: "1px solid #4ade80", borderRadius: 3, padding: "1px 4px", fontSize: 7.5, fontWeight: 600, color: "#4ade80", fontFamily: "'DM Sans',sans-serif", pointerEvents: "none", zIndex: 30, whiteSpace: "nowrap" }}>
+            S {f2(v)}
+          </div>
+        );
+      })}
 
       {/* Legend */}
       <div style={{ position: "absolute", bottom: 8, right: 16, display: "flex", gap: 8, fontSize: 10, fontFamily: "'DM Sans',sans-serif", alignItems: "center", flexWrap: "wrap" }}>

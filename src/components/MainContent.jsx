@@ -58,9 +58,12 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
   const dayChg   = price && prev ? price - prev : null;
   const dayChgPct = dayChg && prev ? (dayChg / prev * 100) : null;
   const isUp     = dayChg >= 0;
-  const curPos   = pos[sym] || 0;
+  const curPos   = typeof pos[sym] === 'object' ? (pos[sym]?.quantity || 0) : (pos[sym] || 0);
 
-  const pnl = cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0) - 100_000;
+  const pnl = cash + Object.entries(pos).reduce((s, [k, v]) => {
+    const qty = typeof v === 'object' ? v.quantity : v;
+    return s + qty * (watch[k]?.price || 0);
+  }, 0) - 100_000;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
@@ -171,7 +174,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
                 </div>
                 {[
                   { label: "Buy",  color: "#4ade80", bg: "rgba(74,222,128,.1)",   border: "rgba(74,222,128,.25)",  action: () => buy(sym, parseInt(qty) || 0, price),  off: !price || (parseInt(qty) || 0) * price > cash },
-                  { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.1)",  border: "rgba(248,113,113,.25)", action: () => sell(sym, parseInt(qty) || 0, price), off: (pos[sym] || 0) < (parseInt(qty) || 0) },
+                  { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.1)",  border: "rgba(248,113,113,.25)", action: () => sell(sym, parseInt(qty) || 0, price), off: curPos < (parseInt(qty) || 0) },
                 ].map(b => (
                   <button key={b.label} onClick={b.action} disabled={b.off} style={{
                     padding: "6px 20px", borderRadius: 5,
@@ -200,7 +203,8 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
               </Glass>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {Object.entries(pos).map(([s, q], i) => {
+                {Object.entries(pos).map(([s, v], i) => {
+                  const q = typeof v === 'object' ? v.quantity : v;
                   const d = watch[s], p = d?.price || 0;
                   const pnlPct = d?.prevClose ? ((p - d.prevClose) / d.prevClose * 100) : 0;
                   const up = pnlPct >= 0;

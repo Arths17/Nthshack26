@@ -70,7 +70,10 @@ export default function App() {
   const inputRef = useRef(null);
 
   const portVal = useMemo(
-    () => cash + Object.entries(pos).reduce((s, [k, v]) => s + v * (watch[k]?.price || 0), 0),
+    () => cash + Object.entries(pos).reduce((s, [k, v]) => {
+      const qty = typeof v === 'object' ? v.quantity : v;
+      return s + qty * (watch[k]?.price || 0);
+    }, 0),
     [cash, pos, watch]
   );
   const pnl = useMemo(() => portVal - 100_000, [portVal]);

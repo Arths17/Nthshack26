@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 /**
  * Hook for fetching news from backend

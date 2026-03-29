@@ -1,6 +1,6 @@
 import { CACHE } from "../utils/constants";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const cache = new Map(); // symbol → { data, expiresAt }
 
 /**

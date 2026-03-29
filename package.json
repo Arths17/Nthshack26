@@ -6,10 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "vite:dev": "vite",
-    "vite:build": "vite build",
-    "vite:preview": "vite preview"
+    "start": "next start"
   },
   "predeploy": "npm run build",
   "deploy": "firebase deploy --only hosting",
@@ -20,8 +17,5 @@
     "react-dom": "^18.2.0",
     "vercel": "^50.37.3"
   },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.21"
-  }
+  "devDependencies": {}
 }

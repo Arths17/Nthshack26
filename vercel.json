@@ -6,5 +6,8 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.py" }
-  ]
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "${NEXT_PUBLIC_API_URL}"
+  },
 }

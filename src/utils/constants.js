@@ -14,7 +14,7 @@ export const CACHE = {
 };
 
 export const API = {
-  BACKEND_URL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  BACKEND_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
   TIMEOUT_MS: 10_000,
 };
 

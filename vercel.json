@@ -1,4 +1,19 @@
 {
+  "experimentalServices": {
+    "web": {
+      "entrypoint": ".",
+      "routePrefix": "/"
+    },
+    "api": {
+      "entrypoint": "backend.py",
+      "routePrefix": "/api"
+    }
+  },
+  "functions": {
+    "backend.py/*.py": { "runtime": "python3.11" }
+  }
+}
+{
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

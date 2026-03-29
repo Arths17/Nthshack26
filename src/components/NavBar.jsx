@@ -208,7 +208,6 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
             e.currentTarget.style.color = "#a1a1aa";
           }}
         >
-          <span>🚪</span>
           Sign Out
         </button>
       </div>

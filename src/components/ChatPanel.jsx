@@ -130,4 +130,5 @@ const panel = {
   display: "flex", flexDirection: "column",
   background: "rgba(6,11,24,.6)", backdropFilter: "blur(20px)",
   overflow: "hidden",
+  height: "100%",
 };

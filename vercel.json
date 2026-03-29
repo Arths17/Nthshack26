@@ -1,17 +1,13 @@
 {
-  "experimentalServices": {
-    "web": {
-      "entrypoint": ".",
-      "routePrefix": "/"
-    },
-    "api": {
-      "entrypoint": "backend.py",
-      "routePrefix": "/api"
-    }
-  },
-  "functions": {
-    "backend.py/*.py": { "runtime": "python3.11" }
-  },
+  "version": 2,
+  "builds": [
+    { "src": "package.json", "use": "@vercel/next" },
+    { "src": "api/index.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/" }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

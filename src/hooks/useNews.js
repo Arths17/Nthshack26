@@ -31,7 +31,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("${API_BASE}/api/news/market");
+      const response = await fetch(`${API_BASE}/api/news/market`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);
@@ -48,7 +48,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("${API_BASE}/api/news/trending");
+      const response = await fetch(`${API_BASE}/api/news/trending`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);

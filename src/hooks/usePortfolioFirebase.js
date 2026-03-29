@@ -26,6 +26,11 @@ export function usePortfolioFirebase() {
   // Refs to track unsubscribers
   const unsubscribersRef = useRef([]);
 
+  // Log auth status for debugging
+  useEffect(() => {
+    console.log("[Portfolio] Auth user:", authUser?.email || "NOT AUTHENTICATED");
+  }, [authUser]);
+
   // Load user profile and subscribe to portfolio/trades on auth change
   useEffect(() => {
     if (!authUser) {
@@ -91,31 +96,60 @@ export function usePortfolioFirebase() {
   // Buy stock: update cash and add position
   const buy = useCallback(
     async (sym, qty, price) => {
+      console.log("[BUY] Starting buy request:", { sym, qty, price, authUserEmail: authUser?.email, authUserUid: authUser?.uid });
+      
       if (!authUser) {
-        setError("Not authenticated");
-        return false;
+        const msg = `Not authenticated. You must log in to trade. Auth user: ${JSON.stringify({ uid: authUser?.uid, email: authUser?.email })}`;
+        console.error("[BUY]", msg);
+        setError(msg);
+        return { success: false, error: "Please log in to trade" };
+      }
+
+      if (!qty || qty <= 0) {
+        const msg = "Quantity must be greater than 0";
+        console.error("[BUY]", msg);
+        setError(msg);
+        return { success: false, error: msg };
+      }
+
+      if (!price || price <= 0) {
+        const msg = "Invalid price";
+        console.error("[BUY]", msg);
+        setError(msg);
+        return { success: false, error: msg };
       }
 
       const cost = qty * price;
       if (cost > cash) {
-        setError("Insufficient funds");
-        return false;
+        const msg = `Insufficient funds. Need $${cost.toFixed(2)}, have $${cash.toFixed(2)}`;
+        console.error("[BUY]", msg);
+        setError(msg);
+        return { success: false, error: msg };
       }
 
       try {
-        // Add to portfolio
-        const { error: buyError } = await buyStock(authUser.uid, sym, qty, price);
-        if (buyError) throw buyError;
+        console.log(`[BUY] Processing: ${qty} shares of ${sym} @ $${price} (total: $${cost.toFixed(2)})`);
+        const newCash = cash - cost;
+        
+        // Add to portfolio and update cash in Firebase
+        const { error: buyError } = await buyStock(authUser.uid, sym, qty, price, newCash);
+        if (buyError) {
+          console.error("[BUY] Firebase error:", buyError);
+          throw buyError;
+        }
 
-        // Update cash
-        setCash((prev) => prev - cost);
+        // Update local cash
+        setCash(newCash);
 
-        // Cash will be persisted in the backend
+        const msg = `Bought ${qty} shares of ${sym}`;
+        console.log("[BUY]", msg);
         setError(null);
-        return true;
+        return { success: true, error: null };
       } catch (err) {
-        setError(err.message);
-        return false;
+        const errMsg = err.message || String(err);
+        console.error("[BUY] Error:", errMsg);
+        setError(errMsg);
+        return { success: false, error: errMsg };
       }
     },
     [authUser, cash]
@@ -125,34 +159,61 @@ export function usePortfolioFirebase() {
   const sell = useCallback(
     async (sym, qty, price) => {
       if (!authUser) {
-        setError("Not authenticated");
-        return false;
+        const msg = "Not authenticated";
+        console.error("[SELL]", msg);
+        setError(msg);
+        return { success: false, error: msg };
+      }
+
+      if (!qty || qty <= 0) {
+        const msg = "Quantity must be greater than 0";
+        console.error("[SELL]", msg);
+        setError(msg);
+        return { success: false, error: msg };
+      }
+
+      if (!price || price <= 0) {
+        const msg = "Invalid price";
+        console.error("[SELL]", msg);
+        setError(msg);
+        return { success: false, error: msg };
       }
 
       const held = pos[sym] || 0;
       if (qty > held) {
-        setError("Insufficient position");
-        return false;
+        const msg = `Insufficient position. Own ${held}, trying to sell ${qty}`;
+        console.error("[SELL]", msg);
+        setError(msg);
+        return { success: false, error: msg };
       }
 
       try {
-        // Remove from portfolio
-        const { error: sellError } = await sellStock(authUser.uid, sym, qty, price);
-        if (sellError) throw sellError;
-
-        // Update cash
+        console.log(`[SELL] Processing: ${qty} shares of ${sym} @ $${price}`);
         const proceeds = qty * price;
-        setCash((prev) => prev + proceeds);
+        const newCash = cash + proceeds;
 
-        // Cash will be persisted in the backend
+        // Remove from portfolio and update cash in Firebase
+        const { error: sellError } = await sellStock(authUser.uid, sym, qty, price, newCash);
+        if (sellError) {
+          console.error("[SELL] Firebase error:", sellError);
+          throw sellError;
+        }
+
+        // Update local cash
+        setCash(newCash);
+
+        const msg = `Sold ${qty} shares of ${sym}`;
+        console.log("[SELL]", msg);
         setError(null);
-        return true;
+        return { success: true, error: null };
       } catch (err) {
-        setError(err.message);
-        return false;
+        const errMsg = err.message || String(err);
+        console.error("[SELL] Error:", errMsg);
+        setError(errMsg);
+        return { success: false, error: errMsg };
       }
     },
-    [authUser, pos]
+    [authUser, pos, cash]
   );
 
   return {

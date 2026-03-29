@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 /**
  * Hook for fetching news from backend
  */
@@ -12,7 +14,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:8000/api/news/stock/${symbol}`);
+      const response = await fetch(`${API_BASE}/api/news/stock/${symbol}`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);
@@ -29,7 +31,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/news/market");
+      const response = await fetch("${API_BASE}/api/news/market");
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);
@@ -46,7 +48,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/news/trending");
+      const response = await fetch("${API_BASE}/api/news/trending");
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);

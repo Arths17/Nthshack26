@@ -1,5 +1,6 @@
 import { CACHE } from "../utils/constants";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
 const cache = new Map(); // symbol → { data, expiresAt }
 
 /**
@@ -29,7 +30,7 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
   }
 
   try {
-    const response = await fetch(`/api/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`, {
+    const response = await fetch(`${API_BASE}/api/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });

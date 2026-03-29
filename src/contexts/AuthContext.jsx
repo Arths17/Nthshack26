@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChangeListener } from "../api/firebase";
+import { onAuthStateChange, getCurrentUser } from "../api/firebaseAuth";
 
 const AuthContext = createContext();
 
@@ -11,13 +11,20 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Subscribe to Firebase auth changes
-    const unsubscribe = onAuthStateChangeListener((authUser) => {
-      setUser(authUser || null);
+    // Check if user is already logged in via Firebase
+    getCurrentUser().then(({ user }) => {
+      setUser(user || null);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Subscribe to auth changes
+    const unsubscribe = onAuthStateChange((user) => {
+      setUser(user || null);
+    });
+
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, []);
 
   return (

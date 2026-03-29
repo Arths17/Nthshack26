@@ -5,10 +5,6 @@
     { "src": "api/index.py", "use": "@vercel/python" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.py" },
-    { "src": "/(.*)", "dest": "/" }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "src": "/api/(.*)", "dest": "/api/index.py" }
   ]
 }

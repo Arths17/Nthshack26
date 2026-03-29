@@ -182,14 +182,6 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
         <div style={{ width: 1, height: 24, background: "rgba(255,255,255,.06)" }} />
         <button
           onClick={onSignOut}
-<<<<<<< HEAD
-          style={{
-            padding: "6px 12px", borderRadius: 5,
-            border: "1px solid rgba(255,255,255,.12)",
-            background: "rgba(255,255,255,.04)",
-            cursor: "pointer", fontSize: 10, fontWeight: 500, color: "#71717a",
-            transition: "all .15s", letterSpacing: ".06em", textTransform: "uppercase",
-=======
           title="Sign out"
           style={{
             padding: "5px 12px",
@@ -204,7 +196,6 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
             display: "flex",
             alignItems: "center",
             gap: 5,
->>>>>>> d254682dd3ebcb16962f558bbfa395dbda6c2e8d
           }}
           onMouseEnter={e => {
             e.currentTarget.style.background = "rgba(248,113,113,.1)";
@@ -212,14 +203,6 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
             e.currentTarget.style.color = "#f87171";
           }}
           onMouseLeave={e => {
-<<<<<<< HEAD
-            e.currentTarget.style.background = "rgba(255,255,255,.04)";
-            e.currentTarget.style.borderColor = "rgba(255,255,255,.12)";
-            e.currentTarget.style.color = "#71717a";
-          }}
-        >
-          Logout
-=======
             e.currentTarget.style.background = "transparent";
             e.currentTarget.style.borderColor = "rgba(255,255,255,.08)";
             e.currentTarget.style.color = "#a1a1aa";
@@ -227,7 +210,6 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
         >
           <span>🚪</span>
           Sign Out
->>>>>>> d254682dd3ebcb16962f558bbfa395dbda6c2e8d
         </button>
       </div>
     </div>

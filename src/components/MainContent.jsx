@@ -213,13 +213,8 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
                     style={{ width: 56, padding: "6px 10px", fontSize: 13, fontWeight: 500, textAlign: "center", opacity: trading ? 0.6 : 1 }} />
                 </div>
                 {[
-<<<<<<< HEAD
-                  { label: "Buy",  color: "#4ade80", bg: "rgba(74,222,128,.1)",   border: "rgba(74,222,128,.25)",  action: () => buy(sym, parseInt(qty) || 0, price),  off: !price || (parseInt(qty) || 0) * price > cash },
-                  { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.1)",  border: "rgba(248,113,113,.25)", action: () => sell(sym, parseInt(qty) || 0, price), off: curPos < (parseInt(qty) || 0) },
-=======
                   { label: "Buy",  color: "#4ade80", bg: "rgba(74,222,128,.1)",   border: "rgba(74,222,128,.25)",  action: handleBuy,  off: trading || !price || (parseInt(qty) || 0) * price > cash },
                   { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.1)",  border: "rgba(248,113,113,.25)", action: handleSell, off: trading || (pos[sym] || 0) < (parseInt(qty) || 0) },
->>>>>>> d254682dd3ebcb16962f558bbfa395dbda6c2e8d
                 ].map(b => (
                   <button key={b.label} onClick={b.action} disabled={b.off} style={{
                     padding: "6px 20px", borderRadius: 5,

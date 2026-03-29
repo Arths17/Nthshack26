@@ -4,7 +4,8 @@ Supports: Yahoo Finance RSS, Reddit, MarketWatch, Seeking Alpha
 """
 
 import re
-import requests
+import urllib.request
+from urllib.error import URLError, HTTPError
 from datetime import datetime
 from typing import List, Dict, Optional
 import xml.etree.ElementTree as ET
@@ -33,6 +34,44 @@ class NewsScraper:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         }
         self.timeout = 10
+
+    def _http_get(self, url: str, headers: Optional[Dict] = None, timeout: Optional[int] = None):
+        """Lightweight HTTP GET using urllib as a fallback to requests.
+        Returns an object with `status_code` and `content` attributes to mimic `requests.Response`.
+        """
+        req = urllib.request.Request(url, headers=(headers or {}), method='GET')
+        try:
+            with urllib.request.urlopen(req, timeout=(timeout or self.timeout)) as resp:
+                content = resp.read()
+                status = getattr(resp, 'status', None) or getattr(resp, 'getcode', None)
+                if callable(status):
+                    status = status()
+
+                class _Resp:
+                    def __init__(self, status_code, content):
+                        self.status_code = status_code
+                        self.content = content
+
+                return _Resp(status, content)
+        except HTTPError as e:
+            class _ErrResp:
+                def __init__(self, code, content):
+                    self.status_code = code
+                    self.content = content
+
+            body = b''
+            try:
+                body = e.read()
+            except:
+                pass
+            return _ErrResp(getattr(e, 'code', None), body)
+        except URLError:
+            class _ErrResp2:
+                def __init__(self):
+                    self.status_code = None
+                    self.content = b''
+
+            return _ErrResp2()
     
     def parse_rss_feed(self, xml_content: str, source: str) -> List[Dict]:
         """Parse RSS feed and extract news items"""
@@ -100,7 +139,7 @@ class NewsScraper:
             # Fetch Yahoo Finance RSS for specific stock
             url = NEWS_SOURCES["yahoo"]["url"].format(symbol=symbol)
             print(f"Fetching stock news from: {url}")
-            response = requests.get(url, headers=self.headers, timeout=self.timeout)
+            response = self._http_get(url, headers=self.headers, timeout=self.timeout)
             if response.status_code == 200:
                 articles = self.parse_rss_feed(response.content, "Yahoo Finance")
                 all_articles.extend(articles)
@@ -158,7 +197,7 @@ class NewsScraper:
         try:
             url = NEWS_SOURCES["yahoo"]["url"].format(symbol="SPY")
             print(f"Fetching market news from: {url}")
-            response = requests.get(url, headers=self.headers, timeout=self.timeout)
+            response = self._http_get(url, headers=self.headers, timeout=self.timeout)
             if response.status_code == 200:
                 articles = self.parse_rss_feed(response.content, "Yahoo Finance Markets")
                 all_articles.extend(articles)
@@ -172,7 +211,7 @@ class NewsScraper:
         try:
             url = NEWS_SOURCES["marketwatch"]["url"]
             print(f"Fetching from MarketWatch: {url}")
-            response = requests.get(url, headers=self.headers, timeout=self.timeout)
+            response = self._http_get(url, headers=self.headers, timeout=self.timeout)
             if response.status_code == 200:
                 articles = self.parse_rss_feed(response.content, "MarketWatch")
                 all_articles.extend(articles)
@@ -186,7 +225,7 @@ class NewsScraper:
         try:
             url = NEWS_SOURCES["cnbc"]["url"]
             print(f"Fetching from CNBC: {url}")
-            response = requests.get(url, headers=self.headers, timeout=self.timeout)
+            response = self._http_get(url, headers=self.headers, timeout=self.timeout)
             if response.status_code == 200:
                 articles = self.parse_rss_feed(response.content, "CNBC")
                 all_articles.extend(articles)

@@ -152,14 +152,14 @@ curl http://localhost:8000/api/news/trending
 ## Files Created/Modified
 
 ### New Files
-- ✅ `backend.py/news_scraper.py` - Scraping engine
+- ✅ `backend/news_scraper.py` - Scraping engine
 - ✅ `src/hooks/useNews.js` - React hook
 - ✅ `NEWS_FEATURE.md` - Full documentation
 - ✅ `NEWS_IMPLEMENTATION.md` - Implementation summary
 - ✅ `QUICKSTART_NEWS.md` - This file
 
-### Modified Files
-- ✅ `backend.py/server.py` - Added API endpoints
+- ### Modified Files
+- ✅ `backend/server.py` - Added API endpoints
 - ✅ `src/pages/NewsPage.jsx` - Updated UI
 - ✅ `requirements.txt` - Added dependencies
 

@@ -13,7 +13,7 @@ A **complete, production-ready web scraping news system** with:
 
 ```
 Nthshack26/
-├── backend.py/
+├── backend/
 │   ├── news_scraper.py          ✨ NEW - News scraping engine
 │   ├── server.py                 ✏️ UPDATED - Added API endpoints
 │   ├── main.py
@@ -57,7 +57,7 @@ pip install -r requirements.txt
 
 ### 2️⃣ Start Backend
 ```bash
-cd backend.py
+cd backend
 uvicorn server:app --reload --port 8000
 ```
 
@@ -229,7 +229,7 @@ Response:
 ## 🔧 Configuration & Customization
 
 ### Add More News Sources
-Edit `backend.py/news_scraper.py`:
+Edit `backend/news_scraper.py`:
 ```python
 NEWS_SOURCES = {
     "yahoo": { "url": "...", "type": "rss" },

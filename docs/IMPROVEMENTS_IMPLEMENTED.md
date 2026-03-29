@@ -15,7 +15,7 @@ This document summarizes all improvements made to the Quanta trading terminal to
 
 ### 2. **Backend Proxy for Yahoo Finance**
 - **Files Modified**: 
-  - [backend.py/server.py](backend.py/server.py) - Added `/api/stock/{symbol}` endpoint
+  - [backend/server.py](backend/server.py) - Added `/api/stock/{symbol}` endpoint
   - [src/api/yahoo.js](src/api/yahoo.js) - Updated to use backend instead of CORS proxy
 - **Benefits**: 
   - Removed dependency on unreliable `corsproxy.io`
@@ -143,7 +143,7 @@ Returns:
 - [src/components/ErrorBoundary.jsx](src/components/ErrorBoundary.jsx) - Error boundary component
 
 **Files Modified (10)**:
-- [backend.py/server.py](backend.py/server.py) - Added `/api/stock/{symbol}` endpoint
+- [backend/server.py](backend/server.py) - Added `/api/stock/{symbol}` endpoint
 - [src/App.jsx](src/App.jsx) - Added error boundary, mobile responsiveness, memoization
 - [src/api/yahoo.js](src/api/yahoo.js) - Now uses backend proxy
 - [src/hooks/useChat.js](src/hooks/useChat.js) - Better error handling, API constant

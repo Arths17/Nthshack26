@@ -9,7 +9,7 @@
 ## Backend Server
 - **URL:** http://localhost:8000
 - **Status:** Running (FastAPI/Uvicorn)
-- **Command:** `cd backend.py && python -m uvicorn server:app --reload --port 8000`
+- **Command:** `cd backend && python -m uvicorn server:app --reload --port 8000`
 - **Process:** Python on port 8000
 
 ## Available Endpoints

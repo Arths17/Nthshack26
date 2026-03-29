@@ -9,7 +9,7 @@ The News feature provides real-time financial news from multiple sources using *
 ### Backend Components
 
 #### 1. **news_scraper.py** - News Scraping Engine
-- **Location**: `backend.py/news_scraper.py`
+- **Location**: `backend/news_scraper.py`
 - **Functionality**:
   - Scrapes RSS feeds from multiple financial news sources
   - Parses RSS feeds (Yahoo Finance, MarketWatch, CNBC)

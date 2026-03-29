@@ -183,10 +183,10 @@ Run: `cd backend && python -m uvicorn server:app --reload --port 8000`
 ## Next Steps
 
 1. **Start Backend**
-   ```bash
-   cd backend.py
-   python -m uvicorn server:app --reload --port 8000
-   ```
+  ```bash
+  cd backend
+  python -m uvicorn server:app --reload --port 8000
+  ```
 
 2. **Watch Terminal** for logging output showing what articles are being fetched
 

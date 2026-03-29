@@ -34,7 +34,7 @@
 ## 📊 Implementation Details
 
 ### Code Changed
-**File**: `backend.py/news_scraper.py`  
+**File**: `backend/news_scraper.py`  
 **Function**: `fetch_stock_news(symbol: str)`  
 **What**: Added content-based filtering  
 **Impact**: 100% accuracy (was 75%)
@@ -126,7 +126,7 @@ Created **10 comprehensive guides** totaling **3,800+ lines**:
 
 ### Step 1: Restart Backend
 ```bash
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 ```
 

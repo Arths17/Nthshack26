@@ -20,7 +20,7 @@ except Exception:
     pass
 
 # Configure Gemini API
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAmbvYcOc8lxyL1yj4tUZHrqtZoNOu7Oa4")
 if not GEMINI_API_KEY:
     # Try to read .env manually as a fallback (avoids dependency issues)
     env_path = os.path.join(os.getcwd(), ".env")

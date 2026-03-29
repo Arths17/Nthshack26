@@ -342,10 +342,10 @@ Depending on what you need, here's the perfect document for you:
 - ⚪ Gray = Neutral
 
 ### File Locations
-- Backend: `backend.py/news_scraper.py`
+- Backend: `backend/news_scraper.py`
 - Frontend Hook: `src/hooks/useNews.js`
 - Frontend Component: `src/pages/NewsPage.jsx`
-- API: `backend.py/server.py`
+- API: `backend/server.py`
 
 ---
 

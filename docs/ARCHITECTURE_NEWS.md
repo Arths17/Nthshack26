@@ -31,14 +31,14 @@ A **complete web scraping news system** with real-time financial news from multi
 ## 📂 Files Created
 
 ### Backend
-- **`backend.py/news_scraper.py`** (200+ lines)
+- **`backend/news_scraper.py`** (200+ lines)
   - `NewsScraper` class with full scraping logic
   - RSS feed parsing and cleanup
   - Sentiment analysis engine
   - Deduplication and sorting
   - Error handling with fallbacks
 
-- **`backend.py/server.py`** (Updated)
+- **`backend/server.py`** (Updated)
   - 3 new API endpoints:
     - `GET /api/news/stock/{symbol}`
     - `GET /api/news/market`
@@ -180,7 +180,7 @@ pip install -r requirements.txt
 
 ### Step 2: Start Backend
 ```bash
-cd backend.py
+cd backend
 uvicorn server:app --reload --port 8000
 ```
 

@@ -255,7 +255,7 @@ Total market articles collected: 30
 ## 📁 File Structure
 
 ```
-backend.py/
+backend/
 ├─ news_scraper.py (239 lines)
 │  ├─ NewsScraper class
 │  ├─ fetch_stock_news(symbol) ← STOCK-SPECIFIC FILTER HERE
@@ -322,7 +322,7 @@ Before going live:
 pip install -r requirements.txt
 
 # 2. Start backend
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 
 # 3. Test Stock News

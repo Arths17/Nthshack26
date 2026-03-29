@@ -218,7 +218,7 @@ See what responses are returned!
 
 ## Files Modified
 
-- ✏️ `backend.py/news_scraper.py`
+- ✏️ `backend/news_scraper.py`
   - Improved `fetch_stock_news()` - now properly returns only stock news
   - Improved `fetch_market_news()` - now fetches from 3 sources
 
@@ -226,7 +226,7 @@ See what responses are returned!
 
 - ✅ `src/pages/NewsPage.jsx` (already working)
 - ✅ `src/hooks/useNews.js` (already working)
-- ✅ `backend.py/server.py` (API correct)
+- ✅ `backend/server.py` (API correct)
 
 ## Summary
 

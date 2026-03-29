@@ -14,7 +14,7 @@ pip install -r requirements.txt
 
 ### 2. Start the backend server
 ```bash
-cd backend.py
+cd backend
 uvicorn server:app --reload --port 8000
 ```
 
@@ -110,7 +110,7 @@ uvicorn server:app --reload --port 8001
 ## Customization
 
 ### Add more news sources
-Edit `backend.py/news_scraper.py`:
+Edit `backend/news_scraper.py`:
 
 ```python
 NEWS_SOURCES = {

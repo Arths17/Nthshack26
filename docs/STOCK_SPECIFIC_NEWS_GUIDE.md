@@ -234,7 +234,7 @@ Status:             ✅ PRODUCTION READY
 
 1. **Restart Backend**
    ```bash
-   cd backend.py
+    cd backend
    python -m uvicorn server:app --reload --port 8000
    ```
 

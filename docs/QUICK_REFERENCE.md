@@ -25,7 +25,7 @@
 
 ### 1. Restart Backend
 ```bash
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 ```
 
@@ -122,7 +122,7 @@ User: "Perfect! ✅"
 
 ## 💻 CODE CHANGE
 
-**File**: `backend.py/news_scraper.py`  
+**File**: `backend/news_scraper.py`  
 **Function**: `fetch_stock_news(symbol)`
 
 ```python

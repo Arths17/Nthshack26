@@ -23,7 +23,7 @@ A real-time paper trading terminal powered by live Yahoo Finance data and Gemini
 Nthshack26/
 ├── server.py                  # FastAPI proxy — /api/chat → Gemini 2.5 Flash
 ├── .env                       # API keys (gitignored)
-├── backend.py/
+├── backend/
 │   └── main.py                # Standalone CLI stock analyzer (Gemini + yfinance)
 └── src/
     ├── index.css              # Global styles + animations

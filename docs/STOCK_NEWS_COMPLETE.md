@@ -72,7 +72,7 @@ After:   "Perfect! Exactly what I need!"
 
 ## 📁 Files Updated
 
-### `backend.py/news_scraper.py` (239 lines)
+### `backend/news_scraper.py` (239 lines)
 **Function**: `fetch_stock_news(symbol: str)`
 
 **What Changed**:
@@ -180,7 +180,7 @@ Display: With colors and source badges
 
 ```bash
 # 1. Restart backend
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 
 # 2. Watch terminal - Should show:

@@ -78,7 +78,7 @@ Win rate: 48-58% (trend-dependent)
 ## ⚡ Real-time Data Accuracy
 
 ### Yahoo Finance Integration
-From `src/api/yahoo.js` & `backend.py/server.py`:
+From `src/api/yahoo.js` & `backend/server.py`:
 
 ```
 Data Point          Accuracy  Latency   Update Frequency
@@ -434,7 +434,7 @@ Validation: ✅ PASS
 ### API Key Protection
 ```
 Gemini API Key Storage:
-├── Location:    backend.py/.env (server-only)
+├── Location:    backend/.env (server-only)
 ├── Transport:   HTTPS between frontend & backend
 ├── Exposure:    ZERO to client-side JavaScript
 ├── Validation: ✅ No API key in localStorage

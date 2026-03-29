@@ -21,7 +21,7 @@
 1. Read: **STOCK_SPECIFIC_NEWS_GUIDE.md** 🔧
 2. Read: **NEWS_ARCHITECTURE_FINAL.md** 🏗️
 3. Read: **IMPLEMENTATION_VERIFICATION.md** ✓
-4. Check code: `backend.py/news_scraper.py`
+4. Check code: `backend/news_scraper.py`
 5. Run tests
 6. Done! ✅
 
@@ -244,7 +244,7 @@ After:  "Perfect! Exactly what I need!"
 - ✅ Created comprehensive documentation
 
 ### Where to Find Code
-- **Main**: `backend.py/news_scraper.py` (Line 95-155)
+- **Main**: `backend/news_scraper.py` (Line 95-155)
 - **Function**: `fetch_stock_news(symbol: str)`
 - **Change**: Added content-based filtering
 
@@ -333,7 +333,7 @@ You'll know it's working when:
 10. ✅ STOCK_NEWS_DOCUMENTATION_INDEX.md (this file)
 
 ### Code Modified
-1. ✅ backend.py/news_scraper.py (fetch_stock_news function)
+1. ✅ backend/news_scraper.py (fetch_stock_news function)
 
 ### Frontend Unchanged
 1. ✅ src/pages/NewsPage.jsx (already working)

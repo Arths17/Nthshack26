@@ -2,7 +2,7 @@
 
 ## ✅ Completed Features
 
-### 1. **Backend News Scraper** (`backend.py/news_scraper.py`)
+### 1. **Backend News Scraper** (`backend/news_scraper.py`)
 - ✅ Multi-source RSS feed scraping (Yahoo Finance, MarketWatch, CNBC)
 - ✅ XML parsing and article extraction
 - ✅ HTML cleanup from descriptions
@@ -11,7 +11,7 @@
 - ✅ Article sorting by date (newest first)
 - ✅ Error handling with graceful fallbacks
 
-### 2. **API Endpoints** (updated `backend.py/server.py`)
+### 2. **API Endpoints** (updated `backend/server.py`)
 ```
 GET /api/news/stock/{symbol}    # Fetch news for specific stock
 GET /api/news/market            # Fetch general market news  
@@ -65,7 +65,7 @@ GET /api/news/trending          # Fetch top trending news
 
 ### Start the backend server:
 ```bash
-cd backend.py
+cd backend
 pip install -r ../requirements.txt
 uvicorn server:app --reload --port 8000
 ```

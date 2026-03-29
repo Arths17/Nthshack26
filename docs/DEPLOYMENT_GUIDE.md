@@ -2,7 +2,7 @@
 
 ## ✅ PRE-DEPLOYMENT CHECKLIST
 
-- [x] Code implemented in `backend.py/news_scraper.py`
+- [x] Code implemented in `backend/news_scraper.py`
 - [x] No syntax errors
 - [x] Filtering logic added to `fetch_stock_news()`
 - [x] Debug logging added
@@ -20,7 +20,7 @@
 ### Step 1: Verify Code (30 seconds)
 ```bash
 # Check that filtering code is in place
-grep -n "Keeping article" backend.py/news_scraper.py
+grep -n "Keeping article" backend/news_scraper.py
 # Should show: print(f"✓ Keeping article...")
 ```
 
@@ -33,7 +33,7 @@ pkill -f "uvicorn"
 
 ### Step 3: Restart Backend (1 minute)
 ```bash
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 ```
 
@@ -82,13 +82,13 @@ Filtered to X NVDA-specific articles
 ### ✅ Code Verification
 ```bash
 # Verify file was modified
-ls -lh backend.py/news_scraper.py
+ls -lh backend/news_scraper.py
 
 # Check filtering is present
-grep "Keeping article" backend.py/news_scraper.py
+grep "Keeping article" backend/news_scraper.py
 
 # Verify no syntax errors
-python -m py_compile backend.py/news_scraper.py
+python -m py_compile backend/news_scraper.py
 # If no output, syntax is OK
 ```
 
@@ -168,7 +168,7 @@ If something goes wrong:
 pkill -f "uvicorn"
 
 # Restart
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 ```
 
@@ -181,7 +181,7 @@ python -m uvicorn server:app --reload --port 8000
 # - Python error (check syntax with py_compile)
 
 # Run diagnostic
-python backend.py/news_scraper.py
+python backend/news_scraper.py
 # Should run without errors
 ```
 
@@ -192,10 +192,10 @@ If critical issue:
 git status
 
 # View changes
-git diff backend.py/news_scraper.py
+git diff backend/news_scraper.py
 
 # Revert if needed
-git checkout backend.py/news_scraper.py
+git checkout backend/news_scraper.py
 ```
 
 ---
@@ -302,7 +302,7 @@ After deployment, verify:
 - **STOCK_NEWS_DOCUMENTATION_INDEX.md** - All docs
 
 ### Code
-- **backend.py/news_scraper.py** - Source code
+- **backend/news_scraper.py** - Source code
 - Line 95-155 - `fetch_stock_news()` function
 - Line 150-200 - `fetch_market_news()` function
 

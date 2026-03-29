@@ -219,8 +219,8 @@ Status: 🟢 PRODUCTION READY
 - ✨ `MARKET_NEWS_FIX.md` - Fix details
 
 ### Already Complete
-- ✅ `backend.py/news_scraper.py` - Scraping
-- ✅ `backend.py/server.py` - API
+- ✅ `backend/news_scraper.py` - Scraping
+- ✅ `backend/server.py` - API
 - ✅ `src/hooks/useNews.js` - Hook
 - ✅ All documentation files
 

@@ -7,7 +7,7 @@
 ## 📋 What Was Delivered
 
 ### 1. **Backend News Scraping Engine**
-- **File**: `backend.py/news_scraper.py` (200+ lines)
+- **File**: `backend/news_scraper.py` (200+ lines)
 - **Capabilities**:
   - Real-time RSS feed scraping from 3 sources
   - Intelligent sentiment analysis (50+ keywords)
@@ -16,7 +16,7 @@
   - Comprehensive error handling
 
 ### 2. **FastAPI Integration**
-- **File**: `backend.py/server.py` (Updated)
+- **File**: `backend/server.py` (Updated)
 - **Endpoints**:
   - `GET /api/news/stock/{symbol}` - Stock-specific news
   - `GET /api/news/market` - General market news
@@ -112,7 +112,7 @@ pip install -r requirements.txt
 
 ### Step 2: Start Backend
 ```bash
-cd backend.py
+cd backend
 uvicorn server:app --reload --port 8000
 ```
 

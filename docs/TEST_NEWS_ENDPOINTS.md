@@ -119,7 +119,7 @@ Total market articles collected: 30
 
 ### "Cannot GET /api/news/stock/NVDA"
 - Backend server isn't running
-- Run: `cd backend.py && python -m uvicorn server:app --reload --port 8000`
+Run: `cd backend && python -m uvicorn server:app --reload --port 8000`
 
 ### "No articles found for NVDA" in logs
 - Yahoo Finance RSS may be down

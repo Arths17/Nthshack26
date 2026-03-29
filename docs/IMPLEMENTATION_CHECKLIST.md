@@ -157,7 +157,7 @@
 pip install -r requirements.txt
 
 # 2. Start backend
-cd backend.py && uvicorn server:app --reload --port 8000
+cd backend && uvicorn server:app --reload --port 8000
 
 # 3. Open frontend (already configured)
 # News page will automatically fetch and display articles

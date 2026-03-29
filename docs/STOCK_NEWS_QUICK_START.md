@@ -4,7 +4,7 @@
 
 ### Step 1: Restart Backend
 ```bash
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 ```
 
@@ -83,7 +83,7 @@ Should NOT see: NVDA-specific articles
 
 ## 🔥 What Changed in Code
 
-**File**: `backend.py/news_scraper.py`  
+**File**: `backend/news_scraper.py`  
 **Function**: `fetch_stock_news()`
 
 Added content-based filtering:

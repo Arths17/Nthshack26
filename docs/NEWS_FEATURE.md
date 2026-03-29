@@ -111,7 +111,7 @@ pip install -r requirements.txt
 ### 2. Start Backend Server
 
 ```bash
-cd backend.py
+cd backend
 uvicorn server:app --reload --port 8000
 ```
 

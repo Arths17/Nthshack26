@@ -6,7 +6,7 @@ Security and Secrets Handling
 2) Never embed secrets in client-side code. The frontend runs in users' browsers — secrets must stay on a server.
 
 3) Current setup
-- The frontend calls `/api/*` endpoints. The FastAPI backend at `backend.py/server.py` reads `GEMINI_API_KEY` from environment variables and uses it to call the Gemini API. This keeps the key server-side.
+- The frontend calls `/api/*` endpoints. The FastAPI backend at `backend/server.py` reads `GEMINI_API_KEY` from environment variables and uses it to call the Gemini API. This keeps the key server-side.
 
 4) Deployment recommendations
 - If you deploy the backend to a host (Vercel Serverless, Render, Fly, Heroku, Google Cloud Run), add `GEMINI_API_KEY` in the host's environment settings (not in repo).

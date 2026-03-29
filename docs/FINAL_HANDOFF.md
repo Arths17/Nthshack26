@@ -54,7 +54,7 @@
 ## 📊 CODE CHANGES
 
 ### File Modified
-**`backend.py/news_scraper.py`**
+**`backend/news_scraper.py`**
 
 ### Function Updated
 **`fetch_stock_news(symbol: str)`** (Lines 95-155)
@@ -147,7 +147,7 @@ Impact: Much higher satisfaction
 # Press Ctrl+C or pkill -f uvicorn
 
 # 2. Restart backend
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 
 # 3. Test

@@ -9,7 +9,7 @@
 ## 📋 Implementation Details
 
 ### What Was Changed
-- **File Modified**: `backend.py/news_scraper.py`
+- **File Modified**: `backend/news_scraper.py`
 - **Function Updated**: `fetch_stock_news(symbol: str)`
 - **Lines Added**: ~25 lines of filtering logic
 - **Complexity**: O(n) where n = articles returned
@@ -204,7 +204,7 @@ Created 4 comprehensive documents:
 
 ```bash
 # 1. Start backend
-cd backend.py
+cd backend
 python -m uvicorn server:app --reload --port 8000
 
 # 2. Watch logs for:

@@ -149,7 +149,7 @@ Filtered to 10 NVDA-specific articles
 
 ## 💻 Code Changes Summary
 
-### File: `backend.py/news_scraper.py`
+### File: `backend/news_scraper.py`
 
 **Lines Added**: ~25 lines  
 **Lines Modified**: ~5 lines  

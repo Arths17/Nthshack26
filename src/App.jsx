@@ -43,7 +43,8 @@ export default function App() {
   const [timeframe, setTimeframe]   = useState("3M");
   // Respect dev override: if devSessionOverride() returns null we force landing
   const devOverride = devSessionOverride();
-  const [showLanding, setShowLanding]       = useState(() => devOverride === null ? true : !getSession());
+  // Always show the landing page first. Only authenticated users (via Auth) can enter.
+  const [showLanding, setShowLanding]       = useState(() => devOverride === null ? true : true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobile, setIsMobile]     = useState(window.innerWidth < UI.BREAKPOINT_MOBILE);
   const [mobilTab, setMobilTab]     = useState("market");
@@ -96,12 +97,11 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false);
 
   function handleEnter() {
-    if (user) {
-      // Already logged in — go straight to terminal
+    // Require an authenticated session (AuthContext) to enter the terminal.
+    if (authUser) {
       setShowLanding(false);
       if (!localStorage.getItem("quanta:onboarded")) setShowOnboarding(true);
     } else {
-      // Need to log in first
       setShowLogin(true);
     }
   }

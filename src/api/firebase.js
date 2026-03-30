@@ -76,12 +76,18 @@ export { auth, db };
  * Sign up new user with Firebase Auth
  */
 export async function signUp(email, password, displayName) {
+  if (!isFirebaseConfigured) {
+    const err = new Error('Firebase not configured');
+    console.error('[Firebase][signUp] Aborted:', err.message);
+    return { user: null, error: err };
+  }
+
   try {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
-    
+
     // Update profile with display name
     await updateProfile(user, { displayName });
-    
+
     // Create user profile document in Firestore
     await setDoc(doc(db, 'users', user.uid), {
       email,
@@ -102,6 +108,12 @@ export async function signUp(email, password, displayName) {
  * Sign in with Firebase Auth
  */
 export async function signIn(email, password) {
+  if (!isFirebaseConfigured) {
+    const err = new Error('Firebase not configured');
+    console.error('[Firebase][signIn] Aborted:', err.message);
+    return { user: null, error: err };
+  }
+
   try {
     const { user } = await signInWithEmailAndPassword(auth, email, password);
     return { user, error: null };
@@ -114,6 +126,12 @@ export async function signIn(email, password) {
  * Sign out
  */
 export async function signOut() {
+  if (!isFirebaseConfigured) {
+    const err = new Error('Firebase not configured');
+    console.error('[Firebase][signOut] Aborted:', err.message);
+    return { error: err };
+  }
+
   try {
     await firebaseSignOut(auth);
     return { error: null };
@@ -126,6 +144,8 @@ export async function signOut() {
  * Get current user (async)
  */
 export function getCurrentUser() {
+  if (!isFirebaseConfigured) return Promise.resolve(null);
+
   return new Promise((resolve, reject) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       unsubscribe();
@@ -138,6 +158,12 @@ export function getCurrentUser() {
  * Listen to auth state changes
  */
 export function onAuthStateChangeListener(callback) {
+  if (!isFirebaseConfigured) {
+    console.warn('[Firebase] onAuthStateChangeListener: Firebase not configured — returning no-op unsubscribe');
+    // Return a no-op unsubscribe function to match the onSnapshot/onAuth API
+    return () => {};
+  }
+
   return onAuthStateChanged(auth, callback);
 }
 
@@ -147,6 +173,12 @@ export function onAuthStateChangeListener(callback) {
 export async function getUserProfile(userId) {
   try {
     console.log('[Firebase] Getting user profile for:', userId);
+    if (!isFirebaseConfigured) {
+      const err = new Error('Firebase not configured');
+      console.error('[Firebase][getUserProfile] Aborted:', err.message);
+      return { data: null, error: err };
+    }
+
     const docSnap = await getDoc(doc(db, 'users', userId));
     console.log('[Firebase] User profile retrieved');
     return { data: docSnap.data(), error: null };
@@ -161,6 +193,11 @@ export async function getUserProfile(userId) {
  */
 export function subscribeToPortfolio(userId, callback) {
   console.log('[Firebase] Subscribing to portfolio for:', userId);
+  if (!isFirebaseConfigured) {
+    console.warn('[Firebase] subscribeToPortfolio skipped: Firebase not configured');
+    return () => {};
+  }
+
   const q = query(collection(db, 'portfolios'), where('userId', '==', userId));
   return onSnapshot(
     q,
@@ -185,7 +222,12 @@ export function subscribeToPortfolio(userId, callback) {
 export async function buyStock(userId, symbol, quantity, price, newCash) {
   try {
     console.log('[Firebase] Starting buy:', { userId, symbol, quantity, price });
-    
+    if (!isFirebaseConfigured) {
+      const err = new Error('Firebase not configured');
+      console.error('[Firebase][buyStock] Aborted:', err.message);
+      return { error: err };
+    }
+
     const portfolioRef = doc(db, 'portfolios', `${userId}_${symbol}`);
     let docSnap;
     
@@ -264,7 +306,12 @@ export async function buyStock(userId, symbol, quantity, price, newCash) {
 export async function sellStock(userId, symbol, quantity, price, newCash) {
   try {
     console.log('[Firebase] Starting sell:', { userId, symbol, quantity, price });
-    
+    if (!isFirebaseConfigured) {
+      const err = new Error('Firebase not configured');
+      console.error('[Firebase][sellStock] Aborted:', err.message);
+      return { error: err };
+    }
+
     const portfolioRef = doc(db, 'portfolios', `${userId}_${symbol}`);
     let docSnap;
     
@@ -340,6 +387,11 @@ export async function sellStock(userId, symbol, quantity, price, newCash) {
  * Get user trades
  */
 export function subscribeToTrades(userId, callback) {
+  if (!isFirebaseConfigured) {
+    console.warn('[Firebase] subscribeToTrades skipped: Firebase not configured');
+    return () => {};
+  }
+
   const q = query(collection(db, 'trades'), where('userId', '==', userId));
   return onSnapshot(q, (snapshot) => {
     const trades = snapshot.docs.map((doc) => ({
@@ -355,6 +407,12 @@ export function subscribeToTrades(userId, callback) {
  */
 export async function createAlert(userId, symbol, alertType, threshold) {
   try {
+    if (!isFirebaseConfigured) {
+      const err = new Error('Firebase not configured');
+      console.error('[Firebase][createAlert] Aborted:', err.message);
+      return { id: null, error: err };
+    }
+
     const docRef = await addDoc(collection(db, 'alerts'), {
       userId,
       symbol,
@@ -373,6 +431,11 @@ export async function createAlert(userId, symbol, alertType, threshold) {
  * Get user alerts
  */
 export function subscribeToAlerts(userId, callback) {
+  if (!isFirebaseConfigured) {
+    console.warn('[Firebase] subscribeToAlerts skipped: Firebase not configured');
+    return () => {};
+  }
+
   const q = query(collection(db, 'alerts'), where('userId', '==', userId));
   return onSnapshot(q, (snapshot) => {
     const alerts = snapshot.docs.map((doc) => ({
@@ -388,6 +451,12 @@ export function subscribeToAlerts(userId, callback) {
  */
 export async function deleteAlert(alertId) {
   try {
+    if (!isFirebaseConfigured) {
+      const err = new Error('Firebase not configured');
+      console.error('[Firebase][deleteAlert] Aborted:', err.message);
+      return { error: err };
+    }
+
     await deleteDoc(doc(db, 'alerts', alertId));
     return { error: null };
   } catch (error) {

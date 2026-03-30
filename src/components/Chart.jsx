@@ -83,7 +83,7 @@ export default function Chart({ candles }) {
   const gradId = isUp ? "chartGradGreen" : "chartGradRed";
 
   return (
-    <div style={{ position: "relative", userSelect: "none" }}
+    <div style={{ position: "relative", userSelect: "none", maxWidth: 960, margin: "0 auto" }}
       onMouseMove={e => {
         const r = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - r.left) / r.width) * W;
@@ -91,7 +91,7 @@ export default function Chart({ candles }) {
         setHov({ i, ...candles[i], pct: (xOf(i) / W * 100) });
       }} onMouseLeave={() => setHov(null)}>
 
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 300 }} preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", maxHeight: H }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="chartGradGreen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#4ade80" stopOpacity=".22" />

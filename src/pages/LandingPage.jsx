@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { f2, SYMBOLS } from "../utils/formatters";
 
 /* ─── Design tokens ──────────────────────────────────────────── */
-const BG       = "#04070f";
+const BG       = "#060b18";
 const GLASS    = "rgba(255,255,255,0.03)";
 const BORDER   = "rgba(255,255,255,0.08)";
 const BORDER_H = "rgba(255,255,255,0.14)";

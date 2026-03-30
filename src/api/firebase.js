@@ -22,6 +22,7 @@ import {
   addDoc,
   serverTimestamp,
 } from 'firebase/firestore';
+import { devLog, devWarn } from '../utils/logger';
 
 // Support both Next.js `NEXT_PUBLIC_` and Vite-style `VITE_` env names so deployment
 // environments using either naming convention will work until they migrate.
@@ -159,7 +160,7 @@ export function getCurrentUser() {
  */
 export function onAuthStateChangeListener(callback) {
   if (!isFirebaseConfigured) {
-    console.warn('[Firebase] onAuthStateChangeListener: Firebase not configured — returning no-op unsubscribe');
+    devWarn('[Firebase] onAuthStateChangeListener: Firebase not configured — returning no-op unsubscribe');
     // Return a no-op unsubscribe function to match the onSnapshot/onAuth API
     return () => {};
   }
@@ -172,7 +173,7 @@ export function onAuthStateChangeListener(callback) {
  */
 export async function getUserProfile(userId) {
   try {
-    console.log('[Firebase] Getting user profile for:', userId);
+    devLog('[Firebase] Getting user profile for:', userId);
     if (!isFirebaseConfigured) {
       const err = new Error('Firebase not configured');
       console.error('[Firebase][getUserProfile] Aborted:', err.message);
@@ -180,7 +181,7 @@ export async function getUserProfile(userId) {
     }
 
     const docSnap = await getDoc(doc(db, 'users', userId));
-    console.log('[Firebase] User profile retrieved');
+    devLog('[Firebase] User profile retrieved');
     return { data: docSnap.data(), error: null };
   } catch (error) {
     console.error('[Firebase] Error getting user profile:', error.message);
@@ -192,9 +193,9 @@ export async function getUserProfile(userId) {
  * Get user portfolio (holdings)
  */
 export function subscribeToPortfolio(userId, callback) {
-  console.log('[Firebase] Subscribing to portfolio for:', userId);
+  devLog('[Firebase] Subscribing to portfolio for:', userId);
   if (!isFirebaseConfigured) {
-    console.warn('[Firebase] subscribeToPortfolio skipped: Firebase not configured');
+    devWarn('[Firebase] subscribeToPortfolio skipped: Firebase not configured');
     return () => {};
   }
 
@@ -202,7 +203,7 @@ export function subscribeToPortfolio(userId, callback) {
   return onSnapshot(
     q,
     (snapshot) => {
-      console.log('[Firebase] Portfolio snapshot received, docs:', snapshot.docs.length);
+      devLog('[Firebase] Portfolio snapshot received, docs:', snapshot.docs.length);
       const holdings = {};
       snapshot.docs.forEach((doc) => {
         const data = doc.data();
@@ -221,7 +222,7 @@ export function subscribeToPortfolio(userId, callback) {
  */
 export async function buyStock(userId, symbol, quantity, price, newCash) {
   try {
-    console.log('[Firebase] Starting buy:', { userId, symbol, quantity, price });
+    devLog('[Firebase] Starting buy:', { userId, symbol, quantity, price });
     if (!isFirebaseConfigured) {
       const err = new Error('Firebase not configured');
       console.error('[Firebase][buyStock] Aborted:', err.message);
@@ -233,7 +234,7 @@ export async function buyStock(userId, symbol, quantity, price, newCash) {
     
     try {
       docSnap = await getDoc(portfolioRef);
-      console.log('[Firebase] Portfolio doc retrieved');
+      devLog('[Firebase] Portfolio doc retrieved');
     } catch (err) {
       console.error('[Firebase] Error reading portfolio doc:', err.message);
       throw new Error(`Failed to read portfolio: ${err.message}`);
@@ -257,7 +258,7 @@ export async function buyStock(userId, symbol, quantity, price, newCash) {
         avgCost: newAvgCost,
         updatedAt: serverTimestamp(),
       });
-      console.log('[Firebase] Portfolio doc written');
+      devLog('[Firebase] Portfolio doc written');
     } catch (err) {
       console.error('[Firebase] Error writing portfolio doc:', err.message);
       throw new Error(`Failed to update portfolio: ${err.message}`);
@@ -274,7 +275,7 @@ export async function buyStock(userId, symbol, quantity, price, newCash) {
         totalValue: quantity * price,
         executedAt: serverTimestamp(),
       });
-      console.log('[Firebase] Trade logged');
+      devLog('[Firebase] Trade logged');
     } catch (err) {
       console.error('[Firebase] Error logging trade:', err.message);
       throw new Error(`Failed to log trade: ${err.message}`);
@@ -286,13 +287,13 @@ export async function buyStock(userId, symbol, quantity, price, newCash) {
         currentCash: newCash,
         updatedAt: serverTimestamp(),
       });
-      console.log('[Firebase] User cash updated');
+      devLog('[Firebase] User cash updated');
     } catch (err) {
       console.error('[Firebase] Error updating user cash:', err.message);
       throw new Error(`Failed to update cash: ${err.message}`);
     }
 
-    console.log('[Firebase] Buy completed successfully');
+    devLog('[Firebase] Buy completed successfully');
     return { error: null };
   } catch (error) {
     console.error('[Firebase] Buy failed:', error.message);
@@ -305,7 +306,7 @@ export async function buyStock(userId, symbol, quantity, price, newCash) {
  */
 export async function sellStock(userId, symbol, quantity, price, newCash) {
   try {
-    console.log('[Firebase] Starting sell:', { userId, symbol, quantity, price });
+    devLog('[Firebase] Starting sell:', { userId, symbol, quantity, price });
     if (!isFirebaseConfigured) {
       const err = new Error('Firebase not configured');
       console.error('[Firebase][sellStock] Aborted:', err.message);
@@ -317,7 +318,7 @@ export async function sellStock(userId, symbol, quantity, price, newCash) {
     
     try {
       docSnap = await getDoc(portfolioRef);
-      console.log('[Firebase] Portfolio doc retrieved');
+      devLog('[Firebase] Portfolio doc retrieved');
     } catch (err) {
       console.error('[Firebase] Error reading portfolio doc:', err.message);
       throw new Error(`Failed to read portfolio: ${err.message}`);
@@ -333,13 +334,13 @@ export async function sellStock(userId, symbol, quantity, price, newCash) {
     try {
       if (newQuantity <= 0) {
         await deleteDoc(portfolioRef);
-        console.log('[Firebase] Position deleted');
+        devLog('[Firebase] Position deleted');
       } else {
         await updateDoc(portfolioRef, {
           quantity: newQuantity,
           updatedAt: serverTimestamp(),
         });
-        console.log('[Firebase] Position updated');
+        devLog('[Firebase] Position updated');
       }
     } catch (err) {
       console.error('[Firebase] Error updating portfolio doc:', err.message);
@@ -357,7 +358,7 @@ export async function sellStock(userId, symbol, quantity, price, newCash) {
         totalValue: quantity * price,
         executedAt: serverTimestamp(),
       });
-      console.log('[Firebase] Trade logged');
+      devLog('[Firebase] Trade logged');
     } catch (err) {
       console.error('[Firebase] Error logging trade:', err.message);
       throw new Error(`Failed to log trade: ${err.message}`);
@@ -369,13 +370,13 @@ export async function sellStock(userId, symbol, quantity, price, newCash) {
         currentCash: newCash,
         updatedAt: serverTimestamp(),
       });
-      console.log('[Firebase] User cash updated');
+      devLog('[Firebase] User cash updated');
     } catch (err) {
       console.error('[Firebase] Error updating user cash:', err.message);
       throw new Error(`Failed to update cash: ${err.message}`);
     }
 
-    console.log('[Firebase] Sell completed successfully');
+    devLog('[Firebase] Sell completed successfully');
     return { error: null };
   } catch (error) {
     console.error('[Firebase] Sell failed:', error.message);
@@ -388,7 +389,7 @@ export async function sellStock(userId, symbol, quantity, price, newCash) {
  */
 export function subscribeToTrades(userId, callback) {
   if (!isFirebaseConfigured) {
-    console.warn('[Firebase] subscribeToTrades skipped: Firebase not configured');
+    devWarn('[Firebase] subscribeToTrades skipped: Firebase not configured');
     return () => {};
   }
 
@@ -432,7 +433,7 @@ export async function createAlert(userId, symbol, alertType, threshold) {
  */
 export function subscribeToAlerts(userId, callback) {
   if (!isFirebaseConfigured) {
-    console.warn('[Firebase] subscribeToAlerts skipped: Firebase not configured');
+    devWarn('[Firebase] subscribeToAlerts skipped: Firebase not configured');
     return () => {};
   }
 

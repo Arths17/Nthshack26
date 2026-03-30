@@ -38,42 +38,25 @@ export default function NewsPage({ sym }) {
 
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="q-page-scroll q-page-in">
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0 }}>
-        <button 
-          onClick={() => setTab("stock")} 
-          style={{
-            padding: "5px 14px", borderRadius: 20, fontSize: 11, cursor: "pointer", transition: "all .2s",
-            border: `1px solid ${tab === "stock" ? "rgba(79,172,254,.4)" : "rgba(255,255,255,.07)"}`,
-            background: tab === "stock" ? "rgba(79,172,254,.12)" : "transparent",
-            color: tab === "stock" ? "#4facfe" : muted,
-          }}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0, alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={() => setTab("stock")}
+          className={`q-tab-chip ${tab === "stock" ? "q-tab-chip--active" : ""}`}
         >
-          {sym} News
+          {sym} news
         </button>
-        <button 
-          onClick={() => setTab("market")} 
-          style={{
-            padding: "5px 14px", borderRadius: 20, fontSize: 11, cursor: "pointer", transition: "all .2s",
-            border: `1px solid ${tab === "market" ? "rgba(79,172,254,.4)" : "rgba(255,255,255,.07)"}`,
-            background: tab === "market" ? "rgba(79,172,254,.12)" : "transparent",
-            color: tab === "market" ? "#4facfe" : muted,
-          }}
+        <button
+          type="button"
+          onClick={() => setTab("market")}
+          className={`q-tab-chip ${tab === "market" ? "q-tab-chip--active" : ""}`}
         >
-          Market News
+          Market news
         </button>
-        <button 
-          onClick={handleRefresh} 
-          style={{ 
-            padding: "5px 12px", borderRadius: 20, fontSize: 11, cursor: "pointer", 
-            border: "1px solid rgba(255,255,255,.07)", background: "transparent", 
-            color: muted, marginLeft: "auto", transition: "all .2s" 
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = "#e2e8f0"}
-          onMouseLeave={e => e.currentTarget.style.color = muted}
-        >
+        <button type="button" onClick={handleRefresh} className="q-btn-ghost" style={{ marginLeft: "auto" }}>
           ⟳ Refresh
         </button>
       </div>
@@ -93,7 +76,7 @@ export default function NewsPage({ sym }) {
 
       {error && (
         <Glass style={{ padding: "32px", textAlign: "center", borderRadius: 16 }}>
-          <div style={{ fontSize: 13, color: "#f87171" }}>📡 {error}</div>
+          <div style={{ fontSize: 13, color: "#f87171" }}>{error}</div>
         </Glass>
       )}
 
@@ -110,29 +93,21 @@ export default function NewsPage({ sym }) {
         const sentLabel = sentiment === "positive" ? "▲ Positive" : sentiment === "negative" ? "▼ Negative" : "● Neutral";
         
         return (
-          <a 
-            key={i} 
-            href={article.link} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ textDecoration: "none" }}
+          <a
+            key={i}
+            className="q-news-card"
+            href={article.link}
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <Glass 
+            <Glass
+              hoverable
               style={{
-                padding: "16px 18px", 
-                borderRadius: 14, 
-                cursor: "pointer", 
-                transition: "border-color .2s, transform .15s",
-                display: "block", 
+                padding: "16px 18px",
+                borderRadius: 14,
+                cursor: "pointer",
+                display: "block",
                 background: sentBg,
-              }}
-              onMouseEnter={e => { 
-                e.currentTarget.style.borderColor = "rgba(255,255,255,.18)"; 
-                e.currentTarget.style.transform = "translateY(-1px)"; 
-              }}
-              onMouseLeave={e => { 
-                e.currentTarget.style.borderColor = "rgba(255,255,255,.07)"; 
-                e.currentTarget.style.transform = "translateY(0)"; 
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 600, color: "#f1f5f9", lineHeight: 1.5, marginBottom: 6 }}>

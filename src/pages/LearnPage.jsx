@@ -1190,18 +1190,8 @@ export default function LearnPage() {
   const finishedAllTests = prog.completedTests.size === totalTests;
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif" }}>
-      <div
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-          padding: "12px 0 10px",
-          background: "rgba(4,7,15,.95)",
-          backdropFilter: "blur(16px)",
-          borderBottom: "1px solid rgba(255,255,255,.06)",
-        }}
-      >
+    <div className="q-page-scroll" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="q-learn-sticky">
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
           <StatBadge icon="✦" value={prog.xp.toLocaleString()} label="XP" color="#a78bfa" />
           <StatBadge icon="◆" value={`${prog.streak}`} label="Day Streak" color="#4ade80" />

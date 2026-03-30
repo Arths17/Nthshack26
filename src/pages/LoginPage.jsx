@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { signUp, signIn } from "../api/firebaseAuth";
+import { signUp, signIn, isUsingLocalDevAuth } from "../api/firebaseAuth";
 
 const SESSION_KEY = "quanta:session";
 
 /* ─── Design tokens ──────────────────────────────────────────── */
-const BG     = "#04070f";
+const BG     = "#060b18";
 const BORDER = "rgba(255,255,255,0.08)";
 const TEXT1  = "#f0f4ff";
 const TEXT2  = "rgba(148,163,184,0.7)";
@@ -169,6 +169,28 @@ export default function LoginPage({ onLogin, onBack }) {
               {mode === "login" ? "Sign in to your Quanta account" : "Start with $100K in virtual cash"}
             </p>
           </div>
+
+          {isUsingLocalDevAuth() && (
+            <div
+              style={{
+                marginBottom: 20,
+                padding: "11px 14px",
+                borderRadius: 12,
+                background: "rgba(79,172,254,.07)",
+                border: "1px solid rgba(79,172,254,.22)",
+                fontSize: 12,
+                color: "rgba(203,213,225,.92)",
+                lineHeight: 1.5,
+                textAlign: "left",
+              }}
+            >
+              <strong style={{ color: "#93c5fd" }}>Local dev mode.</strong>{" "}
+              Firebase is not configured, so accounts are stored only in this browser. To use real auth, copy{" "}
+              <code style={{ fontSize: 11, opacity: 0.9 }}>.env.example</code> →{" "}
+              <code style={{ fontSize: 11, opacity: 0.9 }}>.env.local</code> and add your{" "}
+              <code style={{ fontSize: 11, opacity: 0.9 }}>NEXT_PUBLIC_FIREBASE_*</code> values.
+            </div>
+          )}
 
           {/* Mode toggle */}
           <div style={{

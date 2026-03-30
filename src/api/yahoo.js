@@ -1,4 +1,5 @@
 import { CACHE } from "../utils/constants";
+import { devLog } from "../utils/logger";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const cache = new Map(); // symbol → { data, expiresAt }
@@ -31,10 +32,7 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
 
   try {
     const url = `${API_BASE}/api/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`;
-    // Debug: log the full API URL so frontend network issues are easier to trace
-    // (temporary - remove after debugging)
-    // eslint-disable-next-line no-console
-    console.log('[fetchYF] Fetching URL:', url);
+    devLog("[fetchYF]", url);
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },

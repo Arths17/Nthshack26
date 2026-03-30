@@ -3,6 +3,7 @@ import { askClaude } from "../api/gemini";
 import { f2, fB, fV, sma } from "../utils/formatters";
 import { runBacktest } from "../utils/backtest";
 import { API } from "../utils/constants";
+import { devWarn } from "../utils/logger";
 
 const WELCOME = "Hi, I'm Quanta — your AI trading assistant powered by live Yahoo Finance data.\n\nAsk me to analyze any stock, explain a price move, give a buy/sell verdict, or build a strategy.";
 
@@ -131,7 +132,7 @@ ${Object.entries(watch).map(([s, d]) => {
             backtestResult = runBacktest(data.candles, strategySpec);
           }
         } catch (e) {
-          console.warn("Strategy parse failed:", e);
+          devWarn("Strategy parse failed:", e);
         }
 
         // 2. Get the AI commentary

@@ -3,7 +3,7 @@ import Glass from "../components/Glass";
 import Spark from "../components/Spark";
 import { f2, fB, fV, SYMBOLS } from "../utils/formatters";
 
-const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.4)", accent = "#4facfe";
+const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.4)";
 
 function bar(pct, color) {
   return (
@@ -41,7 +41,7 @@ export default function ComparePage({ watch }) {
 
   const stocks = SYMBOLS.map(s => watch[s]).filter(s => s && selected.has(s.symbol));
   if (!stocks.length) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, color: muted, fontSize: 13 }}>
+    <div className="q-page-scroll" style={{ alignItems: "center", justifyContent: "center", flex: 1, color: muted, fontSize: 13 }}>
       Loading market data…
     </div>
   );
@@ -51,22 +51,21 @@ export default function ComparePage({ watch }) {
   const range   = maxPct - minPct || 1;
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "4px 0", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="q-page-scroll q-page-in">
 
       {/* Company selector */}
       <Glass style={{ padding: "12px 16px", borderRadius: 16 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: muted, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>Compare Companies</div>
+        <div className="q-section-label">Compare companies</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
           {allSymbols.map(sym => {
             const on = selected.has(sym);
             return (
-              <button key={sym} onClick={() => toggle(sym)} style={{
-                padding: "5px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
-                border: `1px solid ${on ? accent : "rgba(255,255,255,.1)"}`,
-                background: on ? "rgba(79,172,254,.12)" : "rgba(255,255,255,.03)",
-                color: on ? accent : muted,
-                transition: "all .15s",
-              }}>
+              <button
+                key={sym}
+                type="button"
+                onClick={() => toggle(sym)}
+                className={`q-symbol-chip ${on ? "q-symbol-chip--on" : ""}`}
+              >
                 {sym}
               </button>
             );
@@ -113,7 +112,7 @@ export default function ComparePage({ watch }) {
           const chgPct = d.price && d.prevClose ? (d.price - d.prevClose) / d.prevClose * 100 : null;
           const up = chgPct >= 0;
           return (
-            <Glass key={d.symbol} style={{ padding: "14px 16px", borderRadius: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+            <Glass key={d.symbol} hoverable style={{ padding: "14px 16px", borderRadius: 16, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#f8fafc", fontWeight: 600, letterSpacing: "-.01em" }}>{d.symbol}</div>
@@ -140,8 +139,8 @@ export default function ComparePage({ watch }) {
       </div>
 
       {/* Today's performance bar chart */}
-      <Glass style={{ padding: "16px 20px", borderRadius: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#e2e8f0", marginBottom: 14 }}>Today's Performance</div>
+      <Glass hoverable style={{ padding: "16px 20px", borderRadius: 16 }}>
+        <div className="q-section-title" style={{ marginBottom: 14 }}>Today&apos;s performance</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {[...stocks].sort((a, b) => {
             const ac = a.price && a.prevClose ? (a.price - a.prevClose) / a.prevClose * 100 : 0;
@@ -165,8 +164,8 @@ export default function ComparePage({ watch }) {
       </Glass>
 
       {/* Comparison table */}
-      <Glass style={{ padding: "16px 20px", borderRadius: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#e2e8f0", marginBottom: 14 }}>Full Comparison Table</div>
+      <Glass hoverable style={{ padding: "16px 20px", borderRadius: 16 }}>
+        <div className="q-section-title" style={{ marginBottom: 14 }}>Full comparison</div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
             <thead>

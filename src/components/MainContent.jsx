@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import Glass from "./Glass";
 import Chart from "./Chart";
 import Spark from "./Spark";
@@ -39,11 +39,9 @@ const TIMEFRAMES = [
 // Fallback loader for lazy pages
 function PageLoader() {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, minHeight: 200 }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, color: "rgba(148,163,184,.5)" }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid rgba(79,172,254,.2)", borderTop: "2px solid #4facfe", animation: "spin .8s linear infinite" }} />
-        <span style={{ fontSize: 11 }}>Loading page…</span>
-      </div>
+    <div className="q-page-loader" role="status" aria-live="polite">
+      <div className="q-page-loader__ring" aria-hidden />
+      <span className="q-page-loader__text">Loading</span>
     </div>
   );
 }
@@ -66,11 +64,6 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
     const qty = typeof v === 'object' ? v.quantity : v;
     return s + qty * (watch[k]?.price || 0);
   }, 0) - 100_000;
-
-  // Debug: Log cash changes
-  useEffect(() => {
-    console.log("[MainContent] Current cash:", cash, "Position in", sym, ":", curPos);
-  }, [cash, curPos, sym]);
 
   // Handle buy/sell with async support
   const handleBuy = async () => {
@@ -106,10 +99,10 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "20px 24px 16px", gap: 12 }}>
+    <div className="q-main">
 
       {/* ── TOP PAGE NAV ── */}
-      <div style={{ display: "flex", gap: 4, flexShrink: 0, overflowX: "auto", paddingBottom: 2 }}>
+      <div className="q-main__subnav">
         {PAGES.map(p => (
           <Pill key={p.id} active={page === p.id} onClick={() => setPage(p.id)}>
             {p.label}
@@ -127,7 +120,8 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       {page === "learn"     && <Suspense fallback={<PageLoader />}><LearnPage /></Suspense>}
 
       {/* ── MARKET PAGE ── */}
-      {page === "market" && <>
+      {page === "market" && (
+      <div className="q-market-stack">
 
       {/* Price hero */}
       <Glass style={{ padding: "18px 22px", flexShrink: 0 }}>
@@ -177,13 +171,11 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
 
       {/* Tabs */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+        <div className="q-main__section-tabs">
           {[["chart", "Chart"], ["positions", "Positions"], ["log", "Trade Log"]].map(([id, label]) => (
             <Pill key={id} active={tab === id} onClick={() => setTab(id)}>{label}</Pill>
           ))}
-          <button onClick={onReload} style={{ marginLeft: "auto", padding: "4px 12px", borderRadius: 5, border: "1px solid rgba(255,255,255,.07)", background: "transparent", color: "rgba(148,163,184,.5)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, transition: "all .15s" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.05)"; e.currentTarget.style.color = "#e2e8f0"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(148,163,184,.5)"; }}>
+          <button type="button" onClick={onReload} className="q-btn-ghost">
             ↺ Refresh
           </button>
         </div>
@@ -255,9 +247,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
                   const pnlPct = d?.prevClose ? ((p - d.prevClose) / d.prevClose * 100) : 0;
                   const up = pnlPct >= 0;
                   return (
-                    <Glass key={s} style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, animation: `fadeUp .3s ${i * .05}s ease both`, cursor: "pointer", transition: "border-color .2s" }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.14)"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.07)"}>
+                    <Glass key={s} hoverable style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, animation: `fadeUp .3s ${i * .05}s ease both`, cursor: "default" }}>
                       <div style={{ width: 36, height: 36, borderRadius: 8, background: up ? "rgba(74,222,128,.08)" : "rgba(248,113,113,.08)", border: `1px solid ${up ? "rgba(74,222,128,.18)" : "rgba(248,113,113,.18)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: up ? "#4ade80" : "#f87171" }}>{s[0]}</span>
                       </div>
@@ -318,7 +308,8 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
           </div>
         )}
       </div>
-      </>}
+      </div>
+      )}
     </div>
   );
 }

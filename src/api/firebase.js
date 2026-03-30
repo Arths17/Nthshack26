@@ -23,13 +23,16 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 
+// Support both Next.js `NEXT_PUBLIC_` and Vite-style `VITE_` env names so deployment
+// environments using either naming convention will work until they migrate.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY || null,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.VITE_FIREBASE_AUTH_DOMAIN || null,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || null,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.VITE_FIREBASE_STORAGE_BUCKET || null,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.VITE_FIREBASE_MESSAGING_SEND || null,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || process.env.VITE_FIREBASE_APP_ID || null,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || process.env.VITE_FIREBASE_MEASUREMENT_ID || null,
 };
 
 let app = null;
@@ -39,21 +42,17 @@ let db = null;
 if (typeof window !== 'undefined') {
   // Runtime safety checks for missing/invalid public env vars
   const missing = [];
-  if (!firebaseConfig.apiKey) missing.push('NEXT_PUBLIC_FIREBASE_API_KEY');
-  if (!firebaseConfig.authDomain) missing.push('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
-  if (!firebaseConfig.projectId) missing.push('NEXT_PUBLIC_FIREBASE_PROJECT_ID');
-  if (!firebaseConfig.storageBucket) missing.push('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET');
-  if (!firebaseConfig.appId) missing.push('NEXT_PUBLIC_FIREBASE_APP_ID');
+  if (!firebaseConfig.apiKey) missing.push('NEXT_PUBLIC_FIREBASE_API_KEY or VITE_FIREBASE_API_KEY');
+  if (!firebaseConfig.authDomain) missing.push('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN or VITE_FIREBASE_AUTH_DOMAIN');
+  if (!firebaseConfig.projectId) missing.push('NEXT_PUBLIC_FIREBASE_PROJECT_ID or VITE_FIREBASE_PROJECT_ID');
+  if (!firebaseConfig.storageBucket) missing.push('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET or VITE_FIREBASE_STORAGE_BUCKET');
+  if (!firebaseConfig.appId) missing.push('NEXT_PUBLIC_FIREBASE_APP_ID or VITE_FIREBASE_APP_ID');
 
   if (missing.length > 0) {
-    // Provide a clear, actionable error instead of the generic Firebase error
-    const msg = `Missing required NEXT_PUBLIC_ env variables: ${missing.join(', ')}.\n` +
-      `Ensure you have a .env.local with the correct keys and restart the dev server.`;
-    // Log the resolved values to help debugging (do not leak secrets elsewhere)
-    // Only log the keys presence, not full secret values except apiKey which is public in client SDKs
+    const msg = `Missing required Firebase env variables (NEXT_PUBLIC_ or VITE_): ${missing.join(', ')}.\n` +
+      `Set them in Vercel Project → Settings → Environment Variables and redeploy.`;
     console.error('[Firebase][Config] ' + msg);
     console.error('[Firebase][Config] apiKey present:', Boolean(firebaseConfig.apiKey));
-    // Throw to fail fast in development with a clear message
     throw new Error(msg);
   }
 

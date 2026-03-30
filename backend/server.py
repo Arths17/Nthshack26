@@ -116,6 +116,31 @@ app = FastAPI(title="Quanta Proxy")
 async def health_check():
     return {"status": "ok"}
 
+@app.get("/api/env")
+async def get_public_env():
+    """Return safe public environment variables for client-side debugging.
+
+    This endpoint intentionally excludes server-only secrets like `GEMINI_API_KEY`.
+    """
+    public = {
+        "NEXT_PUBLIC_FIREBASE_API_KEY": os.getenv("NEXT_PUBLIC_FIREBASE_API_KEY") or os.getenv("VITE_FIREBASE_API_KEY"),
+        "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": os.getenv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN") or os.getenv("VITE_FIREBASE_AUTH_DOMAIN"),
+        "NEXT_PUBLIC_FIREBASE_PROJECT_ID": os.getenv("NEXT_PUBLIC_FIREBASE_PROJECT_ID") or os.getenv("VITE_FIREBASE_PROJECT_ID"),
+        "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": os.getenv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET") or os.getenv("VITE_FIREBASE_STORAGE_BUCKET"),
+        "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": os.getenv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID") or os.getenv("VITE_FIREBASE_MESSAGING_SEND") or os.getenv("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+        "NEXT_PUBLIC_FIREBASE_APP_ID": os.getenv("NEXT_PUBLIC_FIREBASE_APP_ID") or os.getenv("VITE_FIREBASE_APP_ID"),
+        "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID": os.getenv("NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID") or os.getenv("VITE_FIREBASE_MEASUREMENT_ID"),
+        "NEXT_PUBLIC_API_URL": os.getenv("NEXT_PUBLIC_API_URL") or os.getenv("VITE_API_URL"),
+        "VERCEL_URL": os.getenv("VERCEL_URL"),
+    }
+
+    # Recommend switching storage bucket to the appspot.com host if it looks like the newer storage host
+    bucket = public.get("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET")
+    suggested_bucket = None
+    if bucket and bucket.endswith(".firebasestorage.app"):
+        suggested_bucket = bucket.replace(".firebasestorage.app", ".appspot.com")
+
+    return {"public_env": public, "recommended_storage_bucket": suggested_bucket}
 @app.middleware("http")
 async def catch_exceptions_middleware(request: Request, call_next):
     try:

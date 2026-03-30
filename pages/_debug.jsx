@@ -34,11 +34,22 @@ export default function DebugPage(){
 
     setEnv({ next: foundNext, vite: foundVite });
 
-    // Try calling the stock endpoint; prefer an explicit API base if provided
+    // Fetch server-side envs from the backend (this reads Vercel envs available to serverless functions)
     (async ()=>{
       try{
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || '';
+        const envRes = await fetch('/api/env');
+        let serverEnv = null;
+        if (envRes.ok) {
+          serverEnv = await envRes.json();
+        }
+        // Merge server env into the visible env report
+        setEnv(prev => ({ ...prev, server: serverEnv }));
+
+        // Decide API base: prefer server-provided public API URL, then build-time vars, then same-origin
+        const apiBaseFromServer = serverEnv && serverEnv.public_env && (serverEnv.public_env.NEXT_PUBLIC_API_URL || serverEnv.public_env.VITE_API_URL);
+        const apiBase = apiBaseFromServer || process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || '';
         const fetchUrl = apiBase ? `${apiBase.replace(/\/+$/,'')}/api/stock/NVDA?timeframe=3M` : '/api/stock/NVDA?timeframe=3M';
+
         // eslint-disable-next-line no-console
         console.log('[Debug] Fetching URL:', fetchUrl);
         const res = await fetch(fetchUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });

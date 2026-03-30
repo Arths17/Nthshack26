@@ -93,13 +93,9 @@ npm install
 npm run dev
 ```
 
-If you plan to deploy the frontend to Vercel, keep your backend running on a separate host (Railway, Render, Heroku, etc.) and point the frontend at that backend via `NEXT_PUBLIC_API_URL`.
+**Single Vercel project (recommended):** Connect [the GitHub repo](https://github.com/Arths17/quanta-ai) in the Vercel dashboard. This app deploys **Next.js + FastAPI** together: browser calls use the `/api/py/*` prefix so Next.js does not swallow `/api/*`. Production rewrites `/api/py/*` to the Python serverless entry (`api/index.py`). Set `GEMINI_API_KEY` in Vercel **project** environment variables (server-only, not `NEXT_PUBLIC_*`). After deploy, sanity-check: `curl -sS "https://<your-project>.vercel.app/api/py/stock/NVDA?timeframe=3M" | head -c 200`.
 
-Example quick deploy flow:
-
-1. Deploy the Python FastAPI backend to Railway/Render and set `GEMINI_API_KEY` there.
-2. In the Vercel project for this repo, set an environment variable `NEXT_PUBLIC_API_URL` to your deployed backend URL (e.g. `https://my-backend.up.railway.app`).
-3. Connect the Git repo to Vercel and deploy — Vercel will run `npm run build` and serve the Next.js frontend.
+**Split hosting (optional):** Deploy FastAPI elsewhere (Railway, Render, etc.), then set `NEXT_PUBLIC_API_URL` to that origin. Routes on the backend are still under `/api/py/...`.
 
 Note: Do NOT expose `GEMINI_API_KEY` in frontend envs; keep it server-side.
 The repo now includes a Next.js frontend. Development still works with Vite, but production builds should use Next.
@@ -108,7 +104,7 @@ Local dev notes:
 - Vite dev server (legacy): `npm run vite:dev` (runs on 5173)
 - Next dev server (current default): `npm run dev` (Next)
 
-If your backend runs on `http://localhost:8000` during local dev and you want the Next frontend to call it, set `NEXT_PUBLIC_API_URL=http://localhost:8000` in your local `.env` and ensure your frontend fetchers use `process.env.NEXT_PUBLIC_API_URL`.
+Local Next proxies `/api/py/*` to `http://127.0.0.1:8000` when uvicorn is running. Leave `NEXT_PUBLIC_API_URL` unset for that flow, or point it at a non-loopback API if the UI and API are on different hosts.
 
 ---
 

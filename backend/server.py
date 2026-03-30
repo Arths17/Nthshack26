@@ -167,7 +167,7 @@ async def health_check() -> Dict[str, Any]:
     return {"status": "ok"}
 
 
-@app.get("/api/env")
+@app.get("/api/py/env")
 async def get_public_env() -> Dict[str, Any]:
     """Return safe public environment variables for client-side debugging.
 
@@ -305,12 +305,12 @@ class ChatRequest(BaseModel):
     current_ticker: Optional[str] = None
 
 
-@app.options("/api/stock/{symbol}")
+@app.options("/api/py/stock/{symbol}")
 async def options_stock_data(symbol: str) -> Dict[str, Any]:
     return {}
 
 
-@app.get("/api/stocks")
+@app.get("/api/py/stocks")
 async def get_popular_stocks() -> Dict[str, Any]:
     return {
         'stocks': [
@@ -324,7 +324,7 @@ async def get_popular_stocks() -> Dict[str, Any]:
     }
 
 
-@app.get("/api/stock/{symbol}")
+@app.get("/api/py/stock/{symbol}")
 async def get_stock_data(symbol: str, timeframe: str = Query("3M")) -> Dict[str, Any]:
     sym = symbol.strip().upper()
     if not sym or len(sym) > 6 or not sym.replace(".", "").isalnum():
@@ -407,7 +407,7 @@ class StrategyRequest(BaseModel):
     text: str
 
 
-@app.post("/api/strategy")
+@app.post("/api/py/strategy")
 async def parse_strategy(req: StrategyRequest) -> Dict[str, Any]:
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
@@ -498,7 +498,7 @@ Return ONLY valid JSON, no explanation, no markdown fences. Use this exact schem
     raise HTTPException(status_code=500, detail=f"Strategy parse failed: all models unavailable. Tried: {tried}. Last error: {str(last_err)[:200]}")
 
 
-@app.post("/api/chat")
+@app.post("/api/py/chat")
 async def chat(req: ChatRequest) -> Dict[str, Any]:
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured on server")
@@ -565,7 +565,7 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
 
 
 # News endpoints
-@app.get("/api/news/stock/{symbol}")
+@app.get("/api/py/news/stock/{symbol}")
 async def get_stock_news(symbol: str) -> Dict[str, Any]:
     try:
         symbol = symbol.upper()
@@ -577,7 +577,7 @@ async def get_stock_news(symbol: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/news/market")
+@app.get("/api/py/news/market")
 async def get_market_news() -> Dict[str, Any]:
     try:
         articles = scraper.fetch_market_news()
@@ -588,7 +588,7 @@ async def get_market_news() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/news/trending")
+@app.get("/api/py/news/trending")
 async def get_trending_news() -> Dict[str, Any]:
     try:
         market_news = scraper.fetch_market_news()[:10]

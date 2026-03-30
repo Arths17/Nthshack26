@@ -7,13 +7,18 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  /**
+   * FastAPI lives under `/api/py/*` so Next.js on Vercel does not intercept `/api/*`.
+   * Production (and `next start`): rewrite to the Python serverless entry at `/api/`.
+   * Development: proxy straight to local uvicorn.
+   * @see https://github.com/digitros/nextjs-fastapi
+   */
   async rewrites() {
-    // On Vercel, `vercel.json` sends /api to Python; do not proxy to localhost.
-    if (process.env.VERCEL) return [];
+    const isDev = process.env.NODE_ENV === "development";
     return [
       {
-        source: "/api/:path*",
-        destination: `${backendProxy}/api/:path*`,
+        source: "/api/py/:path*",
+        destination: isDev ? `${backendProxy}/api/py/:path*` : "/api/",
       },
     ];
   },

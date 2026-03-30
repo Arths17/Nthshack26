@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { getApiBase } from "../utils/apiBase";
+import { API_ROUTE_PREFIX } from "../utils/constants";
 
 /**
  * Hook for fetching news from backend
@@ -13,7 +14,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${getApiBase()}/api/news/stock/${symbol}`);
+      const response = await fetch(`${getApiBase()}${API_ROUTE_PREFIX}/news/stock/${symbol}`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);
@@ -30,7 +31,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${getApiBase()}/api/news/market`);
+      const response = await fetch(`${getApiBase()}${API_ROUTE_PREFIX}/news/market`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);
@@ -47,7 +48,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${getApiBase()}/api/news/trending`);
+      const response = await fetch(`${getApiBase()}${API_ROUTE_PREFIX}/news/trending`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);

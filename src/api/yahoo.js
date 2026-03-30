@@ -1,4 +1,4 @@
-import { CACHE } from "../utils/constants";
+import { CACHE, API_ROUTE_PREFIX } from "../utils/constants";
 import { devLog } from "../utils/logger";
 import { getApiBase } from "../utils/apiBase";
 
@@ -32,7 +32,7 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
 
   try {
     const base = getApiBase();
-    const url = `${base}/api/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`;
+    const url = `${base}${API_ROUTE_PREFIX}/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`;
     devLog("[fetchYF]", url);
     const response = await fetch(url, {
       method: "GET",
@@ -68,7 +68,9 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
             : `${detail}${localHint ? " " + localHint : ""}`
         );
       }
-      throw new Error(`API error: ${detail}`);
+      throw new Error(
+        `API error (${response.status}): ${detail || response.statusText || "Unknown — see Vercel logs for /api"}`,
+      );
     }
 
     const data = await response.json();

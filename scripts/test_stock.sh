@@ -8,7 +8,7 @@ set -euo pipefail
 SYMBOL=${1:-NVDA}
 TIMEFRAME=${2:-3M}
 
-URL="http://localhost:8000/api/stock/${SYMBOL}?timeframe=${TIMEFRAME}"
+URL="http://localhost:8000/api/py/stock/${SYMBOL}?timeframe=${TIMEFRAME}"
 
 echo "Testing stock endpoint: ${URL}"
 echo

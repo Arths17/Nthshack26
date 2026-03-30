@@ -3,6 +3,9 @@
  */
 import { getApiBase } from "./apiBase";
 
+/** All FastAPI routes live under this path so Next.js on Vercel does not own `/api/*`. */
+export const API_ROUTE_PREFIX = "/api/py";
+
 export const PORTFOLIO = {
   STARTING_CASH: 100_000,
   MAX_TRADE_LOG_ENTRIES: 20,

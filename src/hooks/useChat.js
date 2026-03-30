@@ -3,6 +3,7 @@ import { askClaude } from "../api/gemini";
 import { f2, fB, fV, sma } from "../utils/formatters";
 import { runBacktest } from "../utils/backtest";
 import { getApiBase } from "../utils/apiBase";
+import { API_ROUTE_PREFIX } from "../utils/constants";
 import { devWarn } from "../utils/logger";
 
 const WELCOME = "Hi, I'm Quanta — your AI trading assistant powered by live Yahoo Finance data.\n\nAsk me to analyze any stock, explain a price move, give a buy/sell verdict, or build a strategy.";
@@ -122,7 +123,7 @@ ${Object.entries(watch).map(([s, d]) => {
         let backtestResult = null;
 
         try {
-          const parseRes = await fetch(`${getApiBase()}/api/strategy`, {
+          const parseRes = await fetch(`${getApiBase()}${API_ROUTE_PREFIX}/strategy`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: txt }),

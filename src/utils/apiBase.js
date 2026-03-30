@@ -3,7 +3,7 @@
  * - If NEXT_PUBLIC_API_URL is set → use it (trimmed, no trailing slash).
  * - Else → "" (same-origin).
  *
- * Locally, `next.config.mjs` rewrites `/api/*` → FastAPI (default http://127.0.0.1:8000)
+ * Locally, `next.config.mjs` rewrites `/api/py/*` → FastAPI (default http://127.0.0.1:8000)
  * so the browser never cross-origin fetches — avoids "Failed to fetch" from CORS/mixed
  * host issues (IPv6, LAN hostname, port changes).
  * On Vercel, `vercel.json` routes `/api` to the Python serverless app.

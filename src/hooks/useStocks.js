@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { API } from '../utils/constants';
+import { API, API_ROUTE_PREFIX } from '../utils/constants';
 
 /**
  * Hook to fetch and cache popular stocks from backend
@@ -13,7 +13,7 @@ export function useStocks() {
     const fetchStocks = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API.BACKEND_URL}/api/stocks`, {
+        const response = await fetch(`${API.BACKEND_URL}${API_ROUTE_PREFIX}/stocks`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });

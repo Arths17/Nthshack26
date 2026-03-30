@@ -5,7 +5,7 @@ from backend import server
 client: TestClient = TestClient(server.app)
 
 def test_get_popular_stocks():
-    data = cast(Dict[str, Any], client.get("/api/stocks").json())  # type: ignore
+    data = cast(Dict[str, Any], client.get("/api/py/stocks").json())  # type: ignore
     assert isinstance(data, dict)
     assert "stocks" in data
     assert isinstance(data["stocks"], list)
@@ -13,10 +13,10 @@ def test_get_popular_stocks():
     assert any(stock.get("symbol") == "AAPL" for stock in stocks)
 
 def test_get_stock_data_valid():
-    data = cast(Dict[str, Any], client.get("/api/stock/NVDA").json())  # type: ignore
+    data = cast(Dict[str, Any], client.get("/api/py/stock/NVDA").json())  # type: ignore
     assert data["symbol"] == "NVDA"
     assert "candles" in data
     assert "price" in data
 
 def test_get_stock_data_invalid():
-    assert client.get("/api/stock/INVALID").status_code in (400, 404)  # type: ignore
+    assert client.get("/api/py/stock/INVALID").status_code in (400, 404)  # type: ignore

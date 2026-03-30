@@ -47,19 +47,28 @@ if (typeof window !== 'undefined') {
   if (!firebaseConfig.projectId) missing.push('NEXT_PUBLIC_FIREBASE_PROJECT_ID or VITE_FIREBASE_PROJECT_ID');
   if (!firebaseConfig.storageBucket) missing.push('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET or VITE_FIREBASE_STORAGE_BUCKET');
   if (!firebaseConfig.appId) missing.push('NEXT_PUBLIC_FIREBASE_APP_ID or VITE_FIREBASE_APP_ID');
-
   if (missing.length > 0) {
     const msg = `Missing required Firebase env variables (NEXT_PUBLIC_ or VITE_): ${missing.join(', ')}.\n` +
       `Set them in Vercel Project → Settings → Environment Variables and redeploy.`;
     console.error('[Firebase][Config] ' + msg);
     console.error('[Firebase][Config] apiKey present:', Boolean(firebaseConfig.apiKey));
-    throw new Error(msg);
+    // Do not throw here — allow the app to render so debug pages and other UI can load.
+    // Initialization will be skipped until env vars are present at build/runtime.
+  } else {
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (e) {
+      console.error('[Firebase] Initialization failed:', e);
+      app = null;
+      auth = null;
+      db = null;
+    }
   }
-
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
 }
+
+export const isFirebaseConfigured = Boolean(app && auth && db);
 
 export { auth, db };
 

@@ -129,30 +129,28 @@ async def catch_exceptions_middleware(request: Request, call_next):
 
 _EXTRA_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 
+# If running on Vercel, the platform provides VERCEL_URL at runtime. If present,
+# add the Vercel production origin to allowed origins so the frontend can call the
+# proxy API without CORS issues. Keep this conservative: only add https://{VERCEL_URL}.
+_VERCEL_URL = os.getenv("VERCEL_URL")
+if _VERCEL_URL:
+    _vercel_origin = f"https://{_VERCEL_URL.strip()}"
+    if _vercel_origin not in _EXTRA_ORIGINS:
+        _EXTRA_ORIGINS.append(_vercel_origin)
+
+# Default local origins for development
+_DEFAULT_LOCAL_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+
+allowed = _DEFAULT_LOCAL_ORIGINS + _EXTRA_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5176",
-        "http://localhost:5177",
-        "http://localhost:5178",
-        "http://localhost:5179",
-        "http://localhost:5180",
-        "http://localhost:5181",
-        "http://localhost:5182",
-        "http://localhost:5183",
-        "http://localhost:5184",
-        "http://localhost:5185",
-        "http://localhost:5186",
-        "http://localhost:5187",
-        "http://localhost:5188",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        *_EXTRA_ORIGINS,
-    ],
+    allow_origins=allowed,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
     allow_credentials=True,

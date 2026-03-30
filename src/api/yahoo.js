@@ -30,7 +30,12 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/api/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`, {
+    const url = `${API_BASE}/api/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`;
+    // Debug: log the full API URL so frontend network issues are easier to trace
+    // (temporary - remove after debugging)
+    // eslint-disable-next-line no-console
+    console.log('[fetchYF] Fetching URL:', url);
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });

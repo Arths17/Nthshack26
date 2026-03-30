@@ -37,6 +37,26 @@ let auth = null;
 let db = null;
 
 if (typeof window !== 'undefined') {
+  // Runtime safety checks for missing/invalid public env vars
+  const missing = [];
+  if (!firebaseConfig.apiKey) missing.push('NEXT_PUBLIC_FIREBASE_API_KEY');
+  if (!firebaseConfig.authDomain) missing.push('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
+  if (!firebaseConfig.projectId) missing.push('NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+  if (!firebaseConfig.storageBucket) missing.push('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET');
+  if (!firebaseConfig.appId) missing.push('NEXT_PUBLIC_FIREBASE_APP_ID');
+
+  if (missing.length > 0) {
+    // Provide a clear, actionable error instead of the generic Firebase error
+    const msg = `Missing required NEXT_PUBLIC_ env variables: ${missing.join(', ')}.\n` +
+      `Ensure you have a .env.local with the correct keys and restart the dev server.`;
+    // Log the resolved values to help debugging (do not leak secrets elsewhere)
+    // Only log the keys presence, not full secret values except apiKey which is public in client SDKs
+    console.error('[Firebase][Config] ' + msg);
+    console.error('[Firebase][Config] apiKey present:', Boolean(firebaseConfig.apiKey));
+    // Throw to fail fast in development with a clear message
+    throw new Error(msg);
+  }
+
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);

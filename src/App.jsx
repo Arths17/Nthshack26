@@ -22,13 +22,28 @@ function getSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
 }
 
+// For development: allow forcing the landing page by adding `?forceLanding=1` to the URL.
+function devSessionOverride() {
+  try {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('forceLanding') === '1') return null;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return undefined;
+}
+
 
 export default function App() {
   const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser]             = useState(() => getSession());
   const [sym, setSym]               = useState("NVDA");
   const [timeframe, setTimeframe]   = useState("3M");
-  const [showLanding, setShowLanding]       = useState(() => !getSession());
+  // Respect dev override: if devSessionOverride() returns null we force landing
+  const devOverride = devSessionOverride();
+  const [showLanding, setShowLanding]       = useState(() => devOverride === null ? true : !getSession());
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobile, setIsMobile]     = useState(window.innerWidth < UI.BREAKPOINT_MOBILE);
   const [mobilTab, setMobilTab]     = useState("market");

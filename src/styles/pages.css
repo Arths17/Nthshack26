@@ -373,6 +373,100 @@
   color: var(--q-text-muted);
 }
 
+/* Market data / chart empty & error states */
+.q-data-error {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.18);
+}
+
+.q-data-error__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fecaca;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.q-data-error__body {
+  font-size: 12px;
+  color: rgba(252, 231, 231, 0.82);
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.q-data-error__retry {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--q-font-sans);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.q-data-error__retry:hover {
+  background: rgba(248, 113, 113, 0.16);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.q-chart-placeholder {
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.q-chart-placeholder--error {
+  border: 1px dashed rgba(248, 113, 113, 0.25);
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.04);
+}
+
+.q-chart-placeholder__inner {
+  max-width: 380px;
+}
+
+.q-chart-placeholder__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fecaca;
+  margin: 0 0 8px;
+}
+
+.q-chart-placeholder__detail {
+  font-size: 12px;
+  color: var(--q-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.q-chart-placeholder__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(79, 172, 254, 0.15);
+  border-top-color: var(--q-accent);
+  animation: spin 0.75s linear infinite;
+}
+
+.q-chart-placeholder__hint {
+  font-size: 11px;
+  color: var(--q-text-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
 /* News list: subtle lift on hover (link wraps Glass) */
 .q-news-card {
   display: block;
@@ -391,7 +485,8 @@
   .q-toast,
   .q-onboard-overlay,
   .q-onboard-card,
-  .glass-panel--interactive {
+  .glass-panel--interactive,
+  .q-chart-placeholder__spinner {
     animation: none !important;
     transition: none !important;
   }

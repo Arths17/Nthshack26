@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+import { getApiBase } from "../utils/apiBase";
 
 /**
  * Hook for fetching news from backend
@@ -14,7 +13,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/news/stock/${symbol}`);
+      const response = await fetch(`${getApiBase()}/api/news/stock/${symbol}`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);
@@ -31,7 +30,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/news/market`);
+      const response = await fetch(`${getApiBase()}/api/news/market`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);
@@ -48,7 +47,7 @@ export function useNews() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/news/trending`);
+      const response = await fetch(`${getApiBase()}/api/news/trending`);
       if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       const data = await response.json();
       setArticles(data.articles || []);

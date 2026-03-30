@@ -29,7 +29,7 @@ function calcSR(candles, pivotN = 5, maxLevels = 3) {
   return { resistance: cluster(highs), support: cluster(lows) };
 }
 
-export default function Chart({ candles }) {
+export default function Chart({ candles, loading = false, errorMessage = null }) {
   const [hov, setHov]    = useState(null);
   const [drawn, setDrawn] = useState(false);
   const [showSR, setShowSR] = useState(true);
@@ -58,11 +58,33 @@ export default function Chart({ candles }) {
     return () => ro.disconnect();
   }, []);
 
-  if (!candles?.length) return (
-    <div ref={containerRef} style={{ height: "100%", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid rgba(79,172,254,.15)", borderTop: "2px solid #4facfe", animation: "spin .8s linear infinite" }} />
-    </div>
-  );
+  if (errorMessage) {
+    return (
+      <div ref={containerRef} className="q-chart-placeholder q-chart-placeholder--error" role="alert">
+        <div className="q-chart-placeholder__inner">
+          <p className="q-chart-placeholder__title">Couldn&apos;t load chart</p>
+          <p className="q-chart-placeholder__detail">{errorMessage}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && !candles?.length) {
+    return (
+      <div ref={containerRef} className="q-chart-placeholder" aria-busy="true">
+        <div className="q-chart-placeholder__spinner" />
+        <p className="q-chart-placeholder__hint">Loading prices…</p>
+      </div>
+    );
+  }
+
+  if (!candles?.length) {
+    return (
+      <div ref={containerRef} className="q-chart-placeholder">
+        <p className="q-chart-placeholder__hint">No candle data for this range yet.</p>
+      </div>
+    );
+  }
 
   const W = size.w, H = size.h, PL = 48, PR = 12, PT = 12, PB = 60;
   const cw = W - PL - PR, ch = H - PT - PB - 40, n = candles.length;

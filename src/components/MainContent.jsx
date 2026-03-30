@@ -126,7 +126,13 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       {/* Price hero */}
       <Glass style={{ padding: "18px 22px", flexShrink: 0 }}>
         {error ? (
-          <div style={{ color: "#f87171", fontSize: 13, padding: "8px 0" }}>{error}</div>
+          <div className="q-data-error" role="alert">
+            <p className="q-data-error__title">Market data unavailable</p>
+            <p className="q-data-error__body">{error}</p>
+            <button type="button" className="q-data-error__retry" onClick={onReload}>
+              Retry
+            </button>
+          </div>
         ) : loading ? (
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <div className="skel" style={{ width: 120, height: 36 }} />
@@ -191,7 +197,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
               ))}
             </div>
             <Glass style={{ flex: 1, padding: "4px 8px 0", minHeight: 0, overflow: "hidden" }}>
-              <Chart candles={data?.candles} />
+              <Chart candles={data?.candles} loading={loading} errorMessage={error} />
             </Glass>
             <Glass style={{ padding: "16px 20px", flexShrink: 0, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <div style={{ fontSize: 12, color: "#52525b", display: "flex", gap: 20 }}>

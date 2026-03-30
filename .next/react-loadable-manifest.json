@@ -1,62 +1,117 @@
 {
-  "pages/index.jsx -> ../src/App": {
-    "id": "pages/index.jsx -> ../src/App",
+  "pages/alerts.jsx -> ../src/pages/AlertsPage": {
+    "id": 1398,
     "files": [
-      "static/chunks/src_App_jsx.js"
+      "static/chunks/398.d41e3d8e8fd4370c.js"
+    ]
+  },
+  "pages/compare.jsx -> ../src/pages/ComparePage": {
+    "id": 9167,
+    "files": [
+      "static/chunks/167.36d35ff67556f232.js"
+    ]
+  },
+  "pages/index.jsx -> ../src/App": {
+    "id": 4821,
+    "files": [
+      "static/chunks/667.95a0f05262ad9eef.js",
+      "static/chunks/821.e089082abdba478c.js"
+    ]
+  },
+  "pages/landing.jsx -> ../src/pages/LandingPage": {
+    "id": 8667,
+    "files": [
+      "static/chunks/667.95a0f05262ad9eef.js"
+    ]
+  },
+  "pages/learn.jsx -> ../src/pages/LearnPage": {
+    "id": 115,
+    "files": [
+      "static/chunks/115.386d1e9234b79d5e.js"
+    ]
+  },
+  "pages/login.jsx -> ../src/pages/LoginPage": {
+    "id": 4544,
+    "files": [
+      "static/chunks/544.aa582b9e5d271037.js"
+    ]
+  },
+  "pages/news.jsx -> ../src/pages/NewsPage": {
+    "id": 6173,
+    "files": [
+      "static/chunks/173.78c1267765002eb3.js"
+    ]
+  },
+  "pages/portfolio.jsx -> ../src/pages/PortfolioPage": {
+    "id": 4882,
+    "files": [
+      "static/chunks/882.324cf6e3d81b46b0.js"
+    ]
+  },
+  "pages/screener.jsx -> ../src/pages/ScreenerPage": {
+    "id": 127,
+    "files": [
+      "static/chunks/938.8b0d72ebea043a29.js"
+    ]
+  },
+  "pages/strategy-library.jsx -> ../src/pages/StrategyLibrary": {
+    "id": 3335,
+    "files": [
+      "static/chunks/335.2ff49efb39d4b8bb.js"
     ]
   },
   "src/App.jsx -> ./components/Onboarding": {
-    "id": "src/App.jsx -> ./components/Onboarding",
+    "id": 438,
     "files": [
-      "static/chunks/src_components_Onboarding_jsx.js"
+      "static/chunks/438.aa05f4b780133153.js"
     ]
   },
   "src/App.jsx -> ./pages/LoginPage": {
-    "id": "src/App.jsx -> ./pages/LoginPage",
+    "id": 4544,
     "files": [
-      "static/chunks/src_pages_LoginPage_jsx.js"
+      "static/chunks/544.aa582b9e5d271037.js"
     ]
   },
   "src/components/MainContent.jsx -> ../pages/AlertsPage": {
-    "id": "src/components/MainContent.jsx -> ../pages/AlertsPage",
+    "id": 1398,
     "files": [
-      "static/chunks/src_pages_AlertsPage_jsx.js"
+      "static/chunks/598.26565103c40395bf.js"
     ]
   },
   "src/components/MainContent.jsx -> ../pages/ComparePage": {
-    "id": "src/components/MainContent.jsx -> ../pages/ComparePage",
+    "id": 9167,
     "files": [
-      "static/chunks/src_pages_ComparePage_jsx.js"
+      "static/chunks/9.90d40dde282578e0.js"
     ]
   },
   "src/components/MainContent.jsx -> ../pages/LearnPage": {
-    "id": "src/components/MainContent.jsx -> ../pages/LearnPage",
+    "id": 115,
     "files": [
-      "static/chunks/src_pages_LearnPage_jsx.js"
+      "static/chunks/115.386d1e9234b79d5e.js"
     ]
   },
   "src/components/MainContent.jsx -> ../pages/NewsPage": {
-    "id": "src/components/MainContent.jsx -> ../pages/NewsPage",
+    "id": 6173,
     "files": [
-      "static/chunks/src_pages_NewsPage_jsx.js"
+      "static/chunks/112.5176c83b0ebab873.js"
     ]
   },
   "src/components/MainContent.jsx -> ../pages/PortfolioPage": {
-    "id": "src/components/MainContent.jsx -> ../pages/PortfolioPage",
+    "id": 4882,
     "files": [
-      "static/chunks/src_pages_PortfolioPage_jsx.js"
+      "static/chunks/171.c4255f3550ef3f8a.js"
     ]
   },
   "src/components/MainContent.jsx -> ../pages/ScreenerPage": {
-    "id": "src/components/MainContent.jsx -> ../pages/ScreenerPage",
+    "id": 127,
     "files": [
-      "static/chunks/src_pages_ScreenerPage_jsx.js"
+      "static/chunks/127.9251056d1abe18c0.js"
     ]
   },
   "src/components/MainContent.jsx -> ../pages/StrategyLibrary": {
-    "id": "src/components/MainContent.jsx -> ../pages/StrategyLibrary",
+    "id": 3335,
     "files": [
-      "static/chunks/src_pages_StrategyLibrary_jsx.js"
+      "static/chunks/694.de7a44b4ba1420e3.js"
     ]
   }
 }

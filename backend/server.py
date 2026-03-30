@@ -226,6 +226,7 @@ allowed = _DEFAULT_LOCAL_ORIGINS + _EXTRA_ORIGINS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
     allow_credentials=True,
@@ -325,7 +326,8 @@ async def get_popular_stocks() -> Dict[str, Any]:
 
 @app.get("/api/stock/{symbol}")
 async def get_stock_data(symbol: str, timeframe: str = Query("3M")) -> Dict[str, Any]:
-    if not symbol or len(symbol) > 5 or not symbol.isupper():
+    sym = symbol.strip().upper()
+    if not sym or len(sym) > 6 or not sym.replace(".", "").isalnum():
         raise HTTPException(status_code=400, detail="Invalid symbol format")
 
     timeframe_config = {
@@ -346,12 +348,19 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")) -> Dict[str,
     selected = timeframe_config[tf]
 
     try:
-        stock: Any = yf.Ticker(symbol)
+        stock: Any = yf.Ticker(sym)
         info = cast(Dict[str, Any], getattr(stock, "info", {}) or {})
         hist: pd.DataFrame = stock.history(period=selected["period"], interval=selected["interval"])
 
         if getattr(hist, "empty", True):
-            raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
+            hist = stock.history(period="3mo", interval="1d")
+        if getattr(hist, "empty", True):
+            hist = stock.history(period="1mo", interval="1d")
+        if getattr(hist, "empty", True):
+            hist = stock.history(period="5d", interval="1d")
+
+        if getattr(hist, "empty", True):
+            raise HTTPException(status_code=404, detail=f"No data found for {sym}")
 
         candles: List[Dict[str, Any]] = []
         for date, row in hist.iterrows():
@@ -375,7 +384,7 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")) -> Dict[str,
         prev_close = float(info.get('previousClose') or hist['Open'].iloc[0])
 
         return {
-            "symbol": symbol,
+            "symbol": sym,
             "timeframe": tf,
             "candles": candles,
             "price": current_price,
@@ -387,7 +396,7 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")) -> Dict[str,
             "pe": info.get('trailingPE'),
             "w52h": info.get('fiftyTwoWeekHigh'),
             "w52l": info.get('fiftyTwoWeekLow'),
-            "name": info.get('longName') or info.get('shortName') or symbol,
+            "name": info.get('longName') or info.get('shortName') or sym,
             "sector": info.get('sector') or "—",
         }
     except Exception as e:

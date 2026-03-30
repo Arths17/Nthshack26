@@ -1,6 +1,7 @@
+import { getApiBase } from "../utils/apiBase";
+
 export const askClaude = async (messages, system, currentTicker) => {
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-  const r = await fetch(`${API_BASE}/api/chat`, {
+  const r = await fetch(`${getApiBase()}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, system, current_ticker: currentTicker }),

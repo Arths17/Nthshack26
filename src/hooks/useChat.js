@@ -37,7 +37,7 @@ export function useChat(sym, data, watch, cash, pos) {
     const chgPct  = ((chg / prevClose) * 100).toFixed(2);
     const t7      = candles.length >= 7  ? ((price - candles.at(-7).close)  / candles.at(-7).close  * 100).toFixed(1) : "N/A";
     const t30     = candles.length >= 30 ? ((price - candles.at(-30).close) / candles.at(-30).close * 100).toFixed(1) : "N/A";
-    const t90     = candles.length >= 60 ? ((price - candles.at(-60).close) / candles.at(-60).close * 100).toFixed(1) : "N/A";
+    const t90     = candles.length >= 90 ? ((price - candles.at(-90).close) / candles.at(-90).close * 100).toFixed(1) : "N/A";
     const recent  = candles.slice(-20).map(c => `${c.date}:$${f2(c.close)}`).join(", ");
 
     const sma20arr = sma(candles, 20);
@@ -78,7 +78,7 @@ Price: $${f2(price)} | Change today: ${chg >= 0 ? "+" : ""}${f2(chg)} (${chgPct}
 Day range: $${f2(dayLow)} – $${f2(dayHigh)} | Avg daily range (14d): $${avgRange}
 52-week: $${f2(w52l)} – $${f2(w52h)} | Position in 52w range: ${(((price - w52l) / (w52h - w52l)) * 100).toFixed(0)}%
 Market cap: ${fB(marketCap)} | P/E: ${pe?.toFixed(1) ?? "N/A"} | Volume: ${fV(volume)}
-Performance: 7d ${t7}% | 30d ${t30}% | 60d ${t90}%
+Performance: 7d ${t7}% | 30d ${t30}% | 90d ${t90}%
 SMA20: $${sma20} (price ${aboveSma20 === null ? "unknown" : aboveSma20 ? "ABOVE ▲" : "BELOW ▼"})
 SMA50: $${sma50} (price ${aboveSma50 === null ? "unknown" : aboveSma50 ? "ABOVE ▲" : "BELOW ▼"})
 Recent closes: ${recent}

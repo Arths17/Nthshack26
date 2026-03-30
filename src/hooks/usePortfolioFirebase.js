@@ -62,7 +62,7 @@ export function usePortfolioFirebase() {
         const unsubTrades = subscribeToTrades(authUser.uid, (trades) => {
           const formattedLog = trades
             .sort((a, b) => new Date(b.executedAt) - new Date(a.executedAt))
-            .slice(0, PORTFOLIO.LOG_ENTRIES)
+            .slice(0, PORTFOLIO.MAX_TRADE_LOG_ENTRIES)
             .map((t) => ({
               type: t.type,
               sym: t.symbol,

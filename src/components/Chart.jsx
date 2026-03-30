@@ -37,19 +37,34 @@ export default function Chart({ candles }) {
   const [showSMA, setShowSMA] = useState(true);
   const pathRef = useRef(null);
   const [pLen, setPLen]  = useState(0);
+  const containerRef = useRef(null);
+  const [size, setSize] = useState({ w: 900, h: 300 });
 
   useEffect(() => { setDrawn(false); const t = setTimeout(() => setDrawn(true), 80); return () => clearTimeout(t); }, [candles]);
   useEffect(() => {
     if (drawn && pathRef.current) { const l = pathRef.current.getTotalLength?.() || 3000; setPLen(l); }
   }, [drawn]);
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const r = entry.contentRect;
+        setSize({ w: Math.max(320, Math.floor(r.width)), h: Math.max(200, Math.floor(r.height)) });
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   if (!candles?.length) return (
-    <div style={{ height: 260, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div ref={containerRef} style={{ height: "100%", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid rgba(79,172,254,.15)", borderTop: "2px solid #4facfe", animation: "spin .8s linear infinite" }} />
     </div>
   );
 
-  const W = 900, H = 300, PL = 48, PR = 12, PT = 12, PB = 60;
+  const W = size.w, H = size.h, PL = 48, PR = 12, PT = 12, PB = 60;
   const cw = W - PL - PR, ch = H - PT - PB - 40, n = candles.length;
   const allP = candles.flatMap(c => [c.high, c.low]).filter(Boolean);
   const mn = Math.min(...allP), mx = Math.max(...allP), rng = mx - mn || 1;
@@ -83,7 +98,7 @@ export default function Chart({ candles }) {
   const gradId = isUp ? "chartGradGreen" : "chartGradRed";
 
   return (
-    <div style={{ position: "relative", userSelect: "none", maxWidth: 960, margin: "0 auto" }}
+    <div ref={containerRef} style={{ position: "relative", userSelect: "none", width: "100%", height: "100%", maxWidth: "none", margin: 0 }}
       onMouseMove={e => {
         const r = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - r.left) / r.width) * W;
@@ -91,7 +106,7 @@ export default function Chart({ candles }) {
         setHov({ i, ...candles[i], pct: (xOf(i) / W * 100) });
       }} onMouseLeave={() => setHov(null)}>
 
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", maxHeight: H }} preserveAspectRatio="xMidYMid meet">
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%" }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="chartGradGreen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#4ade80" stopOpacity=".22" />

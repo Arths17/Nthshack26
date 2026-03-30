@@ -7,15 +7,17 @@ import os
 import re
 import json
 from dotenv import load_dotenv
-import google.generativeai as genai
+from collections.abc import Iterable
+import google.generativeai as genai  # type: ignore[import]
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import yfinance as yf
+import yfinance as yf  # type: ignore[import]
 import pandas as pd
-from news_scraper import scraper
+from .news_scraper import scraper
 import logging
 from fastapi.responses import JSONResponse
+from typing import Any, List, Dict, Optional, Set, Callable, Awaitable, cast
 
 load_dotenv()
 
@@ -27,7 +29,16 @@ if not GEMINI_API_KEY:
     print("⚠️  GEMINI_API_KEY not set — run: export GEMINI_API_KEY='your-key'")
 
 # Configure Gemini API with key (no-op if empty)
-genai.configure(api_key=GEMINI_API_KEY)
+genai = cast(Any, genai)  # Treat the runtime `generativeai` module as `Any` for the type-checker so
+                          # attribute access (which varies by installed runtime) doesn't raise Pylance
+                          # errors in this dynamic code path.
+
+if hasattr(genai, "configure"):
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+    except Exception:
+        # If the runtime package surface differs, fail quietly — server can still run.
+        pass
 
 # Choose a compatible model at startup. We prefer recent Gemini flavors but will
 # fall back to any model that advertises `generateContent` support, then to
@@ -42,36 +53,49 @@ PREFERRED_MODELS = [
 ]
 
 
-def _choose_model():
+def _choose_model() -> str:
+    # Use getattr guards because the installed `google.generativeai` runtime
+    # may not expose stable types that the typechecker recognizes.
     try:
-        available = list(genai.list_models())
+        list_models_fn = getattr(genai, "list_models", None)
+        available: List[Any] = []
+        if callable(list_models_fn):
+            try:
+                res = list_models_fn()
+                if isinstance(res, Iterable):
+                    available = list(cast(Iterable[Any], res))
+                else:
+                    available = []
+            except Exception as e:
+                logger.warning("Could not call list_models: %s", e)
+                available = []
     except Exception as e:
         logger.warning("Could not list models: %s", e)
         available = []
 
-    available_names = {m.name for m in available}
+    available_names: Set[str] = {cast(str, getattr(m, "name", "")) for m in available}
 
     # Try preferred models first (normalize to models/ prefix)
     for p in PREFERRED_MODELS:
         candidate = p if p.startswith("models/") else f"models/{p}"
         if candidate in available_names:
-            m = next((x for x in available if x.name == candidate), None)
-            if m and "generateContent" in (m.supported_generation_methods or []):
-                logger.info("Selected model: %s", m.name)
-                return m.name
+            m = next((x for x in available if getattr(x, "name", None) == candidate), None)
+            if m and "generateContent" in (getattr(m, "supported_generation_methods", []) or []):
+                logger.info("Selected model: %s", getattr(m, "name", ""))
+                return cast(str, getattr(m, "name", candidate))
 
     # Pick the first model that supports generateContent
     for m in available:
-        if "generateContent" in (m.supported_generation_methods or []):
-            logger.info("Auto-selected model: %s", m.name)
-            return m.name
+        if "generateContent" in (getattr(m, "supported_generation_methods", []) or []):
+            logger.info("Auto-selected model: %s", getattr(m, "name", ""))
+            return cast(str, getattr(m, "name", "models/text-bison-001"))
 
     # Final fallback
     logger.warning("No compatible models discovered; falling back to models/text-bison-001")
     return "models/text-bison-001"
 
 
-SELECTED_MODEL_NAME = _choose_model()
+SELECTED_MODEL_NAME: str = _choose_model()
 
 # Popular stocks database
 POPULAR_STOCKS = {
@@ -139,12 +163,12 @@ app = FastAPI(title="Quanta Proxy")
 
 
 @app.get("/")
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     return {"status": "ok"}
 
 
 @app.get("/api/env")
-async def get_public_env():
+async def get_public_env() -> Dict[str, Any]:
     """Return safe public environment variables for client-side debugging.
 
     This intentionally excludes server-only secrets like `GEMINI_API_KEY`.
@@ -170,7 +194,7 @@ async def get_public_env():
 
 
 @app.middleware("http")
-async def catch_exceptions_middleware(request: Request, call_next):
+async def catch_exceptions_middleware(request: Request, call_next: Callable[[Request], Awaitable[Any]]) -> Any:
     try:
         return await call_next(request)
     except Exception as exc:
@@ -208,7 +232,7 @@ app.add_middleware(
 )
 
 
-def extract_tickers(text: str) -> set:
+def extract_tickers(text: str) -> Set[str]:
     """Extract stock tickers (1-4 uppercase letters) from text."""
     pattern = r'\b([A-Z]{1,4})\b'
     matches = re.findall(pattern, text)
@@ -229,13 +253,14 @@ def extract_tickers(text: str) -> set:
     return {m.upper() for m in matches if m.upper() not in common_words}
 
 
-def fetch_stock_data(ticker: str) -> dict:
+def fetch_stock_data(ticker: str) -> Optional[Dict[str, Any]]:
     """Fetch live stock data from yfinance."""
     try:
-        stock = yf.Ticker(ticker)
-        info = stock.info
-        hist = stock.history(period="1d")
-        if hist.empty or not info:
+        stock: Any = yf.Ticker(ticker)
+        info = cast(Dict[str, Any], getattr(stock, "info", {}) or {})
+        hist: pd.DataFrame = stock.history(period="1d")
+        # If no historical data or no info dictionary, bail out.
+        if getattr(hist, "empty", True) or not info:
             return None
         current_price = float(info.get('currentPrice', hist['Close'].iloc[-1]))
         prev_close = float(info.get('previousClose', hist['Open'].iloc[-1]))
@@ -257,7 +282,7 @@ def fetch_stock_data(ticker: str) -> dict:
         return None
 
 
-def format_stock_data(stocks_data: list) -> str:
+def format_stock_data(stocks_data: List[Optional[Dict[str, Any]]]) -> str:
     if not stocks_data:
         return ""
     context = "LIVE STOCK DATA:\n"
@@ -274,18 +299,18 @@ def format_stock_data(stocks_data: list) -> str:
 
 
 class ChatRequest(BaseModel):
-    messages: list
+    messages: List[Dict[str, Any]]
     system: str = ""
-    current_ticker: str = None
+    current_ticker: Optional[str] = None
 
 
 @app.options("/api/stock/{symbol}")
-async def options_stock_data(symbol: str):
+async def options_stock_data(symbol: str) -> Dict[str, Any]:
     return {}
 
 
 @app.get("/api/stocks")
-async def get_popular_stocks():
+async def get_popular_stocks() -> Dict[str, Any]:
     return {
         'stocks': [
             {
@@ -299,7 +324,7 @@ async def get_popular_stocks():
 
 
 @app.get("/api/stock/{symbol}")
-async def get_stock_data(symbol: str, timeframe: str = Query("3M")):
+async def get_stock_data(symbol: str, timeframe: str = Query("3M")) -> Dict[str, Any]:
     if not symbol or len(symbol) > 5 or not symbol.isupper():
         raise HTTPException(status_code=400, detail="Invalid symbol format")
 
@@ -321,17 +346,24 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")):
     selected = timeframe_config[tf]
 
     try:
-        stock = yf.Ticker(symbol)
-        info = stock.info
-        hist = stock.history(period=selected["period"], interval=selected["interval"])
+        stock: Any = yf.Ticker(symbol)
+        info = cast(Dict[str, Any], getattr(stock, "info", {}) or {})
+        hist: pd.DataFrame = stock.history(period=selected["period"], interval=selected["interval"])
 
-        if hist.empty:
+        if getattr(hist, "empty", True):
             raise HTTPException(status_code=404, detail=f"No data found for {symbol}")
 
-        candles = []
+        candles: List[Dict[str, Any]] = []
         for date, row in hist.iterrows():
+            # Guard against unknown index types (pandas.Timestamp vs other)
+            date_any = cast(Any, date)
+            dfmt = getattr(date_any, "strftime", None)
+            if callable(dfmt):
+                date_display = date_any.strftime(selected["date_fmt"])
+            else:
+                date_display = str(date_any)
             candles.append({
-                "date": date.strftime(selected["date_fmt"]),
+                "date": date_display,
                 "open": float(row["Open"]) if not pd.isna(row["Open"]) else None,
                 "high": float(row["High"]) if not pd.isna(row["High"]) else None,
                 "low": float(row["Low"]) if not pd.isna(row["Low"]) else None,
@@ -367,7 +399,7 @@ class StrategyRequest(BaseModel):
 
 
 @app.post("/api/strategy")
-async def parse_strategy(req: StrategyRequest):
+async def parse_strategy(req: StrategyRequest) -> Dict[str, Any]:
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
 
@@ -398,36 +430,54 @@ Return ONLY valid JSON, no explanation, no markdown fences. Use this exact schem
 """
 
     # Try selected model first, then fall back to other available models that support generateContent.
-    last_err = None
-    tried = []
+    last_err: Optional[Exception] = None
+    tried: List[str] = []
 
     def _available_candidates():
         # selected model first
         if SELECTED_MODEL_NAME:
             yield SELECTED_MODEL_NAME
         # then other listed models
-        try:
-            for m in genai.list_models():
-                if "generateContent" in (m.supported_generation_methods or []):
-                    if m.name != SELECTED_MODEL_NAME:
-                        yield m.name
-        except Exception:
-            pass
+        list_models_fn = getattr(genai, "list_models", None)
+        if callable(list_models_fn):
+            try:
+                res = list_models_fn()
+                if isinstance(res, Iterable):
+                    for m in cast(Iterable[Any], res):
+                        methods = cast(List[str], getattr(m, "supported_generation_methods", []) or [])
+                        if "generateContent" in methods:
+                            name = getattr(m, "name", None)
+                            if name and name != SELECTED_MODEL_NAME:
+                                yield name
+            except Exception:
+                pass
         # final fallback
         yield "models/text-bison-001"
 
     for model_name in _available_candidates():
         tried.append(model_name)
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(max_output_tokens=512),
-            )
-            raw = response.text.strip()
+            gm_cls = getattr(genai, "GenerativeModel", None)
+            if not gm_cls:
+                # runtime doesn't expose the class we expect — try next candidate
+                continue
+            model = gm_cls(model_name)
+
+            genai_types = getattr(genai, "types", None)
+            gen_cfg = None
+            if genai_types and getattr(genai_types, "GenerationConfig", None):
+                try:
+                    gen_cfg = genai_types.GenerationConfig(max_output_tokens=512)
+                except Exception:
+                    gen_cfg = None
+
+            kwargs = {"generation_config": gen_cfg} if gen_cfg is not None else {}
+            response = model.generate_content(prompt, **kwargs)
+
+            raw = getattr(response, "text", "").strip()
             raw = re.sub(r"^```[a-z]*\n?", "", raw)
             raw = re.sub(r"\n?```$", "", raw)
-            parsed = json.loads(raw)
+            parsed = cast(Dict[str, Any], json.loads(raw))
             return parsed
         except json.JSONDecodeError:
             raise HTTPException(status_code=500, detail="Strategy parse failed: invalid JSON from model")
@@ -440,40 +490,60 @@ Return ONLY valid JSON, no explanation, no markdown fences. Use this exact schem
 
 
 @app.post("/api/chat")
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest) -> Dict[str, Any]:
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured on server")
 
     enhanced_system = req.system or ""
 
-    last_err = None
-    tried = []
+    last_err: Optional[Exception] = None
+    tried: List[str] = []
 
     def _chat_candidates():
         if SELECTED_MODEL_NAME:
             yield SELECTED_MODEL_NAME
-        try:
-            for m in genai.list_models():
-                if "generateContent" in (m.supported_generation_methods or []):
-                    if m.name != SELECTED_MODEL_NAME:
-                        yield m.name
-        except Exception:
-            pass
+        list_models_fn = getattr(genai, "list_models", None)
+        if callable(list_models_fn):
+            try:
+                res = list_models_fn()
+                if isinstance(res, Iterable):
+                    for m in cast(Iterable[Any], res):
+                        methods = cast(List[str], getattr(m, "supported_generation_methods", []) or [])
+                        if "generateContent" in methods:
+                            name = getattr(m, "name", None)
+                            if name and name != SELECTED_MODEL_NAME:
+                                yield name
+            except Exception:
+                pass
         yield "models/text-bison-001"
 
     for model_name in _chat_candidates():
         tried.append(model_name)
         try:
-            model = genai.GenerativeModel(
+            gm_cls = getattr(genai, "GenerativeModel", None)
+            if not gm_cls:
+                continue
+            model = gm_cls(
                 model_name,
                 system_instruction=enhanced_system if enhanced_system else None,
             )
 
-            response = model.generate_content(
-                [{"role": m["role"] if m["role"] == "user" else "model", "parts": [m["content"]]} for m in req.messages],
-                generation_config=genai.types.GenerationConfig(max_output_tokens=1536),
-            )
-            return {"text": response.text}
+            genai_types = getattr(genai, "types", None)
+            gen_cfg = None
+            if genai_types and getattr(genai_types, "GenerationConfig", None):
+                try:
+                    gen_cfg = genai_types.GenerationConfig(max_output_tokens=1536)
+                except Exception:
+                    gen_cfg = None
+
+            kwargs = {"generation_config": gen_cfg} if gen_cfg is not None else {}
+            messages: List[Dict[str, Any]] = req.messages
+            payload: List[Dict[str, Any]] = [
+                {"role": m.get("role") if m.get("role") == "user" else "model", "parts": [m.get("content", "") or ""]}
+                for m in messages
+            ]
+            response = model.generate_content(payload, **kwargs)
+            return {"text": getattr(response, "text", "")}
         except Exception as e:
             last_err = e
             logger.warning("Chat generation failed with model %s: %s", model_name, e)
@@ -487,7 +557,7 @@ async def chat(req: ChatRequest):
 
 # News endpoints
 @app.get("/api/news/stock/{symbol}")
-async def get_stock_news(symbol: str):
+async def get_stock_news(symbol: str) -> Dict[str, Any]:
     try:
         symbol = symbol.upper()
         articles = scraper.fetch_stock_news(symbol)
@@ -499,7 +569,7 @@ async def get_stock_news(symbol: str):
 
 
 @app.get("/api/news/market")
-async def get_market_news():
+async def get_market_news() -> Dict[str, Any]:
     try:
         articles = scraper.fetch_market_news()
         for article in articles:
@@ -510,7 +580,7 @@ async def get_market_news():
 
 
 @app.get("/api/news/trending")
-async def get_trending_news():
+async def get_trending_news() -> Dict[str, Any]:
     try:
         market_news = scraper.fetch_market_news()[:10]
         for article in market_news:

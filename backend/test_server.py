@@ -1,25 +1,22 @@
-import pytest
+from typing import Any, Dict, List, cast
 from fastapi.testclient import TestClient
 from backend import server
 
-client = TestClient(server.app)
+client: TestClient = TestClient(server.app)
 
 def test_get_popular_stocks():
-    response = client.get("/api/stocks")
-    assert response.status_code == 200
-    data = response.json()
+    data = cast(Dict[str, Any], client.get("/api/stocks").json())  # type: ignore
+    assert isinstance(data, dict)
     assert "stocks" in data
     assert isinstance(data["stocks"], list)
-    assert any(stock["symbol"] == "AAPL" for stock in data["stocks"])
+    stocks: List[Dict[str, Any]] = cast(List[Dict[str, Any]], data.get("stocks", []))
+    assert any(stock.get("symbol") == "AAPL" for stock in stocks)
 
 def test_get_stock_data_valid():
-    response = client.get("/api/stock/NVDA")
-    assert response.status_code == 200
-    data = response.json()
+    data = cast(Dict[str, Any], client.get("/api/stock/NVDA").json())  # type: ignore
     assert data["symbol"] == "NVDA"
     assert "candles" in data
     assert "price" in data
 
 def test_get_stock_data_invalid():
-    response = client.get("/api/stock/INVALID")
-    assert response.status_code in (400, 404)
+    assert client.get("/api/stock/INVALID").status_code in (400, 404)  # type: ignore

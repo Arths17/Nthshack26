@@ -7,7 +7,8 @@ import re
 import urllib.request
 from urllib.error import URLError, HTTPError
 from datetime import datetime
-from typing import List, Dict, Optional
+from dataclasses import dataclass
+from typing import List, Dict, Optional, Any, Union, Set
 import xml.etree.ElementTree as ET
 
 # News sources configuration
@@ -26,50 +27,68 @@ NEWS_SOURCES = {
     }
 }
 
+@dataclass
+class HTTPResponse:
+    status_code: Optional[int]
+    content: bytes
+
+
 class NewsScraper:
     """Scrapes financial news from multiple sources"""
-    def __init__(self):
-        self.headers = {
+    def __init__(self) -> None:
+        self.headers: Dict[str, str] = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         }
-        self.timeout = 10
+        self.timeout: int = 10
 
-    def _http_get(self, url: str, headers: Optional[Dict] = None, timeout: Optional[int] = None):
+    def _http_get(
+        self,
+        url: str,
+        headers: Optional[Dict[str, str]] = None,
+        timeout: Optional[int] = None,
+    ) -> HTTPResponse:
         req = urllib.request.Request(url, headers=(headers or {}), method='GET')
         try:
             with urllib.request.urlopen(req, timeout=(timeout or self.timeout)) as resp:
                 content = resp.read()
-                status = getattr(resp, 'status', None) or getattr(resp, 'getcode', None)
-                if callable(status):
-                    status = status()
-                class _Resp:
-                    def __init__(self, status_code, content):
-                        self.status_code = status_code
-                        self.content = content
-                return _Resp(status, content)
+                status_code: Optional[int] = None
+                try:
+                    getcode = getattr(resp, 'getcode', None)
+                    tmp_status = None
+                    try:
+                        if callable(getcode):
+                            tmp_status = getcode()
+                        else:
+                            tmp_status = getattr(resp, 'status', None)
+                    except Exception:
+                        tmp_status = None
+                    if isinstance(tmp_status, int):
+                        status_code = tmp_status
+                    else:
+                        status_code = None
+                except Exception:
+                    status_code = None
+                return HTTPResponse(status_code=status_code, content=content)
         except HTTPError as e:
-            class _ErrResp:
-                def __init__(self, code, content):
-                    self.status_code = code
-                    self.content = content
-            body = b''
+            body: bytes = b''
             try:
-                body = e.read()
-            except:
-                pass
-            return _ErrResp(getattr(e, 'code', None), body)
+                if hasattr(e, 'read'):
+                    body = e.read()
+                    if isinstance(body, str):
+                        body = body.encode()
+            except Exception:
+                body = b''
+            return HTTPResponse(status_code=getattr(e, 'code', None), content=body)
         except URLError:
-            class _ErrResp2:
-                def __init__(self):
-                    self.status_code = None
-                    self.content = b''
-            return _ErrResp2()
+            return HTTPResponse(status_code=None, content=b'')
 
-    def parse_rss_feed(self, xml_content: str, source: str) -> List[Dict]:
+    def parse_rss_feed(self, xml_content: Union[str, bytes], source: str) -> List[Dict[str, Any]]:
         try:
+            if isinstance(xml_content, (bytes, bytearray)):
+                xml_content = xml_content.decode('utf-8', errors='replace')
             root = ET.fromstring(xml_content)
-            articles = []
-            ns = {
+            articles: List[Dict[str, Any]] = []
+            ns: Dict[str, str] = {
                 'content': 'http://purl.org/rss/1.0/modules/content/',
                 'media': 'http://search.yahoo.com/mrss/',
             }
@@ -93,7 +112,7 @@ class NewsScraper:
             print(f"Error parsing RSS feed from {source}: {str(e)}")
             return []
 
-    def _extract_image(self, item: ET.Element, ns: Dict) -> Optional[str]:
+    def _extract_image(self, item: ET.Element, ns: Optional[Dict[str, str]] = None) -> Optional[str]:
         try:
             media = item.find('media:content', ns)
             if media is not None:
@@ -108,8 +127,8 @@ class NewsScraper:
             pass
         return None
 
-    def fetch_stock_news(self, symbol: str) -> List[Dict]:
-        all_articles = []
+    def fetch_stock_news(self, symbol: str) -> List[Dict[str, Any]]:
+        all_articles: List[Dict[str, Any]] = []
         try:
             url = NEWS_SOURCES["yahoo"]["url"].format(symbol=symbol)
             print(f"Fetching stock news from: {url}")
@@ -122,7 +141,7 @@ class NewsScraper:
                 print(f"Yahoo Finance returned status {response.status_code}")
         except Exception as e:
             print(f"Error fetching Yahoo Finance news for {symbol}: {str(e)}")
-        stock_articles = []
+        stock_articles: List[Dict[str, Any]] = []
         for article in all_articles:
             title_lower = article['title'].lower()
             desc_lower = article.get('description', '').lower()
@@ -136,8 +155,8 @@ class NewsScraper:
             print(f"No {symbol}-specific articles found after filtering")
             return []
         print(f"Filtered to {len(stock_articles)} {symbol}-specific articles")
-        seen = set()
-        unique_articles = []
+        seen: Set[str] = set()
+        unique_articles: List[Dict[str, Any]] = []
         for article in stock_articles:
             if article['title'] not in seen:
                 seen.add(article['title'])
@@ -151,8 +170,8 @@ class NewsScraper:
             pass
         return unique_articles
 
-    def fetch_market_news(self) -> List[Dict]:
-        all_articles = []
+    def fetch_market_news(self) -> List[Dict[str, Any]]:
+        all_articles: List[Dict[str, Any]] = []
         try:
             url = NEWS_SOURCES["yahoo"]["url"].format(symbol="SPY")
             print(f"Fetching market news from: {url}")
@@ -190,8 +209,8 @@ class NewsScraper:
         except Exception as e:
             print(f"Error fetching CNBC news: {str(e)}")
         print(f"Total market articles collected: {len(all_articles)}")
-        seen = set()
-        unique_articles = []
+        seen: Set[str] = set()
+        unique_articles: List[Dict[str, Any]] = []
         for article in all_articles:
             if article['title'] not in seen:
                 seen.add(article['title'])

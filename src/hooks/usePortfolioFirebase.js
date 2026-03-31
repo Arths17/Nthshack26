@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { devLog } from "../utils/logger";
 import {
   subscribeToPortfolio,
   subscribeToTrades,
@@ -26,9 +27,8 @@ export function usePortfolioFirebase() {
   // Refs to track unsubscribers
   const unsubscribersRef = useRef([]);
 
-  // Log auth status for debugging
   useEffect(() => {
-    console.log("[Portfolio] Auth user:", authUser?.email || "NOT AUTHENTICATED");
+    devLog("[Portfolio] Auth user:", authUser?.email || "NOT AUTHENTICATED");
   }, [authUser]);
 
   // Load user profile and subscribe to portfolio/trades on auth change
@@ -62,7 +62,7 @@ export function usePortfolioFirebase() {
         const unsubTrades = subscribeToTrades(authUser.uid, (trades) => {
           const formattedLog = trades
             .sort((a, b) => new Date(b.executedAt) - new Date(a.executedAt))
-            .slice(0, PORTFOLIO.LOG_ENTRIES)
+            .slice(0, PORTFOLIO.MAX_TRADE_LOG_ENTRIES)
             .map((t) => ({
               type: t.type,
               sym: t.symbol,
@@ -96,10 +96,10 @@ export function usePortfolioFirebase() {
   // Buy stock: update cash and add position
   const buy = useCallback(
     async (sym, qty, price) => {
-      console.log("[BUY] Starting buy request:", { sym, qty, price, authUserEmail: authUser?.email, authUserUid: authUser?.uid });
-      
+      devLog("[BUY] Starting buy request:", { sym, qty, price, authUserEmail: authUser?.email, authUserUid: authUser?.uid });
+
       if (!authUser) {
-        const msg = `Not authenticated. You must log in to trade. Auth user: ${JSON.stringify({ uid: authUser?.uid, email: authUser?.email })}`;
+        const msg = "Not authenticated. Please log in to trade.";
         console.error("[BUY]", msg);
         setError(msg);
         return { success: false, error: "Please log in to trade" };
@@ -128,7 +128,7 @@ export function usePortfolioFirebase() {
       }
 
       try {
-        console.log(`[BUY] Processing: ${qty} shares of ${sym} @ $${price} (total: $${cost.toFixed(2)})`);
+        devLog(`[BUY] Processing: ${qty} shares of ${sym} @ $${price} (total: $${cost.toFixed(2)})`);
         const newCash = cash - cost;
         
         // Add to portfolio and update cash in Firebase
@@ -142,7 +142,7 @@ export function usePortfolioFirebase() {
         setCash(newCash);
 
         const msg = `Bought ${qty} shares of ${sym}`;
-        console.log("[BUY]", msg);
+        devLog("[BUY]", msg);
         setError(null);
         return { success: true, error: null };
       } catch (err) {
@@ -188,7 +188,7 @@ export function usePortfolioFirebase() {
       }
 
       try {
-        console.log(`[SELL] Processing: ${qty} shares of ${sym} @ $${price}`);
+        devLog(`[SELL] Processing: ${qty} shares of ${sym} @ $${price}`);
         const proceeds = qty * price;
         const newCash = cash + proceeds;
 
@@ -203,7 +203,7 @@ export function usePortfolioFirebase() {
         setCash(newCash);
 
         const msg = `Sold ${qty} shares of ${sym}`;
-        console.log("[SELL]", msg);
+        devLog("[SELL]", msg);
         setError(null);
         return { success: true, error: null };
       } catch (err) {

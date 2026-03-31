@@ -70,15 +70,17 @@ export default function AlertsPage({ watch }) {
   const currentPrice = watch[sym]?.price;
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
+    <div className="q-page-scroll q-page-in" style={{ position: "relative" }}>
 
       {/* Toast notification */}
       {toast && (
-        <div style={{
+        <div
+          className="q-toast"
+          style={{
           position: "fixed", top: 80, right: 24, zIndex: 100,
           background: "rgba(15,20,40,.97)", border: `1px solid ${toast.color}40`,
           borderRadius: 14, padding: "12px 18px", boxShadow: `0 0 32px ${toast.color}30`,
-          animation: "slideUp .3s ease", maxWidth: 300,
+          maxWidth: 300,
           display: "flex", alignItems: "center", gap: 10,
         }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: toast.color, flexShrink: 0, boxShadow: `0 0 10px ${toast.color}` }} />

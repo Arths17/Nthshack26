@@ -1,0 +1,497 @@
+/**
+ * Shared page chrome: motion, surfaces, tabs — tuned for a trading terminal (not generic “AI UI”).
+ */
+
+/* ── Page shell ───────────────────────────────────────────── */
+.q-page-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 2px 0 12px;
+  scrollbar-gutter: stable;
+}
+
+.q-page-in > * {
+  animation: qPageEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.q-page-in > *:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.q-page-in > *:nth-child(2) {
+  animation-delay: 0.05s;
+}
+.q-page-in > *:nth-child(3) {
+  animation-delay: 0.08s;
+}
+.q-page-in > *:nth-child(4) {
+  animation-delay: 0.11s;
+}
+.q-page-in > *:nth-child(5) {
+  animation-delay: 0.14s;
+}
+.q-page-in > *:nth-child(6) {
+  animation-delay: 0.17s;
+}
+.q-page-in > *:nth-child(7) {
+  animation-delay: 0.2s;
+}
+.q-page-in > *:nth-child(8) {
+  animation-delay: 0.23s;
+}
+.q-page-in > *:nth-child(9) {
+  animation-delay: 0.26s;
+}
+.q-page-in > *:nth-child(10) {
+  animation-delay: 0.29s;
+}
+
+@keyframes qPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.q-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--q-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.q-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--q-text-bright);
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+/* Glass: interactive lists / cards */
+.glass-panel--interactive {
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.glass-panel--interactive:hover {
+  border-color: rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+/* Tab chips (secondary pages) */
+.q-tab-chip {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: transparent;
+  color: var(--q-text-muted);
+  font-family: var(--q-font-sans);
+}
+
+.q-tab-chip:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--q-text-secondary);
+}
+
+.q-tab-chip--active {
+  border-color: var(--q-border-accent);
+  background: rgba(79, 172, 254, 0.1);
+  color: var(--q-accent);
+  font-weight: 600;
+}
+
+.q-tab-chip:focus-visible {
+  outline: 2px solid var(--q-accent);
+  outline-offset: 2px;
+}
+
+/* Compare / symbol toggles */
+.q-symbol-chip {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--q-text-muted);
+  font-family: var(--q-font-sans);
+}
+
+.q-symbol-chip:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.q-symbol-chip--on {
+  border-color: rgba(79, 172, 254, 0.45);
+  background: rgba(79, 172, 254, 0.1);
+  color: var(--q-accent);
+}
+
+/* Market view: stagger inner panels */
+.q-market-stack > * {
+  animation: qPageEnter 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.q-market-stack > *:nth-child(1) {
+  animation-delay: 0.03s;
+}
+.q-market-stack > *:nth-child(2) {
+  animation-delay: 0.07s;
+}
+.q-market-stack > *:nth-child(3) {
+  animation-delay: 0.11s;
+}
+.q-market-stack > *:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+/* Page loader */
+.q-page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 200px;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--q-text-muted);
+}
+
+.q-page-loader__ring {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(79, 172, 254, 0.2);
+  border-top-color: var(--q-accent);
+  animation: spin 0.75s linear infinite;
+}
+
+.q-page-loader__text {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Toast */
+.q-toast {
+  animation: qToastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes qToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Learn sticky header */
+.q-learn-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 12px 0 10px;
+  background: rgba(6, 11, 24, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--q-border-muted);
+}
+
+/* Markdown prose (chat) */
+.q-md {
+  line-height: 1.72;
+}
+
+.q-md p {
+  margin: 0;
+}
+
+/* Error boundary */
+.q-error-boundary {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(248, 113, 113, 0.08), transparent 55%);
+}
+
+.q-error-boundary h2 {
+  font-family: var(--q-font-display);
+  font-style: italic;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--q-text-bright);
+  margin-bottom: 8px;
+}
+
+.q-error-boundary p {
+  font-size: 13px;
+  color: var(--q-text-muted);
+  max-width: 360px;
+  line-height: 1.55;
+}
+
+.q-error-boundary button {
+  margin-top: 22px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.08);
+  color: #fecaca;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.q-error-boundary button:hover {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.q-error-boundary button:focus-visible {
+  outline: 2px solid var(--q-danger);
+  outline-offset: 2px;
+}
+
+/* Onboarding modal */
+.q-onboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 8, 18, 0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: qFadeOverlay 0.4s ease both;
+}
+
+@keyframes qFadeOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.q-onboard-card {
+  width: min(460px, calc(100vw - 40px));
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  animation: qOnboardCard 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes qOnboardCard {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.q-onboard-card--exit {
+  opacity: 0;
+  transform: scale(0.97);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.q-onboard-btn-primary {
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  border: none;
+  font-family: var(--q-font-sans);
+}
+
+.q-onboard-btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+.q-onboard-btn-primary:focus-visible {
+  outline: 2px solid var(--q-accent);
+  outline-offset: 2px;
+}
+
+.q-onboard-skip {
+  background: none;
+  border: none;
+  color: var(--q-text-faint);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.18s ease;
+  font-family: var(--q-font-sans);
+}
+
+.q-onboard-skip:hover {
+  color: var(--q-text-muted);
+}
+
+/* Market data / chart empty & error states */
+.q-data-error {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.18);
+}
+
+.q-data-error__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fecaca;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.q-data-error__body {
+  font-size: 12px;
+  color: rgba(252, 231, 231, 0.82);
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.q-data-error__retry {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--q-font-sans);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.q-data-error__retry:hover {
+  background: rgba(248, 113, 113, 0.16);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.q-chart-placeholder {
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.q-chart-placeholder--error {
+  border: 1px dashed rgba(248, 113, 113, 0.25);
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.04);
+}
+
+.q-chart-placeholder__inner {
+  max-width: 380px;
+}
+
+.q-chart-placeholder__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fecaca;
+  margin: 0 0 8px;
+}
+
+.q-chart-placeholder__detail {
+  font-size: 12px;
+  color: var(--q-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.q-chart-placeholder__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(79, 172, 254, 0.15);
+  border-top-color: var(--q-accent);
+  animation: spin 0.75s linear infinite;
+}
+
+.q-chart-placeholder__hint {
+  font-size: 11px;
+  color: var(--q-text-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* News list: subtle lift on hover (link wraps Glass) */
+.q-news-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.q-news-card .glass-panel--interactive:hover {
+  transform: translateY(-2px);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .q-page-in > *,
+  .q-market-stack > *,
+  .q-toast,
+  .q-onboard-overlay,
+  .q-onboard-card,
+  .glass-panel--interactive,
+  .q-chart-placeholder__spinner {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .glass-panel--interactive:hover {
+    transform: none;
+  }
+}

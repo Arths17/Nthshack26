@@ -48,7 +48,7 @@ export default function PortfolioPage({ pos, log, cash, watch }) {
   const buys  = log.filter(t => t.type === "BUY");
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="q-page-scroll q-page-in">
 
       {/* Summary row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
@@ -58,7 +58,7 @@ export default function PortfolioPage({ pos, log, cash, watch }) {
           { label: "Cash Available", value: `$${f2(cash)}`, color: "#e2e8f0" },
           { label: "Invested", value: `$${f2(portVal - cash)}`, color: "#a78bfa" },
         ].map(({ label, value, color }) => (
-          <Glass key={label} style={{ padding: "14px 16px", borderRadius: 14 }}>
+          <Glass key={label} hoverable style={{ padding: "14px 16px", borderRadius: 14 }}>
             <div style={{ fontSize: 9, color: muted, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
             <div style={{ fontSize: 20, fontWeight: 700, color, fontFamily: "'DM Serif Display',serif" }}>{value}</div>
           </Glass>
@@ -67,7 +67,7 @@ export default function PortfolioPage({ pos, log, cash, watch }) {
 
       {/* P&L chart */}
       {log.length > 1 && (
-        <Glass style={{ padding: "14px 16px", borderRadius: 14 }}>
+        <Glass hoverable style={{ padding: "14px 16px", borderRadius: 14 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#e2e8f0", marginBottom: 10 }}>
             Trade P&L over time
             <span style={{ fontSize: 10, color: muted, fontWeight: 400, marginLeft: 8 }}>cash flow from all your trades</span>
@@ -77,7 +77,7 @@ export default function PortfolioPage({ pos, log, cash, watch }) {
       )}
 
       {/* Open positions */}
-      <Glass style={{ padding: "14px 16px", borderRadius: 14 }}>
+      <Glass hoverable style={{ padding: "14px 16px", borderRadius: 14 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: "#e2e8f0", marginBottom: 12 }}>
           Open Positions
           <span style={{ fontSize: 10, color: muted, fontWeight: 400, marginLeft: 8 }}>stocks you currently own</span>

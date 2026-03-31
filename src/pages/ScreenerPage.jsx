@@ -33,10 +33,10 @@ export default function ScreenerPage({ watch }) {
   );
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="q-page-scroll q-page-in">
 
       {/* Sort controls */}
-      <Glass style={{ padding: "12px 16px", borderRadius: 14, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <Glass hoverable style={{ padding: "12px 16px", borderRadius: 14, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <span style={{ fontSize: 11, color: muted, marginRight: 4 }}>Sort by</span>
         {SORTS.map(s => (
           <button key={s.key} onClick={() => { if (sortKey === s.key) setAsc(a => !a); else { setSortKey(s.key); setAsc(false); } }} style={{
@@ -62,9 +62,7 @@ export default function ScreenerPage({ watch }) {
           const peSignal = d.pe ? (d.pe < 15 ? "low P/E" : d.pe > 40 ? "high P/E" : null) : null;
 
           return (
-            <Glass key={d.symbol} style={{ padding: "14px 18px", borderRadius: 14, display: "flex", alignItems: "center", gap: 16, transition: "border-color .2s", cursor: "default" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.14)"}
-              onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.07)"}>
+            <Glass key={d.symbol} hoverable style={{ padding: "14px 18px", borderRadius: 14, display: "flex", alignItems: "center", gap: 16, cursor: "default" }}>
 
               {/* Rank */}
               <div style={{ fontSize: 12, fontWeight: 700, color: muted, width: 20, flexShrink: 0, textAlign: "center" }}>#{rank + 1}</div>

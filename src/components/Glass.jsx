@@ -1,13 +1,7 @@
-const base = {
-  background: "rgba(255,255,255,.03)",
-  backdropFilter: "blur(20px)",
-  border: "1px solid rgba(255,255,255,.07)",
-  borderRadius: 20,
-};
-
-export default function Glass({ children, style = {} }) {
+export default function Glass({ children, style = {}, className = "", hoverable = false }) {
+  const interactive = hoverable ? "glass-panel--interactive" : "";
   return (
-    <div style={{ ...base, ...style }}>
+    <div className={`glass-panel ${interactive} ${className}`.trim()} style={style}>
       {children}
     </div>
   );

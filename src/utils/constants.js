@@ -1,6 +1,10 @@
 /**
  * Global constants for the trading terminal
  */
+import { getApiBase } from "./apiBase";
+
+/** All FastAPI routes live under this path so Next.js on Vercel does not own `/api/*`. */
+export const API_ROUTE_PREFIX = "/api/py";
 
 export const PORTFOLIO = {
   STARTING_CASH: 100_000,
@@ -14,7 +18,10 @@ export const CACHE = {
 };
 
 export const API = {
-  BACKEND_URL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  /** Same-origin "" when using the /api proxy or Vercel routes; else full URL from env. */
+  get BACKEND_URL() {
+    return getApiBase();
+  },
   TIMEOUT_MS: 10_000,
 };
 

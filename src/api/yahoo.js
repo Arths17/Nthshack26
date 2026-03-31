@@ -1,6 +1,7 @@
-import { CACHE } from "../utils/constants";
+import { CACHE, API_ROUTE_PREFIX } from "../utils/constants";
+import { devLog } from "../utils/logger";
+import { getApiBase } from "../utils/apiBase";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
 const cache = new Map(); // symbol → { data, expiresAt }
 
 /**
@@ -30,7 +31,10 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/api/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`, {
+    const base = getApiBase();
+    const url = `${base}${API_ROUTE_PREFIX}/stock/${normalizedSymbol}?timeframe=${encodeURIComponent(normalizedTimeframe)}`;
+    devLog("[fetchYF]", url);
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -49,9 +53,24 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
       }
 
       if (response.status === 404) {
-        throw new Error(`Stock not found: ${symbol}`);
+        const localHint =
+          typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1" ||
+            window.location.hostname === "::1" ||
+            window.location.hostname === "[::1]")
+            ? " Run the API: cd backend && uvicorn server:app --reload --port 8000. In local dev, Next proxies /api to that server (unset NEXT_PUBLIC_API_URL unless the API is on another host)."
+            : "";
+        const looksLikeNextFallback = !detail || /^not found$/i.test(String(detail).trim());
+        throw new Error(
+          looksLikeNextFallback
+            ? `Market data endpoint not reachable (404).${localHint ? " " + localHint : ""}`
+            : `${detail}${localHint ? " " + localHint : ""}`
+        );
       }
-      throw new Error(`API error: ${detail}`);
+      throw new Error(
+        `API error (${response.status}): ${detail || response.statusText || "Unknown — see Vercel logs for /api"}`,
+      );
     }
 
     const data = await response.json();
@@ -62,7 +81,20 @@ export const fetchYF = async (symbol, timeframe = "3M") => {
     return data;
   } catch (error) {
     console.error(`Failed to fetch ${normalizedSymbol} (${normalizedTimeframe}):`, error);
-    throw new Error(`Failed to fetch stock data for ${normalizedSymbol}: ${error.message}`);
+    const msg = error?.message || String(error);
+    const isNetwork =
+      /failed to fetch|networkerror|load failed|network request failed/i.test(msg);
+    const loopback =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname === "::1" ||
+        window.location.hostname === "[::1]");
+    const hint =
+      isNetwork && loopback
+        ? " Start the Python API (port 8000): cd backend && uvicorn server:app --reload --port 8000. Clear NEXT_PUBLIC_API_URL in .env.local for same-origin /api proxy, unless your API runs elsewhere."
+        : "";
+    throw new Error(`Failed to fetch stock data for ${normalizedSymbol}: ${msg}${hint ? " — " + hint : ""}`);
   }
 };
 

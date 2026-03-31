@@ -1,0 +1,11 @@
+python-dotenv
+yfinance
+google-generativeai>=0.8.0
+fastapi
+uvicorn[standard]
+requests
+beautifulsoup4
+lxml
+pandas
+numpy
+pydantic

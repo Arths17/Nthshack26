@@ -1,4 +1,39 @@
 .env
 .env.local
 node_modules/
+node_modules_backup/
+/dist
+/build
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.env
+
+# VSCode/IDE
+.vscode/
+.idea/
+
+# Mac
+.DS_Store
+
+# Misc
+coverage/
+.env.*.local
+*.log
+npm-debug.log*
+.DS_Store
+
+# Vite/Next
+.next/
 .vite/
+
+# pytest
+.pytest_cache/
+
+# archives
+archive/
+.vercel
+.env*.local

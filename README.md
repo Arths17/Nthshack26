@@ -23,7 +23,7 @@ A real-time paper trading terminal powered by live Yahoo Finance data and Gemini
 Nthshack26/
 ├── server.py                  # FastAPI proxy — /api/chat → Gemini 2.5 Flash
 ├── .env                       # API keys (gitignored)
-├── backend.py/
+├── backend/
 │   └── main.py                # Standalone CLI stock analyzer (Gemini + yfinance)
 └── src/
     ├── index.css              # Global styles + animations
@@ -93,18 +93,18 @@ npm install
 npm run dev
 ```
 
-App runs at `http://localhost:5173`. Make sure the backend is running first — the frontend calls `/api/chat` which Vite proxies to port 8000.
+**Single Vercel project (recommended):** Connect [the GitHub repo](https://github.com/Arths17/quanta-ai) in the Vercel dashboard. This app deploys **Next.js + FastAPI** together: browser calls use the `/api/py/*` prefix so Next.js does not swallow `/api/*`. Production rewrites `/api/py/*` to the Python serverless entry (`api/index.py`). Set `GEMINI_API_KEY` in Vercel **project** environment variables (server-only, not `NEXT_PUBLIC_*`). After deploy, sanity-check: `curl -sS "https://<your-project>.vercel.app/api/py/stock/NVDA?timeframe=3M" | head -c 200`.
 
-> **Vite proxy config** — add this to `vite.config.js` if not already present:
-> ```js
-> export default {
->   server: {
->     proxy: {
->       '/api': 'http://localhost:8000'
->     }
->   }
-> }
-> ```
+**Split hosting (optional):** Deploy FastAPI elsewhere (Railway, Render, etc.), then set `NEXT_PUBLIC_API_URL` to that origin. Routes on the backend are still under `/api/py/...`.
+
+Note: Do NOT expose `GEMINI_API_KEY` in frontend envs; keep it server-side.
+The repo now includes a Next.js frontend. Development still works with Vite, but production builds should use Next.
+
+Local dev notes:
+- Vite dev server (legacy): `npm run vite:dev` (runs on 5173)
+- Next dev server (current default): `npm run dev` (Next)
+
+Local Next proxies `/api/py/*` to `http://127.0.0.1:8000` when uvicorn is running. Leave `NEXT_PUBLIC_API_URL` unset for that flow, or point it at a non-loopback API if the UI and API are on different hosts.
 
 ---
 

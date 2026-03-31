@@ -1,6 +1,8 @@
+import { getApiBase } from "../utils/apiBase";
+import { API_ROUTE_PREFIX } from "../utils/constants";
+
 export const askClaude = async (messages, system, currentTicker) => {
-  const API_BASE = import.meta.env.VITE_API_URL || "";
-  const r = await fetch(`${API_BASE}/api/chat`, {
+  const r = await fetch(`${getApiBase()}${API_ROUTE_PREFIX}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, system, current_ticker: currentTicker }),

@@ -49,9 +49,7 @@ function StrategyCard({ strategy, onRun, onDelete }) {
   const isGood = r && parseFloat(r.totalReturn) > 0;
 
   return (
-    <Glass style={{ borderRadius: 16, overflow: "hidden", transition: "border-color .2s" }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.15)"}
-      onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,.07)"}>
+    <Glass hoverable style={{ borderRadius: 16, overflow: "hidden" }}>
       <div style={{ padding: "16px 18px" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
@@ -159,12 +157,12 @@ export default function StrategyLibrary({ onSendToChat }) {
   const starterStrategies = strategies.filter(s => s.starter);
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="q-page-scroll q-page-in">
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>Strategy Library</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9", letterSpacing: "-0.02em" }}>Strategy library</div>
           <div style={{ fontSize: 11, color: muted, marginTop: 2 }}>
             {userStrategies.length} saved · strategies are tested via the AI chat
           </div>

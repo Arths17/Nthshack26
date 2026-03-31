@@ -14,7 +14,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import yfinance as yf
 import pandas as pd
-from .news_scraper import scraper
+try:
+    # Prefer absolute import when running as a script/process from the backend folder
+    from news_scraper import scraper
+except Exception:
+    # Fall back to package-relative import when executed as a module
+    from .news_scraper import scraper
 
 
 def _load_env_files() -> None:
@@ -359,7 +364,9 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")):
             "sector": info.get('sector') or "—",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch data: {str(e)}")
+        logger.exception(f"Error fetching stock data for {symbol}: {e}")
+        # Return a 502 to indicate the external data provider (yfinance/Yahoo) failed.
+        raise HTTPException(status_code=502, detail="Market data provider error — check server logs for details")
 
 
 class StrategyRequest(BaseModel):

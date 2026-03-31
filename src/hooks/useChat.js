@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { askClaude } from "../api/gemini";
+import { fetchYF } from "../api/yahoo";
 import { f2, fB, fV, sma } from "../utils/formatters";
 import { runBacktest } from "../utils/backtest";
 import { getApiBase } from "../utils/apiBase";
@@ -12,6 +13,32 @@ const WELCOME = "Hi, I'm Quanta — your AI trading assistant powered by live Ya
 const STRATEGY_KEYWORDS = /\b(when|ema|sma|rsi|cross|crosses|above|below|buy when|sell when|strategy|backtest|moving average|oversold|overbought)\b/i;
 const isStrategyRequest = (text) => STRATEGY_KEYWORDS.test(text) &&
   /\b(buy|sell|entry|exit|long|short)\b/i.test(text);
+
+const TICKER_STOP_WORDS = new Set([
+  "A", "I", "THE", "AND", "OR", "IF", "IS", "ON", "TO", "UP", "BY", "AT", "BE", "IT", "AS",
+  "THIS", "THAT", "WITH", "FOR", "YOU", "NOT", "BUT", "FROM", "CAN", "DO", "GET", "GO", "HAS",
+  "HE", "IN", "NO", "SO", "US", "WE", "MY", "ME", "VS", "WHAT", "WHO", "WHY", "HOW", "WHEN",
+  "WHERE", "WHICH", "AM", "AN", "ARE", "OF", "THAN", "THEN", "THEY", "THEM", "THEIR", "THESE",
+  "THOSE", "ABOUT", "AFTER", "BEFORE", "BETWEEN", "DURING", "UNTIL", "SINCE", "THROUGH", "INTO",
+  "OVER", "UNDER", "ABOVE", "BELOW", "OUT", "SUCH", "OUR", "ALL", "EACH", "EVERY", "FEW", "MORE",
+  "MOST", "OTHER", "SOME", "ANY", "BEEN", "HAVE", "DOES", "DID", "WILL", "WOULD", "COULD", "SHOULD",
+  "MUST", "MAY", "MIGHT", "SHALL", "BUY", "SELL", "LONG", "SHORT", "CALL", "PUT", "BULL", "BEAR",
+  "RISK", "GAIN", "LOSS", "STOP", "TAKE", "PROFIT", "MARGIN", "PRICE", "RATE", "TERM", "YEAR",
+  "MONTH", "WEEK", "DAY", "OPEN", "CLOSE", "HIGH", "LOW", "VOLUME", "TRADE", "ORDER", "FILL", "CHART",
+]);
+
+function extractRequestedTickers(text, currentSym) {
+  const upper = String(text || "").toUpperCase();
+  const matches = [...upper.matchAll(/\$?([A-Z]{1,5})\b/g)].map((m) => m[1]);
+  const unique = [];
+  for (const token of matches) {
+    if (TICKER_STOP_WORDS.has(token)) continue;
+    if (!unique.includes(token)) unique.push(token);
+    if (unique.length >= 8) break;
+  }
+  if (currentSym && !unique.includes(currentSym)) unique.unshift(currentSym);
+  return unique.slice(0, 8);
+}
 
 /**
  * Chat hook for AI trading assistant
@@ -107,6 +134,29 @@ ${Object.entries(watch).map(([s, d]) => {
 - This is educational paper trading — be encouraging and clear.`;
   }, [data, cash, pos, sym]);
 
+  const buildRequestedStockContext = useCallback(async (text) => {
+    const tickers = extractRequestedTickers(text, sym);
+    if (!tickers.length) return "";
+
+    const rows = await Promise.all(
+      tickers.map(async (ticker) => {
+        try {
+          const d = watch?.[ticker] || (await fetchYF(ticker, "3M"));
+          if (!d) return null;
+          const chg = d.price && d.prevClose ? ((d.price - d.prevClose) / d.prevClose) * 100 : null;
+          return `${ticker}: $${f2(d.price)} (${chg == null ? "N/A" : `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`} today) | MCap: ${fB(d.marketCap)} | P/E: ${d.pe?.toFixed(1) ?? "N/A"} | Sector: ${d.sector || "N/A"}`;
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    const valid = rows.filter(Boolean);
+    if (!valid.length) return "";
+
+    return `\n\nREQUESTED STOCK CONTEXT (use this for comparisons even if symbols are not in watchlist):\n${valid.join("\n")}`;
+  }, [sym, watch]);
+
   const send = useCallback(async (text) => {
     const txt = (typeof text === "string" ? text : input).trim();
     if (!txt || busy) return;
@@ -118,6 +168,7 @@ ${Object.entries(watch).map(([s, d]) => {
     try {
       // If it looks like a strategy, also run the backtester
       if (isStrategyRequest(txt) && data?.candles?.length) {
+        const requestedContext = await buildRequestedStockContext(txt);
         // 1. Ask Gemini to parse the strategy into JSON
         let strategySpec = null;
         let backtestResult = null;
@@ -145,7 +196,7 @@ Comment on these results and whether to use this strategy on ${sym} given curren
           : "";
 
         const reply = await askClaude(
-          [...history, { role: "user", content: txt + backtestContext }],
+          [...history, { role: "user", content: txt + requestedContext + backtestContext }],
           buildSystemPrompt(),
           sym
         );
@@ -159,9 +210,10 @@ Comment on these results and whether to use this strategy on ${sym} given curren
         }]);
       } else {
         // Normal analysis / Q&A
+        const requestedContext = await buildRequestedStockContext(txt);
         const history = msgsRef.current.slice(-4).map(m => ({ role: m.role, content: m.content }));
         const reply = await askClaude(
-          [...history, { role: "user", content: txt }],
+          [...history, { role: "user", content: txt + requestedContext }],
           buildSystemPrompt(),
           sym
         );
@@ -183,7 +235,7 @@ Comment on these results and whether to use this strategy on ${sym} given curren
     }
 
     setBusy(false);
-  }, [input, busy, buildSystemPrompt, data, sym]);
+  }, [input, busy, buildSystemPrompt, data, sym, buildRequestedStockContext]);
 
   return { msgs, input, setInput, busy, send };
 }

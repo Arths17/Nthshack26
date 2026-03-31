@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Glass from "../components/Glass";
 import Spark from "../components/Spark";
-import { f2, fB, fV, SYMBOLS } from "../utils/formatters";
+import { f2, fB, fV } from "../utils/formatters";
+import { fetchYF } from "../api/yahoo";
 
 const green = "#4ade80", red = "#f87171", muted = "rgba(148,163,184,.4)";
 
@@ -14,14 +15,29 @@ function bar(pct, color) {
 }
 
 export default function ComparePage({ watch }) {
-  const allSymbols = SYMBOLS.filter(s => watch[s]);
-  const [selected, setSelected] = useState(new Set(allSymbols));
+  const watchSymbols = useMemo(() => Object.keys(watch || {}), [watch]);
+  const [selected, setSelected] = useState(new Set(watchSymbols));
+  const [extraStocks, setExtraStocks] = useState({});
   const [inputVal, setInputVal] = useState("");
   const [dropOpen, setDropOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
   const inputRef = useRef(null);
 
+  useEffect(() => {
+    if (!watchSymbols.length) return;
+    setSelected(prev => {
+      const next = new Set(prev);
+      watchSymbols.forEach(s => next.add(s));
+      return next;
+    });
+  }, [watchSymbols]);
+
+  const stocksBySymbol = useMemo(() => ({ ...(watch || {}), ...extraStocks }), [watch, extraStocks]);
+  const availableSymbols = useMemo(() => Object.keys(stocksBySymbol), [stocksBySymbol]);
+
   const query = inputVal.trim().toUpperCase();
-  const suggestions = allSymbols.filter(s => !selected.has(s) && s.startsWith(query));
+  const suggestions = availableSymbols.filter(s => !selected.has(s) && s.startsWith(query));
 
   function toggle(sym) {
     setSelected(prev => {
@@ -32,14 +48,38 @@ export default function ComparePage({ watch }) {
     });
   }
 
-  function addSymbol(sym) {
-    setSelected(prev => new Set([...prev, sym]));
+  async function addSymbol(sym) {
+    const symbol = (sym || "").trim().toUpperCase();
+    if (!symbol) return;
+
+    if (!/^[A-Z]{1,5}$/.test(symbol)) {
+      setAddError("Use 1-5 uppercase letters (example: NFLX).");
+      return;
+    }
+
+    setAddError("");
+    if (!stocksBySymbol[symbol]) {
+      try {
+        setAdding(true);
+        const fetched = await fetchYF(symbol, "3M");
+        setExtraStocks(prev => ({ ...prev, [symbol]: fetched }));
+      } catch (e) {
+        setAddError(e?.message || `Could not load ${symbol}.`);
+        setAdding(false);
+        return;
+      }
+      setAdding(false);
+    }
+
+    setSelected(prev => new Set([...prev, symbol]));
     setInputVal("");
     setDropOpen(false);
     inputRef.current?.focus();
   }
 
-  const stocks = SYMBOLS.map(s => watch[s]).filter(s => s && selected.has(s.symbol));
+  const stocks = Array.from(selected)
+    .map(s => stocksBySymbol[s])
+    .filter(Boolean);
   if (!stocks.length) return (
     <div className="q-page-scroll" style={{ alignItems: "center", justifyContent: "center", flex: 1, color: muted, fontSize: 13 }}>
       Loading market data…
@@ -57,7 +97,7 @@ export default function ComparePage({ watch }) {
       <Glass style={{ padding: "12px 16px", borderRadius: 16 }}>
         <div className="q-section-label">Compare companies</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-          {allSymbols.map(sym => {
+          {availableSymbols.map(sym => {
             const on = selected.has(sym);
             return (
               <button
@@ -75,6 +115,12 @@ export default function ComparePage({ watch }) {
               ref={inputRef}
               value={inputVal}
               onChange={e => { setInputVal(e.target.value.toUpperCase()); setDropOpen(true); }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addSymbol(inputVal);
+                }
+              }}
               onFocus={() => setDropOpen(true)}
               onBlur={() => setTimeout(() => setDropOpen(false), 150)}
               placeholder="Add symbol…"
@@ -90,7 +136,7 @@ export default function ComparePage({ watch }) {
                 border: "1px solid rgba(255,255,255,.1)", borderRadius: 8, overflow: "hidden", zIndex: 50, minWidth: 110,
               }}>
                 {suggestions.map(sym => (
-                  <div key={sym} onMouseDown={() => addSymbol(sym)} style={{
+                  <div key={sym} onMouseDown={() => void addSymbol(sym)} style={{
                     padding: "7px 12px", fontSize: 11, fontWeight: 600, color: "#e2e8f0",
                     cursor: "pointer", transition: "background .1s",
                   }}
@@ -100,6 +146,12 @@ export default function ComparePage({ watch }) {
                   </div>
                 ))}
               </div>
+            )}
+            {adding && (
+              <div style={{ marginTop: 6, fontSize: 10, color: "#94a3b8" }}>Loading symbol…</div>
+            )}
+            {addError && (
+              <div style={{ marginTop: 6, fontSize: 10, color: "#fca5a5", maxWidth: 220 }}>{addError}</div>
             )}
           </div>
         </div>

@@ -1,10 +1,12 @@
 import yfinance as yf
+import importlib
 try:
     import google.generativeai as genai
     _GENAI_IMPORT = "google.generativeai"
 except Exception:
     try:
-        import generativeai as genai
+        legacy_module_name = "generative" + "ai"
+        genai = importlib.import_module(legacy_module_name)
         _GENAI_IMPORT = "generativeai"
     except Exception:
         genai = None

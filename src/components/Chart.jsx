@@ -51,7 +51,13 @@ export default function Chart({ candles, loading = false, errorMessage = null })
     const ro = new ResizeObserver(entries => {
       for (const entry of entries) {
         const r = entry.contentRect;
-        setSize({ w: Math.max(320, Math.floor(r.width)), h: Math.max(200, Math.floor(r.height)) });
+        const nextW = Math.max(320, Math.floor(r.width));
+        const measuredH = r.height > 0 ? r.height : r.width * 0.42;
+        const nextH = Math.max(220, Math.min(520, Math.floor(measuredH)));
+        setSize(prev => {
+          if (prev.w === nextW && prev.h === nextH) return prev;
+          return { w: nextW, h: nextH };
+        });
       }
     });
     ro.observe(el);
@@ -88,10 +94,11 @@ export default function Chart({ candles, loading = false, errorMessage = null })
 
   const W = size.w, H = size.h, PL = 48, PR = 12, PT = 12, PB = 60;
   const cw = W - PL - PR, ch = H - PT - PB - 40, n = candles.length;
+  const nSafe = Math.max(2, n);
   const allP = candles.flatMap(c => [c.high, c.low]).filter(Boolean);
   const mn = Math.min(...allP), mx = Math.max(...allP), rng = mx - mn || 1;
   const lo = mn - rng * .06, hi = mx + rng * .06;
-  const xOf = i => PL + (i / (n - 1)) * cw;
+  const xOf = i => PL + (i / (nSafe - 1)) * cw;
   const yOf = v => PT + ch - ((v - lo) / (hi - lo)) * ch;
   
   // Volume calculations
@@ -120,7 +127,7 @@ export default function Chart({ candles, loading = false, errorMessage = null })
   const gradId = isUp ? "chartGradGreen" : "chartGradRed";
 
   return (
-    <div ref={containerRef} style={{ position: "relative", userSelect: "none", width: "100%", height: "100%", maxWidth: "none", margin: 0 }}
+    <div ref={containerRef} style={{ position: "relative", userSelect: "none", width: "100%", height: "100%", maxWidth: "none", margin: 0, overflow: "hidden" }}
       onMouseMove={e => {
         const r = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - r.left) / r.width) * W;

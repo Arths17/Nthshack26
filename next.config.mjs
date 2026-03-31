@@ -18,7 +18,8 @@ const nextConfig = {
     return [
       {
         source: "/api/py/:path*",
-        destination: isDev ? `${backendProxy}/api/py/:path*` : "/api/",
+        // Frontend keeps /api/py namespace; backend routes are mounted at /api/*.
+        destination: isDev ? `${backendProxy}/api/:path*` : "/api/:path*",
       },
     ];
   },

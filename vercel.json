@@ -5,5 +5,15 @@
       "maxDuration": 60,
       "excludeFiles": "{.next,.git,node_modules}/**"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/py/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
+    }
+  ]
 }

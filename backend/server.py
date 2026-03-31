@@ -137,6 +137,17 @@ app = FastAPI(title="Quanta Proxy")
 async def health_check():
     return {"status": "ok"}
 
+
+@app.middleware("http")
+async def normalize_api_prefix_middleware(request: Request, call_next):
+    """Accept both /api/* and /api/py/* paths for deployment compatibility."""
+    path = request.scope.get("path", "")
+    if path == "/api/py":
+        request.scope["path"] = "/api"
+    elif path.startswith("/api/py/"):
+        request.scope["path"] = "/api/" + path[len("/api/py/"):]
+    return await call_next(request)
+
 @app.middleware("http")
 async def catch_exceptions_middleware(request: Request, call_next):
     try:
@@ -501,6 +512,21 @@ async def get_trending_news():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.options("/api/py/stock/{symbol}")
+async def options_stock_data_py(symbol: str):
+    return {}
+
+
+@app.get("/api/py/stocks")
+async def get_popular_stocks_py():
+    return await get_popular_stocks()
+
+
+@app.get("/api/py/stock/{symbol}")
+async def get_stock_data_py(symbol: str, timeframe: str = Query("3M")):
+    return await get_stock_data(symbol, timeframe)
+
+
 
 # --- Error Handling Middleware ---
 import logging
@@ -688,6 +714,21 @@ async def get_stock_data(symbol: str, timeframe: str = Query("3M")):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch data: {str(e)}")
+
+
+@app.options("/api/py/stock/{symbol}")
+async def options_stock_data_py(symbol: str):
+    return {}
+
+
+@app.get("/api/py/stocks")
+async def get_popular_stocks_py():
+    return await get_popular_stocks()
+
+
+@app.get("/api/py/stock/{symbol}")
+async def get_stock_data_py(symbol: str, timeframe: str = Query("3M")):
+    return await get_stock_data(symbol, timeframe)
 
 
 class StrategyRequest(BaseModel):

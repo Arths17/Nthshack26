@@ -547,6 +547,17 @@ app = FastAPI(title="Quanta Proxy")
 async def health_check():
     return {"status": "ok"}
 
+
+@app.middleware("http")
+async def normalize_api_prefix_middleware(request: Request, call_next):
+    """Accept both /api/* and /api/py/* paths for deployment compatibility."""
+    path = request.scope.get("path", "")
+    if path == "/api/py":
+        request.scope["path"] = "/api"
+    elif path.startswith("/api/py/"):
+        request.scope["path"] = "/api/" + path[len("/api/py/"):]
+    return await call_next(request)
+
 @app.middleware("http")
 async def catch_exceptions_middleware(request: Request, call_next):
     try:
@@ -771,6 +782,11 @@ async def parse_strategy(req: StrategyRequest):
     raise HTTPException(status_code=500, detail=f"Strategy parse failed: all models unavailable. Last error: {str(last_err)[:100]}")
 
 
+@app.post("/api/py/strategy")
+async def parse_strategy_py(req: StrategyRequest):
+    return await parse_strategy(req)
+
+
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
     if not GEMINI_API_KEY:
@@ -794,6 +810,11 @@ async def chat(req: ChatRequest):
             print(f"Model {model_name} failed: {e}")
             continue
     raise HTTPException(status_code=500, detail=f"All models failed. Last error: {str(last_err)[:150]}")
+
+
+@app.post("/api/py/chat")
+async def chat_py(req: ChatRequest):
+    return await chat(req)
 
 
 @app.get("/api/news/stock/{symbol}")

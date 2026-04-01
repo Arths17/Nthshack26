@@ -146,7 +146,7 @@ export default function Chart({
   return (
     <div
       ref={containerRef}
-      style={{ position: "relative", userSelect: "none", width: "100%", height: "100%", maxWidth: "none", margin: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8 }}
+      className="q-chart-surface"
       onMouseMove={e => {
         const r = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - r.left) / r.width) * W;
@@ -269,11 +269,14 @@ export default function Chart({
       </svg>
 
       {hov && (
-        <div style={{ position: "absolute", top: 10, left: hov.pct > 60 ? "auto" : `${Math.max(2, hov.pct + 1)}%`, right: hov.pct > 60 ? "1%" : "auto", background: "rgba(15,20,40,.92)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, padding: "10px 14px", fontSize: 11, lineHeight: 2, pointerEvents: "none", zIndex: 20, fontFamily: "'DM Sans',sans-serif", boxShadow: "0 8px 32px rgba(0,0,0,.5)" }}>
-          <div style={{ color: "rgba(148,163,184,.6)", marginBottom: 2, fontSize: 10 }}>{hov.date}</div>
-          <div style={{ color: "#e2e8f0" }}>O <span style={{ color: "#fff" }}>${f2(hov.open)}</span>&nbsp;&nbsp;H <span style={{ color: "#4ade80" }}>${f2(hov.high)}</span></div>
-          <div style={{ color: "#e2e8f0" }}>L <span style={{ color: "#f87171" }}>${f2(hov.low)}</span>&nbsp;&nbsp;C <span style={{ color: isUp ? "#4ade80" : "#f87171" }}>${f2(hov.close)}</span></div>
-          <div style={{ color: "rgba(148,163,184,.5)", fontSize: 10 }}>Vol {fV(hov.volume)}</div>
+        <div
+          className="q-chart-tooltip"
+          style={{ left: hov.pct > 60 ? "auto" : `${Math.max(2, hov.pct + 1)}%`, right: hov.pct > 60 ? "1%" : "auto" }}
+        >
+          <div className="q-chart-tooltip__date">{hov.date}</div>
+          <div className="q-chart-tooltip__row">O <span className="q-chart-tooltip__value">${f2(hov.open)}</span>&nbsp;&nbsp;H <span className="q-chart-tooltip__value q-chart-tooltip__value--up">${f2(hov.high)}</span></div>
+          <div className="q-chart-tooltip__row">L <span className="q-chart-tooltip__value q-chart-tooltip__value--down">${f2(hov.low)}</span>&nbsp;&nbsp;C <span className={`q-chart-tooltip__value ${isUp ? "q-chart-tooltip__value--up" : "q-chart-tooltip__value--down"}`}>${f2(hov.close)}</span></div>
+          <div className="q-chart-tooltip__meta">Vol {fV(hov.volume)}</div>
         </div>
       )}
 
@@ -281,7 +284,7 @@ export default function Chart({
       {showSR && resistance.map((v, i) => {
         const y = yOf(v);
         return (
-          <div key={`rlabel${i}`} style={{ position: "absolute", left: `${((W - PR - 18) / W) * 100}%`, top: `${(y / H) * 100}%`, transform: "translate(-50%, -50%)", background: "rgba(248,113,113,.25)", border: "1px solid #f87171", borderRadius: 3, padding: "1px 4px", fontSize: 7.5, fontWeight: 600, color: "#f87171", fontFamily: "'DM Sans',sans-serif", pointerEvents: "none", zIndex: 30, whiteSpace: "nowrap" }}>
+          <div key={`rlabel${i}`} className="q-chart-level-label q-chart-level-label--resistance" style={{ left: `${((W - PR - 18) / W) * 100}%`, top: `${(y / H) * 100}%` }}>
             R {f2(v)}
           </div>
         );
@@ -289,35 +292,20 @@ export default function Chart({
       {showSR && support.map((v, i) => {
         const y = yOf(v);
         return (
-          <div key={`slabel${i}`} style={{ position: "absolute", left: `${((W - PR - 18) / W) * 100}%`, top: `${(y / H) * 100}%`, transform: "translate(-50%, -50%)", background: "rgba(74,222,128,.25)", border: "1px solid #4ade80", borderRadius: 3, padding: "1px 4px", fontSize: 7.5, fontWeight: 600, color: "#4ade80", fontFamily: "'DM Sans',sans-serif", pointerEvents: "none", zIndex: 30, whiteSpace: "nowrap" }}>
+          <div key={`slabel${i}`} className="q-chart-level-label q-chart-level-label--support" style={{ left: `${((W - PR - 18) / W) * 100}%`, top: `${(y / H) * 100}%` }}>
             S {f2(v)}
           </div>
         );
       })}
 
       {/* Legend */}
-      <div style={{ position: "absolute", bottom: 8, right: 16, display: "flex", gap: 8, fontSize: 10, fontFamily: "'DM Sans',sans-serif", alignItems: "center", flexWrap: "wrap" }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(148,163,184,.5)" }}>
-          <span style={{ width: 16, height: 2, background: "#4facfe", display: "inline-block", borderRadius: 1 }} /> SMA20
+      <div className="q-chart-legend" aria-hidden>
+        <span className="q-chart-legend__item">
+          <span className="q-chart-legend__swatch q-chart-legend__swatch--sma20" /> SMA20
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(148,163,184,.5)" }}>
-          <span style={{ width: 16, height: 2, background: "#a78bfa", display: "inline-block", borderRadius: 1 }} /> SMA50
+        <span className="q-chart-legend__item">
+          <span className="q-chart-legend__swatch q-chart-legend__swatch--sma50" /> SMA50
         </span>
-        <button onClick={() => setShowVolume(v => !v)} 
-          style={{ background: showVolume ? "rgba(255,255,255,.06)" : "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: showVolume ? "#e2e8f0" : "rgba(148,163,184,.4)", fontSize: 9, transition: "all .2s" }}
-          title="Toggle volume bars">
-          Vol {showVolume ? "on" : "off"}
-        </button>
-        <button onClick={() => setShowSMA(v => !v)} 
-          style={{ background: showSMA ? "rgba(255,255,255,.06)" : "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: showSMA ? "#e2e8f0" : "rgba(148,163,184,.4)", fontSize: 9, transition: "all .2s" }}
-          title="Toggle moving averages">
-          SMA {showSMA ? "on" : "off"}
-        </button>
-        <button onClick={() => setShowSR(v => !v)} 
-          style={{ background: showSR ? "rgba(255,255,255,.06)" : "transparent", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: showSR ? "#e2e8f0" : "rgba(148,163,184,.4)", fontSize: 9, transition: "all .2s" }}
-          title="Toggle support/resistance">
-          S/R {showSR ? "on" : "off"}
-        </button>
       </div>
     </div>
   );

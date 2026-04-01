@@ -176,7 +176,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       </Glass>
 
       {/* Tabs */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div className="q-market-body">
         <div className="q-main__section-tabs">
           {[["chart", "Chart"], ["positions", "Positions"], ["log", "Trade Log"]].map(([id, label]) => (
             <Pill key={id} active={tab === id} onClick={() => setTab(id)}>{label}</Pill>
@@ -188,8 +188,8 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
 
         {/* ── CHART TAB ── */}
         {tab === "chart" && (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minHeight: 0, animation: "fadeIn .3s ease" }}>
-            <Glass style={{ flex: 1, padding: "12px 14px 10px", minHeight: 0, overflow: "hidden" }}>
+          <div className="q-market-chart-stack" style={{ animation: "fadeIn .3s ease" }}>
+            <Glass className="q-chart-shell" style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
               <Chart
                 sym={sym}
                 candles={data?.candles}
@@ -200,58 +200,36 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
                 onTimeframeChange={onTimeframeChange}
               />
             </Glass>
-            <Glass style={{ padding: "16px 20px", flexShrink: 0, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ fontSize: 12, color: "#52525b", display: "flex", gap: 20 }}>
-                <span>Position <strong style={{ color: "#a1a1aa", marginLeft: 6 }}>{curPos} shares</strong></span>
-                <span>Value <strong style={{ color: "#a1a1aa", marginLeft: 6 }}>${f2(curPos * (price || 0))}</strong></span>
+            <Glass className="q-trade-bar">
+              <div className="q-trade-bar__position">
+                <span>Position <strong>{curPos} shares</strong></span>
+                <span>Value <strong>${f2(curPos * (price || 0))}</strong></span>
               </div>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
-                  <span style={{ fontSize: 11, color: "#3f3f46" }}>Qty</span>
+              <div className="q-trade-bar__controls">
+                <div className="q-trade-bar__qty">
+                  <span className="q-trade-bar__qty-label">Qty</span>
                   <input
                     type="number"
                     value={qty}
                     onChange={e => setQty(e.target.value)}
                     disabled={trading}
-                    style={{ width: 68, padding: "6px 10px", fontSize: 13, fontWeight: 600, textAlign: "center", opacity: trading ? 0.6 : 1 }}
+                    className="q-trade-bar__qty-input"
+                    style={{ opacity: trading ? 0.6 : 1 }}
                   />
-                  <span style={{ fontSize: 11, color: "#3f3f46" }}>≈ ${f2((parseInt(qty) || 0) * (price || 0))}</span>
+                  <span className="q-trade-bar__estimate">≈ ${f2((parseInt(qty) || 0) * (price || 0))}</span>
                 </div>
                 <button
                   onClick={handleBuy}
                   disabled={trading || !price || (parseInt(qty) || 0) * price > cash}
-                  style={{
-                    padding: "10px 22px",
-                    borderRadius: 10,
-                    border: "1px solid rgba(74,222,128,.5)",
-                    background: "linear-gradient(135deg, rgba(74,222,128,.18), rgba(74,222,128,.08))",
-                    color: "#bbf7d0",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    letterSpacing: "0.01em",
-                    boxShadow: "0 8px 24px rgba(74,222,128,.15)",
-                    cursor: trading || !price ? "not-allowed" : "pointer",
-                    opacity: trading && price ? 0.7 : 1,
-                    transition: "all .16s",
-                  }}
+                  className="q-trade-btn q-trade-btn--buy"
+                  style={{ opacity: trading && price ? 0.7 : 1 }}
                 >
                   {trading ? "..." : `Buy ${sym}`}
                 </button>
                 <button
                   onClick={handleSell}
                   disabled={trading || (pos[sym] || 0) < (parseInt(qty) || 0)}
-                  style={{
-                    padding: "9px 18px",
-                    borderRadius: 10,
-                    border: "1px solid rgba(255,255,255,.08)",
-                    background: "rgba(255,255,255,.03)",
-                    color: trading ? "#3f3f46" : "#e4e4e7",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: trading ? "not-allowed" : "pointer",
-                    opacity: trading ? 0.7 : 1,
-                    transition: "all .16s",
-                  }}
+                  className="q-trade-btn q-trade-btn--sell"
                 >
                   {trading ? "..." : "Sell"}
                 </button>

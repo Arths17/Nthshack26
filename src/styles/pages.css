@@ -230,6 +230,19 @@
   margin: 0;
 }
 
+.q-md--chat {
+  color: var(--q-text-secondary);
+  line-height: 1.82;
+}
+
+.q-md--chat > div {
+  margin-bottom: 6px;
+}
+
+.q-md--chat strong {
+  color: var(--q-text-bright);
+}
+
 /* Error boundary */
 .q-error-boundary {
   min-height: 100%;

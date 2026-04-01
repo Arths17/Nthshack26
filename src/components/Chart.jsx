@@ -29,7 +29,15 @@ function calcSR(candles, pivotN = 5, maxLevels = 3) {
   return { resistance: cluster(highs), support: cluster(lows) };
 }
 
-export default function Chart({ candles, loading = false, errorMessage = null }) {
+export default function Chart({
+  candles,
+  loading = false,
+  errorMessage = null,
+  sym,
+  timeframe,
+  timeframes = [],
+  onTimeframeChange,
+}) {
   const [hov, setHov]    = useState(null);
   const [drawn, setDrawn] = useState(false);
   const [showSR, setShowSR] = useState(true);
@@ -38,7 +46,7 @@ export default function Chart({ candles, loading = false, errorMessage = null })
   const pathRef = useRef(null);
   const [pLen, setPLen]  = useState(0);
   const containerRef = useRef(null);
-  const [size, setSize] = useState({ w: 900, h: 300 });
+  const [size, setSize] = useState({ w: 900, h: 320 });
 
   useEffect(() => { setDrawn(false); const t = setTimeout(() => setDrawn(true), 80); return () => clearTimeout(t); }, [candles]);
   useEffect(() => {
@@ -92,8 +100,14 @@ export default function Chart({ candles, loading = false, errorMessage = null })
     );
   }
 
-  const W = size.w, H = size.h, PL = 48, PR = 12, PT = 12, PB = 60;
-  const cw = W - PL - PR, ch = H - PT - PB - 40, n = candles.length;
+  const W = size.w, H = size.h, PL = 48, PR = 14, PT = 14, PB = 64;
+  const volBandH = 58;
+  const volGap = 14;
+  const priceH = H - PT - PB - volBandH - volGap;
+  const chartBottom = PT + priceH;
+  const cw = W - PL - PR;
+  const ch = priceH;
+  const n = candles.length;
   const nSafe = Math.max(2, n);
   const allP = candles.flatMap(c => [c.high, c.low]).filter(Boolean);
   const mn = Math.min(...allP), mx = Math.max(...allP), rng = mx - mn || 1;
@@ -104,9 +118,10 @@ export default function Chart({ candles, loading = false, errorMessage = null })
   // Volume calculations
   const volumes = candles.map(c => c.volume || 0);
   const maxVol = Math.max(...volumes, 1);
-  const volH = 30; // Height of volume bars
-  const volY = PT + ch + 10; // Y position of volume bars
-  const volOf = (v) => (v / maxVol) * volH;
+  const volTop = chartBottom + volGap;
+  const volH = volBandH;
+  const volBase = volTop + volH;
+  const volOf = (v) => (v / maxVol) * Math.max(6, volH - 10);
   const isUp = candles.at(-1).close >= candles[0].close;
   const lineColor = isUp ? "#4ade80" : "#f87171";
   const s20 = sma(candles, 20), s50 = sma(candles, 50);
@@ -114,7 +129,7 @@ export default function Chart({ candles, loading = false, errorMessage = null })
 
   const closePts = candles.map((c, i) => [xOf(i), yOf(c.close)]);
   const linePath = `M ${closePts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(" L ")}`;
-  const areaPath = `${linePath} L ${xOf(n - 1)} ${H - PB} L ${xOf(0)} ${H - PB} Z`;
+  const areaPath = `${linePath} L ${xOf(n - 1)} ${chartBottom} L ${xOf(0)} ${chartBottom} Z`;
   const toPath = (arr) => {
     const pts = arr.map((v, i) => v ? `${xOf(i).toFixed(1)} ${yOf(v).toFixed(1)}` : null);
     const segs = []; let cur = [];
@@ -122,18 +137,60 @@ export default function Chart({ candles, loading = false, errorMessage = null })
     if (cur.length) segs.push(cur);
     return segs.map(s => `M ${s.join(" L ")}`).join(" ");
   };
-  const yticks = [0, .25, .5, .75, 1].map(t => lo + (hi - lo) * t);
-  const xticks = [0, Math.floor(n * .25), Math.floor(n * .5), Math.floor(n * .75), n - 1];
+  const mid = lo + (hi - lo) * 0.5;
+  const yticks = [lo, mid, hi];
+  const xticks = [0, Math.floor(n * .33), Math.floor(n * .66), n - 1];
+  const baseline = candles[0]?.close || candles[0]?.open || mid;
   const gradId = isUp ? "chartGradGreen" : "chartGradRed";
 
   return (
-    <div ref={containerRef} style={{ position: "relative", userSelect: "none", width: "100%", height: "100%", maxWidth: "none", margin: 0, overflow: "hidden" }}
+    <div
+      ref={containerRef}
+      style={{ position: "relative", userSelect: "none", width: "100%", height: "100%", maxWidth: "none", margin: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8 }}
       onMouseMove={e => {
         const r = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - r.left) / r.width) * W;
         const i = Math.max(0, Math.min(n - 1, Math.round((x - PL) / cw * (n - 1))));
         setHov({ i, ...candles[i], pct: (xOf(i) / W * 100) });
-      }} onMouseLeave={() => setHov(null)}>
+      }}
+      onMouseLeave={() => setHov(null)}
+    >
+
+      <div className="q-chart__toolbar">
+        <div>
+          <div className="q-chart__title">{sym || "Price & volume"}</div>
+          <div className="q-chart__subtitle">20/50 MA, support/resistance, volume</div>
+        </div>
+        <div className="q-chart__toolbar-right">
+          {timeframes.length > 0 && (
+            <div className="q-chart__pills">
+              {timeframes.map(tf => (
+                <button
+                  key={tf.id}
+                  type="button"
+                  onClick={() => onTimeframeChange?.(tf.id)}
+                  className={`q-chart__pill ${timeframe === tf.id ? "q-chart__pill--active" : ""}`}
+                >
+                  {tf.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="q-chart__toggles">
+            {[{ id: "sma", label: "MAs", on: showSMA, set: setShowSMA }, { id: "vol", label: "Vol", on: showVolume, set: setShowVolume }, { id: "sr", label: "S/R", on: showSR, set: setShowSR }].map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => t.set(v => !v)}
+                className={`q-chart__toggle ${t.on ? "q-chart__toggle--on" : ""}`}
+                aria-pressed={t.on}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%" }} preserveAspectRatio="xMidYMid meet">
         <defs>
@@ -146,23 +203,29 @@ export default function Chart({ candles, loading = false, errorMessage = null })
             <stop offset="75%" stopColor="#f87171" stopOpacity="0" />
           </linearGradient>
           <filter id="lineGlow"><feGaussianBlur stdDeviation="2.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          <clipPath id="chartClip"><rect x={PL} y={PT} width={cw + 1} height={ch + 1} /></clipPath>
+          <clipPath id="chartClip"><rect x={PL} y={PT} width={cw + 1} height={H - PT - PB + volBandH} /></clipPath>
         </defs>
 
         <g clipPath="url(#chartClip)">
           <path d={areaPath} fill={`url(#${gradId})`} />
 
-          {/* Volume bars */}
+          {/* Volume bars (separate band) */}
           {showVolume && candles.map((c, i) => {
             const h = volOf(c.volume || 0);
-            const w = Math.max(0.8, cw / (n * 1.3));
+            const w = Math.max(1, cw / (n * 1.25));
             const x = xOf(i) - w / 2;
-            const y = volY - h;
+            const y = volBase - h;
             const isUpBar = c.close >= c.open;
             return (
-              <rect key={`vol${i}`} x={x} y={y} width={w} height={h}
-                fill={isUpBar ? "rgba(74,222,128,.25)" : "rgba(248,113,113,.25)"}
-                opacity={hov?.i === i ? 0.5 : 0.25} />
+              <rect
+                key={`vol${i}`}
+                x={x}
+                y={y}
+                width={w}
+                height={h}
+                fill={isUpBar ? "rgba(74,222,128,.3)" : "rgba(248,113,113,.28)"}
+                opacity={hov?.i === i ? 0.55 : 0.3}
+              />
             );
           })}
 
@@ -174,12 +237,14 @@ export default function Chart({ candles, loading = false, errorMessage = null })
             <line key={`s${i}`} x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="#4ade80" strokeWidth="1" strokeDasharray="5 4" opacity=".5" />
           ))}
 
-          <path d={toPath(s50)} fill="none" stroke="#a78bfa" strokeWidth="1.2" opacity={showSMA ? ".7" : ".3"} strokeLinejoin="round" />
-          <path d={toPath(s20)} fill="none" stroke="#4facfe" strokeWidth="1.2" opacity={showSMA ? ".7" : ".3"} strokeLinejoin="round" />
+          <path d={toPath(s50)} fill="none" stroke="#a78bfa" strokeWidth="1.2" opacity={showSMA ? ".8" : ".2"} strokeLinejoin="round" />
+          <path d={toPath(s20)} fill="none" stroke="#4facfe" strokeWidth="1.2" opacity={showSMA ? ".8" : ".2"} strokeLinejoin="round" />
+          <line x1={PL} x2={W - PR} y1={yOf(baseline)} y2={yOf(baseline)} stroke="rgba(255,255,255,.16)" strokeWidth="1.2" strokeDasharray="6 4" />
           <path ref={pathRef} d={linePath} fill="none" stroke={lineColor} strokeWidth="2" filter="url(#lineGlow)" strokeLinejoin="round" strokeLinecap="round"
             style={{ strokeDasharray: pLen || 9999, strokeDashoffset: drawn ? 0 : (pLen || 9999), transition: drawn ? "stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)" : "none" }} />
           {hov && <>
-            <line x1={xOf(hov.i)} x2={xOf(hov.i)} y1={PT} y2={H - PB} stroke="rgba(255,255,255,.12)" strokeWidth="1" strokeDasharray="3 4" />
+            <line x1={xOf(hov.i)} x2={xOf(hov.i)} y1={PT} y2={H - PB} stroke="rgba(255,255,255,.14)" strokeWidth="1" strokeDasharray="3 4" />
+            <line x1={PL} x2={W - PR} y1={yOf(hov.close)} y2={yOf(hov.close)} stroke="rgba(255,255,255,.12)" strokeWidth="1" strokeDasharray="3 4" />
             <circle cx={xOf(hov.i)} cy={yOf(hov.close)} r="5" fill={lineColor} stroke="rgba(15,20,35,.8)" strokeWidth="2.5" />
             <circle cx={xOf(hov.i)} cy={yOf(hov.close)} r="10" fill="none" stroke={lineColor} strokeWidth="1" opacity=".3" />
           </>}
@@ -188,14 +253,17 @@ export default function Chart({ candles, loading = false, errorMessage = null })
         {/* Y-axis labels (outside clip) */}
         {yticks.map((v, i) => (
           <g key={i}>
-            <line x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="rgba(148,163,184,.06)" strokeWidth="1" />
-            <text x={PL - 8} y={yOf(v) + 4} textAnchor="end" fontSize="9" fill="rgba(148,163,184,.4)" fontFamily="'DM Sans',sans-serif">${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(0)}</text>
+            <line x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke={i === 1 ? "rgba(148,163,184,.14)" : "rgba(148,163,184,.06)"} strokeWidth={i === 1 ? "1.2" : "1"} />
+            <text x={PL - 8} y={yOf(v) + 4} textAnchor="end" fontSize="9" fill={i === 1 ? "rgba(226,232,240,.78)" : "rgba(148,163,184,.5)"} fontFamily="'DM Sans',sans-serif">${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(0)}</text>
           </g>
         ))}
         {/* X-axis labels (outside clip) */}
-        {xticks.map((idx, i) => (
-          <text key={i} x={xOf(idx)} y={H - 8} textAnchor="middle" fontSize="9" fill="rgba(148,163,184,.4)" fontFamily="'DM Sans',sans-serif">{candles[idx]?.date}</text>
-        ))}
+        {xticks.map((idx, i) => {
+          const safeIdx = Math.min(Math.max(idx, 0), n - 1);
+          return (
+            <text key={i} x={xOf(safeIdx)} y={H - 8} textAnchor="middle" fontSize="9" fill="rgba(148,163,184,.4)" fontFamily="'DM Sans',sans-serif">{candles[safeIdx]?.date}</text>
+          );
+        })}
 
         {/* S/R labels (outside clip, on the right) - rendered as HTML overlays for z-index control */}
       </svg>

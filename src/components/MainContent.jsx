@@ -189,46 +189,75 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
         {/* ── CHART TAB ── */}
         {tab === "chart" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minHeight: 0, animation: "fadeIn .3s ease" }}>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {TIMEFRAMES.map(tf => (
-                <Pill key={tf.id} active={timeframe === tf.id} onClick={() => onTimeframeChange(tf.id)} style={{ padding: "4px 10px", fontSize: 11 }}>
-                  {tf.label}
-                </Pill>
-              ))}
-            </div>
-            <Glass style={{ flex: 1, padding: "4px 8px 0", minHeight: 0, overflow: "hidden" }}>
-              <Chart candles={data?.candles} loading={loading} errorMessage={error} />
+            <Glass style={{ flex: 1, padding: "12px 14px 10px", minHeight: 0, overflow: "hidden" }}>
+              <Chart
+                sym={sym}
+                candles={data?.candles}
+                loading={loading}
+                errorMessage={error}
+                timeframe={timeframe}
+                timeframes={TIMEFRAMES}
+                onTimeframeChange={onTimeframeChange}
+              />
             </Glass>
             <Glass style={{ padding: "16px 20px", flexShrink: 0, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <div style={{ fontSize: 12, color: "#52525b", display: "flex", gap: 20 }}>
                 <span>Position <strong style={{ color: "#a1a1aa", marginLeft: 6 }}>{curPos} shares</strong></span>
                 <span>Value <strong style={{ color: "#a1a1aa", marginLeft: 6 }}>${f2(curPos * (price || 0))}</strong></span>
               </div>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: "#3f3f46" }}>Qty</span>
-                <div style={{ border: "1px solid rgba(255,255,255,.08)", borderRadius: 5, background: "rgba(255,255,255,.04)", overflow: "hidden" }}>
-                  <input type="number" value={qty} onChange={e => setQty(e.target.value)} disabled={trading}
-                    style={{ width: 56, padding: "6px 10px", fontSize: 13, fontWeight: 500, textAlign: "center", opacity: trading ? 0.6 : 1 }} />
+              <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
+                  <span style={{ fontSize: 11, color: "#3f3f46" }}>Qty</span>
+                  <input
+                    type="number"
+                    value={qty}
+                    onChange={e => setQty(e.target.value)}
+                    disabled={trading}
+                    style={{ width: 68, padding: "6px 10px", fontSize: 13, fontWeight: 600, textAlign: "center", opacity: trading ? 0.6 : 1 }}
+                  />
+                  <span style={{ fontSize: 11, color: "#3f3f46" }}>≈ ${f2((parseInt(qty) || 0) * (price || 0))}</span>
                 </div>
-                {[
-                  { label: "Buy",  color: "#4ade80", bg: "rgba(74,222,128,.1)",   border: "rgba(74,222,128,.25)",  action: handleBuy,  off: trading || !price || (parseInt(qty) || 0) * price > cash },
-                  { label: "Sell", color: "#f87171", bg: "rgba(248,113,113,.1)",  border: "rgba(248,113,113,.25)", action: handleSell, off: trading || (pos[sym] || 0) < (parseInt(qty) || 0) },
-                ].map(b => (
-                  <button key={b.label} onClick={b.action} disabled={b.off} style={{
-                    padding: "6px 20px", borderRadius: 5,
-                    border: `1px solid ${b.off ? "rgba(255,255,255,.06)" : b.border}`,
-                    background: b.off ? "transparent" : b.bg,
-                    color: b.off ? "#3f3f46" : b.color,
-                    fontSize: 12, fontWeight: 600, cursor: b.off ? "not-allowed" : "pointer", transition: "all .15s",
-                    opacity: trading && !b.off ? 0.7 : 1,
-                  }}>
-                    {trading && (b.label === "Buy" || b.label === "Sell") ? "..." : b.label}
-                  </button>
-                ))}
-                <span style={{ fontSize: 11, color: "#3f3f46" }}>≈ ${f2((parseInt(qty) || 0) * (price || 0))}</span>
+                <button
+                  onClick={handleBuy}
+                  disabled={trading || !price || (parseInt(qty) || 0) * price > cash}
+                  style={{
+                    padding: "10px 22px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(74,222,128,.5)",
+                    background: "linear-gradient(135deg, rgba(74,222,128,.18), rgba(74,222,128,.08))",
+                    color: "#bbf7d0",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: "0.01em",
+                    boxShadow: "0 8px 24px rgba(74,222,128,.15)",
+                    cursor: trading || !price ? "not-allowed" : "pointer",
+                    opacity: trading && price ? 0.7 : 1,
+                    transition: "all .16s",
+                  }}
+                >
+                  {trading ? "..." : `Buy ${sym}`}
+                </button>
+                <button
+                  onClick={handleSell}
+                  disabled={trading || (pos[sym] || 0) < (parseInt(qty) || 0)}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,.08)",
+                    background: "rgba(255,255,255,.03)",
+                    color: trading ? "#3f3f46" : "#e4e4e7",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: trading ? "not-allowed" : "pointer",
+                    opacity: trading ? 0.7 : 1,
+                    transition: "all .16s",
+                  }}
+                >
+                  {trading ? "..." : "Sell"}
+                </button>
               </div>
               {tradeMsg && (
-                <div style={{ marginTop: -8, width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: 11, background: tradeMsg.type === "success" ? "rgba(74,222,128,.1)" : "rgba(248,113,113,.1)", color: tradeMsg.type === "success" ? "#4ade80" : "#f87171", border: `1px solid ${tradeMsg.type === "success" ? "rgba(74,222,128,.3)" : "rgba(248,113,113,.3)"}` }}>
+                <div style={{ marginTop: -6, width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 11, background: tradeMsg.type === "success" ? "rgba(74,222,128,.1)" : "rgba(248,113,113,.1)", color: tradeMsg.type === "success" ? "#4ade80" : "#f87171", border: `1px solid ${tradeMsg.type === "success" ? "rgba(74,222,128,.3)" : "rgba(248,113,113,.3)"}` }}>
                   {tradeMsg.text}
                 </div>
               )}

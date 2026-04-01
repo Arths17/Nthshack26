@@ -62,15 +62,28 @@ export default function ChatPanel({ sym, msgs, input, setInput, busy, send }) {
                 <div className="q-chat__bubble-user">{m.content}</div>
               </div>
             ) : (
-              <>
-                <MarkdownText
-                  text={m.content}
-                  style={{ fontSize: 12, color: "var(--q-text-secondary)", lineHeight: 1.75 }}
-                />
-                {m.backtestResult && m.strategySpec && (
-                  <BacktestCard spec={m.strategySpec} result={m.backtestResult} sym={m.sym} />
-                )}
-              </>
+              (() => {
+                const verdictMatch = m.content?.match(/VERDICT:\s*(BUY|SELL|HOLD)/i);
+                const verdict = verdictMatch ? verdictMatch[1].toUpperCase() : null;
+                const trimmed = verdict ? m.content.replace(/VERDICT:\s*[^\n]+\n?/, "").trim() : m.content;
+                return (
+                  <div className="q-chat__bot">
+                    {verdict && (
+                      <div className={`q-chat__verdict q-chat__verdict--${verdict.toLowerCase()}`}>
+                        Verdict: {verdict}
+                      </div>
+                    )}
+                    <MarkdownText
+                      text={trimmed}
+                      className="q-md q-md--chat"
+                      style={{ fontSize: 12, color: "var(--q-text-secondary)", lineHeight: 1.8 }}
+                    />
+                    {m.backtestResult && m.strategySpec && (
+                      <BacktestCard spec={m.strategySpec} result={m.backtestResult} sym={m.sym} />
+                    )}
+                  </div>
+                );
+              })()
             )}
           </div>
         ))}

@@ -508,12 +508,36 @@
   align-items: center;
   background: var(--q-bg-nav);
   flex-shrink: 0;
+  padding-right: 84px;
+}
+
+.q-ticker--collapsed {
+  height: 26px;
 }
 
 .q-ticker__track {
   display: flex;
   animation: ticker 55s linear infinite;
   white-space: nowrap;
+}
+
+.q-ticker__toggle {
+  position: absolute;
+  right: 10px;
+  top: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--q-border-muted);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--q-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  transition: background var(--q-transition-fast), color var(--q-transition-fast), border-color var(--q-transition-fast);
+}
+
+.q-ticker__toggle:hover {
+  background: var(--q-surface-hover);
+  color: var(--q-text);
 }
 
 .q-ticker__btn {
@@ -655,6 +679,45 @@
   max-width: 88%;
 }
 
+.q-chat__bot {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--q-border-muted);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.q-chat__verdict {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--q-border);
+}
+
+.q-chat__verdict--buy {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #86efac;
+}
+
+.q-chat__verdict--sell {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fecaca;
+}
+
+.q-chat__verdict--hold {
+  background: rgba(79, 172, 254, 0.12);
+  border-color: rgba(79, 172, 254, 0.35);
+  color: #bfdbfe;
+}
+
 .q-chat__suggestion {
   text-align: left;
   padding: 10px 13px;
@@ -777,6 +840,94 @@
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--q-border-muted);
+}
+
+.q-chart__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 2px 2px 6px;
+}
+
+.q-chart__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--q-text-bright);
+}
+
+.q-chart__subtitle {
+  font-size: 11px;
+  color: var(--q-text-muted);
+  margin-top: 2px;
+}
+
+.q-chart__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.q-chart__pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.q-chart__pill {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--q-border-muted);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--q-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background var(--q-transition-fast), border-color var(--q-transition-fast), color var(--q-transition-fast);
+}
+
+.q-chart__pill--active {
+  background: rgba(79, 172, 254, 0.12);
+  border-color: var(--q-border-accent);
+  color: var(--q-accent);
+  font-weight: 700;
+}
+
+.q-chart__pill:focus-visible {
+  outline: 2px solid var(--q-accent);
+  outline-offset: 2px;
+}
+
+.q-chart__toggles {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.q-chart__toggle {
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--q-border-muted);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--q-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background var(--q-transition-fast), color var(--q-transition-fast), border-color var(--q-transition-fast);
+}
+
+.q-chart__toggle--on {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(79, 172, 254, 0.35);
+  color: var(--q-text);
+}
+
+.q-chart__toggle:focus-visible {
+  outline: 2px solid var(--q-accent);
+  outline-offset: 2px;
 }
 
 .q-btn-ghost {

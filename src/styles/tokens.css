@@ -207,11 +207,11 @@
 .q-nav {
   position: relative;
   z-index: 10;
-  height: 54px;
+  min-height: 58px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  gap: 16px;
+  padding: 8px 20px;
+  gap: 14px;
   background: var(--q-bg-nav);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
@@ -219,16 +219,32 @@
   flex-shrink: 0;
 }
 
+.q-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .q-nav__brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   background: linear-gradient(135deg, var(--q-accent), var(--q-accent-2));
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 4px 16px rgba(79, 172, 254, 0.2);
+}
+
+.q-nav__brand-letter {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--q-font-display);
+  font-style: italic;
+  color: #fff;
+  letter-spacing: -0.02em;
 }
 
 .q-nav__brand-text-title {
@@ -246,10 +262,10 @@
 
 .q-nav__scroll {
   display: flex;
-  gap: 3px;
+  gap: 6px;
   overflow-x: auto;
   flex: 1;
-  padding: 0 8px;
+  padding: 2px 8px;
   align-items: center;
   scrollbar-width: none;
 }
@@ -259,22 +275,23 @@
 }
 
 .q-nav-symbol {
-  padding: 5px 10px;
-  border-radius: 7px;
+  padding: 6px 10px;
+  border-radius: 9px;
   border: 1px solid transparent;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.01);
   cursor: pointer;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
+  gap: 7px;
   flex-shrink: 0;
-  transition: background var(--q-transition-fast), border-color var(--q-transition-fast);
+  transition: background var(--q-transition-fast), border-color var(--q-transition-fast), transform var(--q-transition-fast);
   font-family: var(--q-font-sans);
 }
 
 .q-nav-symbol:hover:not(.q-nav-symbol--active) {
   background: var(--q-surface-hover);
+  transform: translateY(-1px);
 }
 
 .q-nav-symbol:focus-visible {
@@ -288,8 +305,8 @@
 }
 
 .q-nav-symbol__ticker {
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--q-text-dim);
 }
@@ -300,8 +317,9 @@
 }
 
 .q-nav-symbol__chg {
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .q-nav-symbol__chg--up {
@@ -420,10 +438,14 @@
 .q-nav__stats {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
   border-left: 1px solid var(--q-border-muted);
-  padding-left: 16px;
+  padding-left: 14px;
+}
+
+.q-nav__stat-block {
+  min-width: 56px;
 }
 
 .q-nav__stat-label {
@@ -436,6 +458,11 @@
 .q-nav__stat-value {
   font-size: 13px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.q-nav__stat-value--neutral {
+  color: #a1a1aa;
 }
 
 .q-nav__stat-value--pnl-pos {
@@ -474,7 +501,7 @@
 }
 
 .q-nav__signout {
-  padding: 6px 13px;
+  padding: 7px 13px;
   border-radius: var(--q-radius-sm);
   border: 1px solid var(--q-border);
   background: transparent;
@@ -821,13 +848,13 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  padding: 20px 24px 16px;
-  gap: 12px;
+  padding: 18px 22px 14px;
+  gap: 14px;
 }
 
 .q-main__subnav {
   display: flex;
-  gap: 5px;
+  gap: 7px;
   flex-shrink: 0;
   overflow-x: auto;
   padding-bottom: 2px;
@@ -836,10 +863,99 @@
 .q-main__section-tabs {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
   margin-bottom: 12px;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--q-border-muted);
+}
+
+.q-market-hero {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.95fr) minmax(170px, 1.1fr) minmax(380px, 2fr);
+  align-items: center;
+  gap: 20px;
+}
+
+.q-market-hero__identity {
+  min-width: 0;
+}
+
+.q-market-hero__price-block {
+  min-width: 0;
+}
+
+.q-market-hero__stats {
+  margin-left: auto;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(72px, auto));
+  gap: 18px;
+  justify-content: end;
+}
+
+@media (max-width: 1280px) {
+  .q-nav__brand-text-sub {
+    display: none;
+  }
+
+  .q-nav__stats {
+    gap: 10px;
+    padding-left: 10px;
+  }
+
+  .q-market-hero {
+    grid-template-columns: minmax(90px, 0.9fr) minmax(160px, 1fr) minmax(260px, 1.5fr);
+  }
+
+  .q-market-hero__stats {
+    grid-template-columns: repeat(3, minmax(72px, auto));
+    row-gap: 10px;
+    justify-content: start;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  .q-nav {
+    padding: 8px 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .q-nav__brand {
+    order: 1;
+  }
+
+  .q-nav__stats {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .q-nav__scroll {
+    order: 3;
+    width: 100%;
+    padding: 2px 0;
+  }
+
+  .q-nav__divider:nth-of-type(1),
+  .q-nav__divider:nth-of-type(2),
+  .q-nav__stat-block--cash {
+    display: none;
+  }
+
+  .q-main {
+    padding: 14px 14px 12px;
+  }
+
+  .q-market-hero {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .q-market-hero__stats {
+    grid-template-columns: repeat(2, minmax(92px, 1fr));
+    justify-content: start;
+    gap: 12px;
+  }
 }
 
 .q-chart__toolbar {

@@ -194,7 +194,7 @@ export default function App() {
             minHeight: 0,
             overflow: "hidden",
             display: isMobile ? "flex" : "grid",
-            gridTemplateColumns: isMobile ? undefined : `${UI.SIDEBAR_WIDTH}px 1fr`,
+            gridTemplateColumns: isMobile ? undefined : `minmax(${UI.SIDEBAR_WIDTH}px, 23vw) minmax(0, 1fr)`,
             flexDirection: isMobile ? "column" : undefined,
           }}
         >

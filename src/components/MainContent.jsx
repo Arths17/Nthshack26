@@ -124,7 +124,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
       <div className="q-market-stack">
 
       {/* Price hero */}
-      <Glass style={{ padding: "18px 22px", flexShrink: 0 }}>
+      <Glass style={{ padding: "20px 24px", flexShrink: 0 }}>
         {error ? (
           <div className="q-data-error" role="alert">
             <p className="q-data-error__title">Market data unavailable</p>
@@ -142,13 +142,13 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
             </div>
           </div>
         ) : data ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap", animation: "fadeIn .4s ease" }}>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: "#f8fafc", letterSpacing: "-.02em", lineHeight: 1, fontFamily: "'DM Serif Display', serif" }}>{sym}</div>
-              <div style={{ fontSize: 11, color: "rgba(148,163,184,.5)", marginTop: 3 }}>{data.name}</div>
+          <div className="q-market-hero" style={{ animation: "fadeIn .4s ease" }}>
+            <div className="q-market-hero__identity">
+              <div style={{ fontSize: 26, fontWeight: 700, color: "#f8fafc", letterSpacing: "-.02em", lineHeight: 1, fontFamily: "'DM Serif Display', serif" }}>{sym}</div>
+              <div style={{ fontSize: 11, color: "rgba(148,163,184,.5)", marginTop: 4 }}>{data.name}</div>
             </div>
-            <div>
-              <div style={{ fontSize: 32, fontWeight: 600, color: "#f8fafc", letterSpacing: "-.02em", lineHeight: 1 }}>
+            <div className="q-market-hero__price-block">
+              <div style={{ fontSize: 36, fontWeight: 600, color: "#f8fafc", letterSpacing: "-.02em", lineHeight: 1 }}>
                 <Counter to={price} prefix="$" />
               </div>
               <div style={{ fontSize: 13, marginTop: 4, color: isUp ? "#4ade80" : "#f87171", display: "flex", alignItems: "center", gap: 6 }}>
@@ -158,7 +158,7 @@ export default function MainContent({ sym, data, loading, error, watch, pos, log
                 <span style={{ fontSize: 11, color: "rgba(148,163,184,.5)" }}>today</span>
               </div>
             </div>
-            <div style={{ marginLeft: "auto", display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <div className="q-market-hero__stats">
               {[
                 { label: "Market Cap", value: fB(data.marketCap) },
                 { label: "P/E Ratio",  value: data.pe?.toFixed(1) ?? "—" },

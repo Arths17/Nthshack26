@@ -34,20 +34,9 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
 
   return (
     <header className="q-nav" role="banner">
-      <div style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
+      <div className="q-nav__brand">
         <div className="q-nav__brand-mark" aria-hidden>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: "var(--q-font-display)",
-              fontStyle: "italic",
-              color: "#fff",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Q
-          </span>
+          <span className="q-nav__brand-letter">Q</span>
         </div>
         <div>
           <div className="q-nav__brand-text-title">QUANTA</div>
@@ -163,9 +152,9 @@ export default memo(function NavBar({ sym, watch, pnl, cash, onSelect, onSignOut
           </div>
         </div>
         <div className="q-nav__divider" aria-hidden />
-        <div>
+        <div className="q-nav__stat-block q-nav__stat-block--cash">
           <div className="q-nav__stat-label">CASH</div>
-          <div className="q-nav__stat-value" style={{ fontWeight: 500, color: "#a1a1aa" }}>
+          <div className="q-nav__stat-value q-nav__stat-value--neutral">
             ${(cash / 1000).toFixed(1)}k
           </div>
         </div>

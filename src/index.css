@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "./styles/tokens.css";
 @import "./styles/pages.css";
 
@@ -8,6 +8,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "ss02", "cv01";
 }
 
 html, body {
@@ -15,15 +16,32 @@ html, body {
   background: var(--q-bg);
   color: var(--q-text);
   font-family: var(--q-font-sans);
+  line-height: 1.6;
 }
 
 ::selection {
-  background: rgba(79, 172, 254, 0.25);
+  background: rgba(99, 102, 241, 0.3);
   color: var(--q-text-bright);
 }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 4px; }
+::-webkit-scrollbar { 
+  width: 6px; 
+  height: 6px; 
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb { 
+  background: rgba(255,255,255,0.08); 
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.15);
+}
 
 .sr-only {
   position: absolute;
@@ -39,12 +57,17 @@ html, body {
 
 textarea, input {
   font-family: var(--q-font-sans);
-  color: #e2e8f0;
+  color: var(--q-text);
   background: transparent;
   border: none;
   outline: none;
   resize: none;
 }
+
+textarea::placeholder, input::placeholder {
+  color: var(--q-text-faint);
+}
+
 button {
   font-family: var(--q-font-sans);
 }
@@ -53,20 +76,103 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* ── Animations ─────────────────────────────────────────────────────────── */
-@keyframes spin    { to { transform: rotate(360deg); } }
-@keyframes fadeUp  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pulse   { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
-@keyframes ticker  { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-@keyframes breathe { 0%, 100% { transform: scale(1); opacity: .6; } 50% { transform: scale(1.04); opacity: 1; } }
-@keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
-
-/* ── Skeleton loader ────────────────────────────────────────────────────── */
-.skel {
-  background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.04) 75%);
-  background-size: 600px 100%;
-  animation: shimmer 1.6s infinite;
-  border-radius: 6px;
+/* ══════════════════════════════════════════════════════════════════
+   PREMIUM ANIMATIONS
+   ══════════════════════════════════════════════════════════════════ */
+@keyframes spin { 
+  to { transform: rotate(360deg); } 
 }
+
+@keyframes fadeUp { 
+  from { opacity: 0; transform: translateY(16px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; } 
+  to { opacity: 1; } 
+}
+
+@keyframes slideUp { 
+  from { opacity: 0; transform: translateY(8px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse { 
+  0%, 100% { opacity: 1; } 
+  50% { opacity: 0.4; } 
+}
+
+@keyframes ticker { 
+  0% { transform: translateX(0); } 
+  100% { transform: translateX(-50%); } 
+}
+
+@keyframes breathe { 
+  0%, 100% { transform: scale(1); opacity: 0.7; } 
+  50% { transform: scale(1.05); opacity: 1; } 
+}
+
+@keyframes shimmer { 
+  0% { background-position: -800px 0; } 
+  100% { background-position: 800px 0; } 
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SKELETON LOADER — Premium shimmer
+   ══════════════════════════════════════════════════════════════════ */
+.skel {
+  background: linear-gradient(
+    90deg, 
+    rgba(255,255,255,0.03) 0%,
+    rgba(255,255,255,0.06) 20%,
+    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.06) 80%,
+    rgba(255,255,255,0.03) 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  border-radius: var(--q-radius-sm);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ══════════════════════════════════════════════════════════════════ */
+.animate-in {
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-in-delay-1 { animation-delay: 0.05s; }
+.animate-in-delay-2 { animation-delay: 0.1s; }
+.animate-in-delay-3 { animation-delay: 0.15s; }
+.animate-in-delay-4 { animation-delay: 0.2s; }

@@ -7,9 +7,19 @@ export default function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#060b18" />
-        <meta name="description" content="Quanta — AI-powered paper trading terminal with live market data." />
+        <title>Quanta — AI Trading Terminal</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+        <meta name="theme-color" content="#030712" />
+        <meta name="description" content="Institutional-grade analysis for everyone. Live market data, AI-powered verdicts, and paper trading — built for traders who mean business." />
+        <meta name="keywords" content="trading, stocks, AI, paper trading, market analysis, investing, finance" />
+        <meta property="og:title" content="Quanta — AI Trading Terminal" />
+        <meta property="og:description" content="Institutional-grade analysis for everyone. Live market data, AI-powered verdicts, and paper trading." />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Quanta — AI Trading Terminal" />
+        <meta name="twitter:description" content="Institutional-grade analysis for everyone. Live market data, AI-powered verdicts, and paper trading." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
       <AuthProvider>
         <Component {...pageProps} />

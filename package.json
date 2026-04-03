@@ -17,5 +17,7 @@
     "react-dom": "^18.2.0",
     "vercel": "^50.37.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/react": "19.2.14"
+  }
 }

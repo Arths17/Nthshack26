@@ -4,14 +4,14 @@
  */
 :root {
   /* ══════════════════════════════════════════════════════════════
-     BACKGROUNDS — Deep, sophisticated layers
+     BACKGROUNDS — Mercury/Linear-inspired deep charcoal
      ══════════════════════════════════════════════════════════════ */
   --q-bg: #030712;
-  --q-bg-elevated: #0a0f1e;
-  --q-bg-nav: rgba(3, 7, 18, 0.92);
-  --q-bg-panel: rgba(3, 7, 18, 0.75);
-  --q-bg-card: rgba(15, 23, 42, 0.45);
-  --q-bg-card-hover: rgba(15, 23, 42, 0.65);
+  --q-bg-elevated: #080c14;
+  --q-bg-nav: rgba(3, 7, 18, 0.85);
+  --q-bg-panel: rgba(3, 7, 18, 0.7);
+  --q-bg-card: rgba(255, 255, 255, 0.02);
+  --q-bg-card-hover: rgba(255, 255, 255, 0.04);
 
   /* ══════════════════════════════════════════════════════════════
      SURFACES — Layered glass morphism
@@ -24,13 +24,13 @@
   --q-surface-glow: rgba(99, 102, 241, 0.08);
 
   /* ══════════════════════════════════════════════════════════════
-     BORDERS — Subtle, elegant dividers
+     BORDERS — 1px precision (Mercury-style)
      ══════════════════════════════════════════════════════════════ */
-  --q-border: rgba(255, 255, 255, 0.06);
-  --q-border-muted: rgba(255, 255, 255, 0.04);
-  --q-border-strong: rgba(255, 255, 255, 0.1);
-  --q-border-accent: rgba(99, 102, 241, 0.4);
-  --q-border-glow: rgba(99, 102, 241, 0.2);
+  --q-border: rgba(255, 255, 255, 0.05);
+  --q-border-muted: rgba(255, 255, 255, 0.03);
+  --q-border-strong: rgba(255, 255, 255, 0.08);
+  --q-border-accent: rgba(99, 102, 241, 0.3);
+  --q-border-glow: rgba(99, 102, 241, 0.15);
 
   /* ══════════════════════════════════════════════════════════════
      TEXT — Clear hierarchy with optimal contrast
@@ -118,29 +118,30 @@
   --q-font-mono: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
 
   /* ══════════════════════════════════════════════════════════════
-     TRANSITIONS — Smooth, premium motion
+     TRANSITIONS — Wispr-style motion system
+     - Primary easing: cubic-bezier(0.16, 1, 0.3, 1) — snappy deceleration
+     - Duration: 200-500ms for most transitions
      ══════════════════════════════════════════════════════════════ */
   --q-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --q-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --q-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --q-ease-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
 
-  --q-transition-fast: 0.15s var(--q-ease-out);
-  --q-transition: 0.2s var(--q-ease-out);
-  --q-transition-slow: 0.35s var(--q-ease-out);
+  --q-transition-fast: 0.2s var(--q-ease-out);
+  --q-transition: 0.35s var(--q-ease-out);
+  --q-transition-slow: 0.5s var(--q-ease-out);
   --q-transition-spring: 0.5s var(--q-ease-spring);
 
   /* ══════════════════════════════════════════════════════════════
-     GRADIENTS — Premium fintech look
+     GRADIENTS — Subtle, professional (avoid flashy)
      ══════════════════════════════════════════════════════════════ */
-  --q-gradient-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  --q-gradient-brand: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
   --q-gradient-accent: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
   --q-gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   --q-gradient-danger: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
-  --q-gradient-glass: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 100%);
-  --q-gradient-shine: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 50%);
-  --q-gradient-radial: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent);
-  --q-gradient-radial-lg: radial-gradient(ellipse 100% 80% at 50% -30%, rgba(99, 102, 241, 0.2), transparent);
+  --q-gradient-glass: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+  --q-gradient-shine: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 50%);
+  --q-gradient-radial: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(99, 102, 241, 0.08), transparent);
+  --q-gradient-radial-lg: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99, 102, 241, 0.1), transparent);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -390,32 +391,26 @@
 }
 
 .q-nav__brand-mark {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--q-radius-md);
-  background: var(--q-gradient-brand);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 
-    0 8px 24px rgba(99, 102, 241, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: transform var(--q-transition), box-shadow var(--q-transition);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .q-nav__brand-mark:hover {
-  transform: scale(1.05);
-  box-shadow: 
-    0 12px 32px rgba(99, 102, 241, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: scale(1.03);
 }
 
 .q-nav__brand-letter {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   font-family: var(--q-font-display);
-  color: #fff;
+  color: #030712;
   letter-spacing: -0.02em;
 }
 

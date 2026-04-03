@@ -37,13 +37,11 @@
 @keyframes qPageEnter {
   from {
     opacity: 0;
-    transform: translateY(12px);
-    filter: blur(4px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -89,11 +87,8 @@
 
 .glass-panel--interactive:hover {
   border-color: var(--q-border-strong);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 20px 50px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(99, 102, 241, 0.08);
-  transform: translateY(-3px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -139,11 +134,10 @@
 }
 
 .q-tab-chip--active {
-  border-color: var(--q-border-accent);
-  background: var(--q-accent-subtle);
-  color: var(--q-accent-light);
+  border-color: var(--q-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--q-text-bright);
   font-weight: 600;
-  box-shadow: 0 0 24px var(--q-accent-glow);
 }
 
 .q-tab-chip:focus-visible {
@@ -181,10 +175,9 @@
 }
 
 .q-symbol-chip--on {
-  border-color: var(--q-border-accent);
-  background: var(--q-accent-subtle);
-  color: var(--q-accent-light);
-  box-shadow: 0 0 20px var(--q-accent-glow);
+  border-color: var(--q-border-strong);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--q-text-bright);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -202,13 +195,12 @@
 }
 
 .q-page-loader__ring {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 3px solid var(--q-accent-subtle);
-  border-top-color: var(--q-accent);
-  animation: spin 0.8s linear infinite;
-  box-shadow: 0 0 20px var(--q-accent-glow);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.5);
+  animation: spin 0.7s linear infinite;
 }
 
 .q-page-loader__text {
@@ -229,13 +221,11 @@
 @keyframes qToastIn {
   from {
     opacity: 0;
-    transform: translateY(-12px) scale(0.96);
-    filter: blur(4px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
+    transform: translateY(0);
   }
 }
 
@@ -396,13 +386,11 @@
 @keyframes qOnboardCard {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.97);
-    filter: blur(4px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
+    transform: translateY(0);
   }
 }
 
@@ -416,27 +404,23 @@
 
 .q-onboard-btn-primary {
   padding: 12px 28px;
-  border-radius: var(--q-radius-full);
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: 
-    transform var(--q-transition-fast),
-    box-shadow var(--q-transition-fast),
-    background var(--q-transition-fast);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   border: none;
   font-family: var(--q-font-sans);
-  background: var(--q-gradient-accent);
-  color: #fff;
-  box-shadow: 0 8px 28px var(--q-accent-glow);
+  background: #fff;
+  color: #030712;
 }
 
 .q-onboard-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
 }
 
 .q-onboard-btn-primary:focus-visible {
@@ -506,7 +490,7 @@
   transform: translateY(-1px);
 }
 
-/* ══════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════��═════════════
    CHART PLACEHOLDER
    ══════════════════════════════════════════════════════════════════ */
 .q-chart-placeholder {
@@ -546,13 +530,12 @@
 }
 
 .q-chart-placeholder__spinner {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: 3px solid var(--q-accent-subtle);
-  border-top-color: var(--q-accent);
-  animation: spin 0.8s linear infinite;
-  box-shadow: 0 0 24px var(--q-accent-glow);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.5);
+  animation: spin 0.7s linear infinite;
 }
 
 .q-chart-placeholder__hint {
@@ -825,9 +808,9 @@
 }
 
 .q-lesson-card:hover {
-  border-color: var(--q-border-accent);
+  border-color: var(--q-border-strong);
   transform: translateY(-2px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35), 0 0 40px var(--q-accent-glow);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
 }
 
 .q-lesson-card__number {
